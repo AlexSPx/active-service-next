@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Your Java application
+  java-app:
+    build: .  # Assumes Dockerfile is in current directory
+    # Or use: image: your-java-app:latest
+    ports:
+      - "${APP_PORT}:8080"
+    environment:
+      # Spring Boot MongoDB configuration using environment variables
+      - SPRING_DATA_MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      - SPRING_DATA_MONGODB_DATABASE=${MONGO_DATABASE}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # MongoDB service
+  mongodb:
+    image: mongo:7.0  # Use specific version for consistency
+    container_name: mongodb
+    ports:
+      - "27017:27017"  # Optional: expose port to host
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      # Persistent data storage - this prevents data loss on restarts
+      - mongodb_data:/data/db
+      # Optional: Mount initialization scripts
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# Named volumes for persistent storage
+volumes:
+  mongodb_data:
+    driver: local
+
+# Custom network for container communication
+networks:
+  app-network:
+    driver: bridge

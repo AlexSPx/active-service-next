@@ -1,0 +1,23 @@
+meta {
+  name: Exercise Search Request
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{service-url}}/api/exercise/search?name=bench
+  body: none
+  auth: bearer
+}
+
+params:query {
+  name: bench
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
