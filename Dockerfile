@@ -17,8 +17,8 @@ WORKDIR /app
 # Copy JAR from builder stage
 COPY --from=builder /app/target/active-*.jar app.jar
 
-# Copy application.yml to classpath root
-COPY /src/main/resources/application.properties ./application.properties
+# Copy application-local.properties to classpath root as application.properties
+COPY /src/main/resources/application-local.properties ./application.properties
 
 # Expose Spring Boot's default port
 EXPOSE 8080

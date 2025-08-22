@@ -1,6 +1,5 @@
 package com.services.active.config;
 
-import com.services.active.models.User;
 import com.services.active.services.JwtService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
