@@ -11,13 +11,14 @@ import com.services.active.models.WorkoutTemplate;
 import com.services.active.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,40 +31,40 @@ public class WorkoutService {
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
 
-    public Mono<Workout> createWorkout(String userId, CreateWorkoutRequest request) {
+    public Workout createWorkout(String userId, CreateWorkoutRequest request) {
         WorkoutTemplate workoutTemplate = WorkoutTemplate.builder()
-                .exercises(request.getTemplate().getExercises())
+                .exercises(request.getTemplate() != null ? request.getTemplate().getExercises() : List.of())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return workoutTemplateRepository.save(workoutTemplate)
-                .flatMap(savedTemplate -> {
-                    Workout workout = Workout.builder()
-                            .userId(userId)
-                            .notes(request.getNotes())
-                            .workoutRecordIds(new ArrayList<>())
-                            .templateId(savedTemplate.getId())
-                            .createdAt(LocalDateTime.now())
-                            .updatedAt(LocalDateTime.now())
-                            .build();
+        WorkoutTemplate savedTemplate = workoutTemplateRepository.save(workoutTemplate);
 
-                    return workoutRepository.save(workout);
-                });
+        Workout workout = Workout.builder()
+                .userId(userId)
+                .title(request.getTitle())
+                .notes(request.getNotes())
+                .workoutRecordIds(new ArrayList<>())
+                .templateId(savedTemplate.getId())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        return workoutRepository.save(workout);
     }
 
-
-    public Flux<WorkoutWithTemplate> getUserWorkouts(String userId) {
-        return workoutRepository.findAllByUserId(userId)
-                .flatMap(workout -> {
-                    Mono<WorkoutTemplate> templateMono = workoutTemplateRepository.findById(workout.getTemplateId());
-
-                    return templateMono.map(template -> WorkoutWithTemplate.createFromWorkoutAndTemplate(workout, template)
-                    ).switchIfEmpty(Mono.error(new RuntimeException("Template not found for workout: " + workout.getId())));
-                });
+    public List<WorkoutWithTemplate> getUserWorkouts(String userId) {
+        List<Workout> workouts = workoutRepository.findAllByUserId(userId);
+        List<WorkoutWithTemplate> result = new ArrayList<>();
+        for (Workout workout : workouts) {
+            WorkoutTemplate template = workoutTemplateRepository.findById(workout.getTemplateId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Template not found for workout: " + workout.getId()));
+            result.add(WorkoutWithTemplate.createFromWorkoutAndTemplate(workout, template));
+        }
+        return result;
     }
 
-    public Mono<String> createWorkoutRecord(String userId, WorkoutRecordRequest request) {
+    public String createWorkoutRecord(String userId, WorkoutRecordRequest request) {
         log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
 
         List<ExerciseRecord> exerciseRecords = request.getExerciseRecords().stream()
@@ -78,47 +79,48 @@ public class WorkoutService {
                         .build())
                 .toList();
 
-        return exerciseRecordRepository.saveAllAndReturnIds(exerciseRecords)
-                .collectList()
-                .flatMap(exerciseRecordIds -> {
-                    WorkoutRecord workoutRecord = WorkoutRecord.builder()
-                            .userId(userId)
-                            .workoutId(request.getWorkoutId())
-                            .notes(request.getNotes())
-                            .exerciseRecordIds(exerciseRecordIds)
-                            .createdAt(LocalDateTime.now())
-                            .build();
+        List<String> exerciseRecordIds = exerciseRecordRepository.saveAllAndReturnIds(exerciseRecords);
 
-                    return workoutRecordRepository.save(workoutRecord);
-                })
-                .flatMap(record ->
-                        workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), record.getId())
-                                .then(Mono.just(record.getId()))
-                );
+        WorkoutRecord workoutRecord = WorkoutRecord.builder()
+                .userId(userId)
+                .workoutId(request.getWorkoutId())
+                .notes(request.getNotes())
+                .exerciseRecordIds(exerciseRecordIds)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        WorkoutRecord saved = workoutRecordRepository.save(workoutRecord);
+        workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), saved.getId());
+        return saved.getId();
     }
 
-    public Flux<UserWorkoutRecordsResponse> getWorkoutRecords(String userId) {
+    public List<UserWorkoutRecordsResponse> getWorkoutRecords(String userId) {
         return workoutRecordRepository.findAllByUserId(userId)
-                .flatMap(workoutRecord ->
-                    exerciseRecordRepository.findAllById(workoutRecord.getExerciseRecordIds())
-                            .flatMap(exRecord ->
-                                    exerciseRepository.findById(exRecord.getExerciseId())
-                                            .map(exercise -> UserWorkoutRecordsResponse.ExerciseRecordResponse.builder()
-                                                    .exerciseName(exercise.getName())
-                                                    .reps(exRecord.getReps())
-                                                    .weight(exRecord.getWeight())
-                                                    .durationSeconds(exRecord.getDurationSeconds())
-                                                    .notes(exRecord.getNotes())
-                                                    .build())
-                            )
+                .stream()
+                .map(workoutRecord -> {
+                    var exerciseRecords = exerciseRecordRepository.findAllById(workoutRecord.getExerciseRecordIds())
+                            .stream()
+                            .map(exRecord -> {
+                                var exercise = exerciseRepository.findById(exRecord.getExerciseId())
+                                        .orElse(null);
+                                String exerciseName = exercise != null ? exercise.getName() : "Unknown";
+                                return UserWorkoutRecordsResponse.ExerciseRecordResponse.builder()
+                                        .exerciseName(exerciseName)
+                                        .reps(exRecord.getReps())
+                                        .weight(exRecord.getWeight())
+                                        .durationSeconds(exRecord.getDurationSeconds())
+                                        .notes(exRecord.getNotes())
+                                        .build();
+                            })
+                            .collect(Collectors.toList());
 
-                            .collectList()
-                            .map(exerciseRecords -> UserWorkoutRecordsResponse.builder()
-                                    .workoutId(workoutRecord.getWorkoutId())
-                                    .notes(workoutRecord.getNotes())
-                                    .exerciseRecords(exerciseRecords)
-                                    .createdAt(workoutRecord.getCreatedAt())
-                                    .build())
-                );
+                    return UserWorkoutRecordsResponse.builder()
+                            .workoutId(workoutRecord.getWorkoutId())
+                            .notes(workoutRecord.getNotes())
+                            .exerciseRecords(exerciseRecords)
+                            .createdAt(workoutRecord.getCreatedAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

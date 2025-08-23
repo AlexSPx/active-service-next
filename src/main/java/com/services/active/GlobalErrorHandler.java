@@ -2,49 +2,39 @@ package com.services.active;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Slf4j
-@Component
-@Order(-2)
-public class GlobalErrorHandler implements ErrorWebExceptionHandler {
+@ControllerAdvice
+public class GlobalErrorHandler {
 
-    @Override
-    @NonNull
-    public Mono<Void> handle(@NonNull ServerWebExchange exchange, Throwable ex) {
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatus(@NonNull ResponseStatusException ex) {
         log.error("Handling exception: {}", ex.getMessage());
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        String msg = ex.getReason() != null ? ex.getReason() : ex.getMessage();
+        return ResponseEntity.status(status).body(Map.of("message", msg != null ? msg : "Unexpected error"));
+    }
 
-        HttpStatusCode status = HttpStatus.INTERNAL_SERVER_ERROR;
-        String message = "Unexpected error";
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
+        String msg = ex.getBindingResult().getAllErrors().stream()
+                .findFirst().map(e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid request")
+                .orElse("Invalid request");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", msg));
+    }
 
-        if (ex instanceof ResponseStatusException rse) {
-            status = rse.getStatusCode();
-            message = rse.getReason() != null ? rse.getReason() : rse.getMessage();
-        }
-
-        String response = String.format("""
-            {
-                "message": "%s"
-            }
-            """, message);
-
-        exchange.getResponse().setStatusCode(status);
-        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        DataBufferFactory bufferFactory = exchange.getResponse().bufferFactory();
-
-        return exchange.getResponse()
-                .writeWith(Mono.just(bufferFactory.wrap(response.getBytes(StandardCharsets.UTF_8))));
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(Exception ex) {
+        log.error("Unexpected error", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Unexpected error"));
     }
 }
-

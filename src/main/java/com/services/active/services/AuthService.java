@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
@@ -23,36 +22,31 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public Mono<TokenResponse> signup(@NonNull AuthRequest request) {
-        return userRepository.findByEmail(request.getEmail())
-                .flatMap(_ -> Mono.<TokenResponse>error(
-                        new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists")))
-                .switchIfEmpty(Mono.defer(() -> {
-                    var user = User.builder()
-                            .username(request.getUsername())
-                            .email(request.getEmail())
-                            .firstName(request.getFirstName())
-                            .lastName(request.getLastName())
-                            .passwordHash(passwordEncoder.encode(request.getPassword()))
-                            .provider(AuthProvider.LOCAL)
-                            .createdAt(LocalDate.now())
-                            .build();
-
-                    return userRepository.save(user)
-                            .map(saved -> new TokenResponse(jwtService.generateToken(saved)));
-                }));
+    public TokenResponse signup(@NonNull AuthRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+        var user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .provider(AuthProvider.LOCAL)
+                .createdAt(LocalDate.now())
+                .build();
+        User saved = userRepository.save(user);
+        return new TokenResponse(jwtService.generateToken(saved));
     }
 
-    public Mono<TokenResponse> login(@NonNull LoginRequest request) {
-        return userRepository.findByEmail(request.getEmail())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")))
-                .flatMap(user -> {
-                    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-                    }
+    public TokenResponse login(@NonNull LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
-                    String token = jwtService.generateToken(user);
-                    return Mono.just(new TokenResponse(token));
-                });
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+        String token = jwtService.generateToken(user);
+        return new TokenResponse(token);
     }
 }

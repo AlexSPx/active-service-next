@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class ExerciseController {
                 content = @Content(schema = @Schema(implementation = Exercise.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public Flux<Exercise> searchExercises(
+    public List<Exercise> searchExercises(
             @Parameter(description = "Exercise name (case-insensitive partial match)")
             @RequestParam(required = false) String name,
 

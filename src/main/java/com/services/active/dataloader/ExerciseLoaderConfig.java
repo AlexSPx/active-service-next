@@ -9,11 +9,11 @@ import com.services.active.repository.ExerciseRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
@@ -23,36 +23,32 @@ public class ExerciseLoaderConfig {
     private final ExerciseRepository exerciseRepository;
     private final ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final Logger log = LoggerFactory.getLogger(ExerciseLoaderConfig.class);
+
+    @Value("${active.exercises.autoload:true}")
+    private boolean autoLoad;
+
     @Bean
     ApplicationRunner loadExercisesRunner() {
         return args -> {
-            exerciseRepository.count()
-                    .flatMapMany(count -> {
-                        if (count == 0) {
-                            log.info("Exercises collection empty — loading remote JSON.");
-                            return WebClient.create()
-                                    .get()
-                                    .uri("https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json")
-                                    .retrieve()
-                                    .bodyToFlux(String.class)
-                                    .collectList()
-                                    .flatMapMany(jsonList -> {
-                                        String json = String.join("", jsonList);
-                                        List<Exercise> list;
-                                        try {
-                                            list = mapper.readValue(json, new TypeReference<List<Exercise>>() {});
-                                        } catch (Exception e) {
-                                            return Flux.error(e);
-                                        }
-                                        return exerciseRepository.saveAll(list);
-                                    });
-                        } else {
-                            log.info("Exercises already loaded (count: {})", count);
-                            return Flux.empty();
-                        }
-                    })
-                    .doOnNext(e -> log.info("Imported exercise: {}", e.getName()))
-                    .blockLast();
+            if (!autoLoad) {
+                log.info("Exercise autoload disabled.");
+                return;
+            }
+            long count = exerciseRepository.count();
+            if (count == 0) {
+                log.info("Exercises collection empty — loading remote JSON.");
+                String json = RestClient.create()
+                        .get()
+                        .uri("https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json")
+                        .retrieve()
+                        .body(String.class);
+
+                List<Exercise> list = mapper.readValue(json, new TypeReference<List<Exercise>>() {});
+                exerciseRepository.saveAll(list);
+                log.info("Imported {} exercises", list.size());
+            } else {
+                log.info("Exercises already loaded (count: {})", count);
+            }
         };
     }
 }

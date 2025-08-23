@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,9 +36,8 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
         @ApiResponse(responseCode = "409", description = "Email already exists")
     })
-    public Mono<ResponseEntity<TokenResponse>> signup(
-            @RequestBody @NonNull AuthRequest request) {
-        return authService.signup(request).map(ResponseEntity::ok);
+    public ResponseEntity<TokenResponse> signup(@RequestBody @NonNull AuthRequest request) {
+        return ResponseEntity.ok(authService.signup(request));
     }
 
     @PostMapping("/login")
@@ -52,8 +50,7 @@ public class AuthController {
                 content = @Content(schema = @Schema(implementation = TokenResponse.class))),
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    public Mono<ResponseEntity<TokenResponse>> login(
-            @RequestBody @NonNull LoginRequest request) {
-        return authService.login(request).map(ResponseEntity::ok);
+    public ResponseEntity<TokenResponse> login(@RequestBody @NonNull LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }

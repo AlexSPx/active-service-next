@@ -1,9 +1,10 @@
 package com.services.active.repository;
 
 import com.services.active.models.WorkoutRecord;
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import reactor.core.publisher.Flux;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface WorkoutRecordRepository extends ReactiveMongoRepository<WorkoutRecord, String> {
-    Flux<WorkoutRecord> findAllByUserId(String userId);
+import java.util.List;
+
+public interface WorkoutRecordRepository extends MongoRepository<WorkoutRecord, String> {
+    List<WorkoutRecord> findAllByUserId(String userId);
 }

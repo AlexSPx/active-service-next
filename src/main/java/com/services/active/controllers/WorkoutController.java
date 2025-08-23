@@ -17,12 +17,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/workouts")
@@ -45,12 +44,13 @@ public class WorkoutController {
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
         @ApiResponse(responseCode = "404", description = "Referenced template not found")
     })
-    public Mono<Workout> createWorkout(
-            @Parameter(hidden = true) @AuthenticationPrincipal Mono<Principal> principalMono,
-            @RequestBody  CreateWorkoutRequest request) {
-        return principalMono.flatMap(principal ->
-            workoutService.createWorkout(principal.getName(), request)
-        );
+    public Workout createWorkout(
+            Principal principal,
+            @RequestBody CreateWorkoutRequest request) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return workoutService.createWorkout(principal.getName(), request);
     }
 
     @GetMapping
@@ -63,11 +63,12 @@ public class WorkoutController {
                 content = @Content(schema = @Schema(implementation = Workout.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public Flux<WorkoutWithTemplate> getUserWorkouts(
-            @Parameter(hidden = true) @AuthenticationPrincipal Mono<Principal> principalMono) {
-        return principalMono.flatMapMany(principal ->
-            workoutService.getUserWorkouts(principal.getName())
-        );
+    public List<WorkoutWithTemplate> getUserWorkouts(
+            Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return workoutService.getUserWorkouts(principal.getName());
     }
 
     @GetMapping("/record")
@@ -80,20 +81,24 @@ public class WorkoutController {
                 content = @Content(schema = @Schema(implementation = UserWorkoutRecordsResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public Flux<UserWorkoutRecordsResponse> getUserWorkoutRecords(
-            @Parameter(hidden = true) @AuthenticationPrincipal Mono<Principal> principalMono) {
-        return principalMono.flatMapMany(principal ->
-                workoutService.getWorkoutRecords(principal.getName()));
+    public List<UserWorkoutRecordsResponse> getUserWorkoutRecords(
+            Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return workoutService.getWorkoutRecords(principal.getName());
     }
 
 
     @PostMapping("/record")
-    public Mono<ResponseEntity<String>> createRecord(
-            @Parameter(hidden = true) @AuthenticationPrincipal Mono<Principal> principalMono,
+    public ResponseEntity<String> createRecord(
+            Principal principal,
             @RequestBody WorkoutRecordRequest record
     ) {
-        return principalMono.flatMap(principal ->
-                workoutService.createWorkoutRecord(principal.getName(), record)
-                        .map(result -> ResponseEntity.status(HttpStatus.CREATED).body(result)));
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        String result = workoutService.createWorkoutRecord(principal.getName(), record);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 }

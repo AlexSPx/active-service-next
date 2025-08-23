@@ -7,11 +7,10 @@ import com.services.active.models.types.Level;
 import com.services.active.models.types.MuscleGroup;
 import com.services.active.repository.ExerciseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +19,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExerciseService {
     private final ExerciseRepository exerciseRepository;
-    private final ReactiveMongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
 
-    public Flux<Exercise> searchExercises(String name, Category category, Level level,
+    public List<Exercise> searchExercises(String name, Category category, Level level,
                                           List<MuscleGroup> primaryMuscles, List<MuscleGroup> secondaryMuscles,
                                           Equipment equipment) {
         List<Criteria> criteriaList = new ArrayList<>();

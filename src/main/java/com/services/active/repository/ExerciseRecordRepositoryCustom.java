@@ -1,9 +1,9 @@
 package com.services.active.repository;
 
 import com.services.active.models.ExerciseRecord;
-import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 public interface ExerciseRecordRepositoryCustom {
-    Flux<String> saveAllAndReturnIds(Iterable<ExerciseRecord> exerciseRecords);
+    List<String> saveAllAndReturnIds(Iterable<ExerciseRecord> exerciseRecords);
 }
-
