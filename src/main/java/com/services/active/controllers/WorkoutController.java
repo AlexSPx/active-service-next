@@ -32,7 +32,7 @@ import java.security.Principal;
 public class WorkoutController {
     private final WorkoutService workoutService;
 
-    @PostMapping
+    @PostMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "Create a new workout",

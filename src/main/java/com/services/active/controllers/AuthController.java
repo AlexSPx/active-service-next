@@ -39,7 +39,7 @@ public class AuthController {
     })
     public Mono<ResponseEntity<TokenResponse>> signup(
             @RequestBody @NonNull AuthRequest request) {
-        return authService.signup(request);
+        return authService.signup(request).map(ResponseEntity::ok);
     }
 
     @PostMapping("/login")
@@ -54,6 +54,6 @@ public class AuthController {
     })
     public Mono<ResponseEntity<TokenResponse>> login(
             @RequestBody @NonNull LoginRequest request) {
-        return authService.login(request);
+        return authService.login(request).map(ResponseEntity::ok);
     }
 }

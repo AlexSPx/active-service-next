@@ -12,7 +12,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
@@ -44,7 +43,7 @@ class AuthServiceTest {
         request.setEmail("test@example.com");
         when(userRepository.findByEmail("test@example.com")).thenReturn(Mono.just(new User()));
 
-        Mono<ResponseEntity<TokenResponse>> result = authService.signup(request);
+        Mono<TokenResponse> result = authService.signup(request);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, result::block);
         assertEquals("Email already exists", ex.getReason());
     }
@@ -71,10 +70,10 @@ class AuthServiceTest {
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(Mono.just(user));
         when(jwtService.generateToken(user)).thenReturn("token");
 
-        Mono<ResponseEntity<TokenResponse>> result = authService.signup(request);
-        ResponseEntity<TokenResponse> response = result.block();
+        Mono<TokenResponse> result = authService.signup(request);
+        TokenResponse response = result.block();
         assertNotNull(response);
-        assertEquals("token", response.getBody().getToken());
+        assertEquals("token", response.getToken());
     }
 
     @Test
@@ -83,7 +82,7 @@ class AuthServiceTest {
         request.setEmail("notfound@example.com");
         when(userRepository.findByEmail("notfound@example.com")).thenReturn(Mono.empty());
 
-        Mono<ResponseEntity<TokenResponse>> result = authService.login(request);
+        Mono<TokenResponse> result = authService.login(request);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, result::block);
         assertEquals("User not found", ex.getReason());
     }
@@ -97,7 +96,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Mono.just(user));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
-        Mono<ResponseEntity<TokenResponse>> result = authService.login(request);
+        Mono<TokenResponse> result = authService.login(request);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, result::block);
         assertEquals("Invalid credentials", ex.getReason());
     }
@@ -112,10 +111,9 @@ class AuthServiceTest {
         when(passwordEncoder.matches("correct", "hashed")).thenReturn(true);
         when(jwtService.generateToken(user)).thenReturn("token");
 
-        Mono<ResponseEntity<TokenResponse>> result = authService.login(request);
-        ResponseEntity<TokenResponse> response = result.block();
+        Mono<TokenResponse> result = authService.login(request);
+        TokenResponse response = result.block();
         assertNotNull(response);
-        assertEquals("token", response.getBody().getToken());
+        assertEquals("token", response.getToken());
     }
 }
-
