@@ -33,5 +33,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/active:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/active:${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/active-service-next:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/active-service-next:${{ github.sha }}
