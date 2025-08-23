@@ -9,7 +9,6 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
 @Testcontainers
 public abstract class IntegrationTestBase {
 
@@ -32,4 +31,3 @@ public abstract class IntegrationTestBase {
         registry.add("jwt.secret", () -> "really_long_secret_that_is_at_least_256_bits_long");
     }
 }
-
