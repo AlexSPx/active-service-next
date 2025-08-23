@@ -1,23 +1,26 @@
-name: CI Build
+name: Validator
 
-on: [push, pull_request]
+on:
+  workflow_call:
 
 jobs:
-  build:
+  validate:
+    name: Validate build and tests
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 24
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 24
-          cache: maven
+          distribution: 'temurin'
+          java-version: '24'
+          cache: 'maven'
 
-      - name: Verify Docker
-        run: docker info
+      - name: Validate with Maven (tests + package)
+        run: |
+          mvn -B -ntp -DskipITs=false verify
 
-      - name: Build & Test
-        run: mvn -B clean verify
