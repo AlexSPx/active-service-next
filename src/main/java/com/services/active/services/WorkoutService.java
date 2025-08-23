@@ -32,8 +32,12 @@ public class WorkoutService {
     private final WorkoutRecordRepository workoutRecordRepository;
 
     public Workout createWorkout(String userId, CreateWorkoutRequest request) {
+        if (request.getTemplate() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template is required");
+        }
+
         WorkoutTemplate workoutTemplate = WorkoutTemplate.builder()
-                .exercises(request.getTemplate() != null ? request.getTemplate().getExercises() : List.of())
+                .exercises(request.getTemplate().getExercises())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
