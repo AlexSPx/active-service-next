@@ -2,7 +2,6 @@ package com.services.active.controllers;
 
 import com.services.active.models.User;
 import com.services.active.services.UserService;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

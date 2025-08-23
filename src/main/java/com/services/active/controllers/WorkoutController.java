@@ -7,7 +7,6 @@ import com.services.active.dto.WorkoutWithTemplate;
 import com.services.active.models.Workout;
 import com.services.active.services.WorkoutService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
