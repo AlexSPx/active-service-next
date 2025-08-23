@@ -45,7 +45,7 @@ class WorkoutUpdateControllerTest extends IntegrationTestBase {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private Workout createWorkout(User user) throws Exception {
+    private Workout createWorkout(User user) {
         TemplateExercise exercise = TemplateExercise.builder()
                 .exerciseId("exercise-1")
                 .reps(List.of(10, 8, 6))
