@@ -3,6 +3,8 @@ package com.services.active.config.user;
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
+import com.services.active.models.User;
+import com.services.active.repository.UserRepository;
 import com.services.active.services.AuthService;
 import org.junit.jupiter.api.extension.*;
 import org.springframework.context.ApplicationContext;
@@ -18,69 +20,93 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(WithTestUserExtension.class);
 
     private AuthService authService;
+    private UserRepository userRepository;
     private String token;
+    private User user;
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         Object testInstance = context.getRequiredTestInstance();
         new TestContextManager(testInstance.getClass()).prepareTestInstance(testInstance);
 
-        // Try to get AuthService now; if it fails, resolve lazily later
-        resolveAuthService(context, testInstance);
+        // Try to get beans now; if it fails, resolve lazily later
+        resolveBeans(context, testInstance);
 
-        // Attempt eager token creation; if it fails due to order, resolve lazily in resolveParameter
-        this.token = createTokenIfAnnotated(context);
-        if (this.token != null) {
-            context.getStore(NAMESPACE).put("jwt", this.token);
-        }
+        // Attempt eager creation to cache both token and user
+        createContextIfAnnotated(context);
     }
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         Parameter parameter = parameterContext.getParameter();
-        return parameter.getType().equals(String.class) && parameter.isAnnotationPresent(TestUserToken.class);
+        if (!parameter.isAnnotationPresent(TestUserContext.class)) return false;
+        Class<?> type = parameter.getType();
+        return type.equals(String.class) || type.equals(User.class);
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext context) {
-        String cached = context.getStore(NAMESPACE).get("jwt", String.class);
-        if (cached != null) {
-            return cached;
+        // Ensure context is prepared
+        createContextIfAnnotated(context);
+
+        Class<?> type = parameterContext.getParameter().getType();
+        if (type.equals(String.class)) {
+            String cached = context.getStore(NAMESPACE).get("jwt", String.class);
+            if (cached != null) return cached;
+            if (this.token != null) {
+                context.getStore(NAMESPACE).put("jwt", this.token);
+                return this.token;
+            }
+        } else if (type.equals(User.class)) {
+            User cachedUser = context.getStore(NAMESPACE).get("user", User.class);
+            if (cachedUser != null) return cachedUser;
+            if (this.user != null) {
+                context.getStore(NAMESPACE).put("user", this.user);
+                return this.user;
+            }
         }
-        if (this.token != null) {
-            context.getStore(NAMESPACE).put("jwt", this.token);
-            return this.token;
-        }
-        // Lazily resolve AuthService and create token now
-        resolveAuthService(context, context.getRequiredTestInstance());
-        String created = createTokenIfAnnotated(context);
-        if (created == null) {
-            throw new IllegalStateException("@WithTestUser not present on method or class, cannot provide @TestUserToken");
-        }
-        context.getStore(NAMESPACE).put("jwt", created);
-        this.token = created;
-        return created;
+        throw new IllegalStateException("@WithTestUser not present on method or class, cannot provide @TestUserContext");
     }
 
-    private void resolveAuthService(ExtensionContext context, Object testInstance) {
-        if (this.authService != null) return;
+    private void resolveBeans(ExtensionContext context, Object testInstance) {
+        if (this.authService != null && this.userRepository != null) return;
         try {
             ApplicationContext applicationContext = SpringExtension.getApplicationContext(context);
-            this.authService = applicationContext.getBean(AuthService.class);
+            if (this.authService == null) this.authService = applicationContext.getBean(AuthService.class);
+            if (this.userRepository == null) this.userRepository = applicationContext.getBean(UserRepository.class);
         } catch (Exception ignored) {
             try {
-                Field field = testInstance.getClass().getDeclaredField("authService");
-                field.setAccessible(true);
-                this.authService = (AuthService) field.get(testInstance);
+                if (this.authService == null) {
+                    Field field = testInstance.getClass().getDeclaredField("authService");
+                    field.setAccessible(true);
+                    this.authService = (AuthService) field.get(testInstance);
+                }
+                if (this.userRepository == null) {
+                    Field field = testInstance.getClass().getDeclaredField("userRepository");
+                    field.setAccessible(true);
+                    this.userRepository = (UserRepository) field.get(testInstance);
+                }
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalStateException("AuthService bean not found for WithTestUserExtension", e);
+                throw new IllegalStateException("Required beans not found for WithTestUserExtension", e);
             }
         }
     }
 
-    private String createTokenIfAnnotated(ExtensionContext context) {
+    private void createContextIfAnnotated(ExtensionContext context) {
+        // if already cached, skip
+        String cachedToken = context.getStore(NAMESPACE).get("jwt", String.class);
+        User cachedUser = context.getStore(NAMESPACE).get("user", User.class);
+        if (cachedToken != null && cachedUser != null) {
+            this.token = cachedToken;
+            this.user = cachedUser;
+            return;
+        }
+
         WithTestUser annotation = findWithTestUserAnnotation(context);
-        if (annotation == null) return null;
+        if (annotation == null) return;
+
+        // Ensure beans present
+        resolveBeans(context, context.getRequiredTestInstance());
 
         String username = annotation.username();
         String email = annotation.email();
@@ -101,6 +127,12 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
             // ignore existing user
         }
 
+        // Fetch user entity
+        this.user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Failed to load test user by email"));
+        context.getStore(NAMESPACE).put("user", this.user);
+
+        // Login to get token
         LoginRequest login = new LoginRequest();
         login.setEmail(email);
         login.setPassword(password);
@@ -108,7 +140,8 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
         if (tokenResponse == null || tokenResponse.getToken() == null) {
             throw new IllegalStateException("Failed to obtain JWT token in WithTestUserExtension");
         }
-        return tokenResponse.getToken();
+        this.token = tokenResponse.getToken();
+        context.getStore(NAMESPACE).put("jwt", this.token);
     }
 
     private WithTestUser findWithTestUserAnnotation(ExtensionContext context) {

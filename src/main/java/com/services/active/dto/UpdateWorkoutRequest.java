@@ -1,8 +1,6 @@
 package com.services.active.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,16 +10,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Request payload for creating a new workout")
-public class CreateWorkoutRequest {
-    @NotBlank(message = "Title is required")
+@Schema(description = "Request payload for updating an existing workout")
+public class UpdateWorkoutRequest {
     @Schema(description = "Name of the workout", example = "Push Day Workout")
     private String title;
 
     @Schema(description = "Additional notes about the workout", example = "Focus on form and progressive overload")
     private String notes;
 
-    @NotNull(message = "Template is required")
-    @Schema(description = "New template to create alongside the workout")
+    @Schema(description = "Updated template to apply to the workout; if exercises are empty or null, the template is not changed")
     private CreateWorkoutTemplateRequest template;
 }

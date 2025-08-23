@@ -127,4 +127,37 @@ public class WorkoutService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public Workout updateWorkout(String userId, String workoutId, com.services.active.dto.UpdateWorkoutRequest request) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
+
+        if (!userId.equals(workout.getUserId())) {
+            throw new com.services.active.exceptions.UnauthorizedException("Not authorized to update this workout");
+        }
+
+        boolean workoutChanged = false;
+        if (request.getTitle() != null) {
+            workout.setTitle(request.getTitle());
+            workoutChanged = true;
+        }
+        if (request.getNotes() != null) {
+            workout.setNotes(request.getNotes());
+            workoutChanged = true;
+        }
+        if (workoutChanged) {
+            workout.setUpdatedAt(LocalDateTime.now());
+        }
+
+        if (request.getTemplate() != null && request.getTemplate().getExercises() != null
+                && !request.getTemplate().getExercises().isEmpty()) {
+            WorkoutTemplate template = workoutTemplateRepository.findById(workout.getTemplateId())
+                    .orElseThrow(() -> new NotFoundException("Template not found for workout: " + workoutId));
+            template.setExercises(request.getTemplate().getExercises());
+            template.setUpdatedAt(LocalDateTime.now());
+            workoutTemplateRepository.save(template);
+        }
+
+        return workoutChanged ? workoutRepository.save(workout) : workout;
+    }
 }

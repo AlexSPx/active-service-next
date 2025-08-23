@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 
 import java.security.Principal;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Workouts", description = "Workout management endpoints")
 @SecurityRequirement(name = "bearerAuth")
+@Validated
 public class WorkoutController {
     private final WorkoutService workoutService;
 
@@ -45,7 +48,7 @@ public class WorkoutController {
     })
     public Workout createWorkout(
             Principal principal,
-            @RequestBody CreateWorkoutRequest request) {
+            @RequestBody @Valid CreateWorkoutRequest request) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -99,5 +102,27 @@ public class WorkoutController {
         }
         String result = workoutService.createWorkoutRecord(principal.getName(), record);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @PutMapping(value = "/{workoutId}", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+        summary = "Update a workout",
+        description = "Partially updates a workout. Only provided fields are updated. For template, exercises are updated only if provided and non-empty."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Workout updated successfully",
+                content = @Content(schema = @Schema(implementation = Workout.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Workout or template not found")
+    })
+    public Workout updateWorkout(
+            Principal principal,
+            @PathVariable("workoutId") String workoutId,
+            @RequestBody com.services.active.dto.UpdateWorkoutRequest request) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return workoutService.updateWorkout(principal.getName(), workoutId, request);
     }
 }
