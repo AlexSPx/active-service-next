@@ -1,11 +1,10 @@
 package com.services.active.services;
 
+import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.User;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +13,6 @@ public class UserService {
 
     public User getUserById(String userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }

@@ -3,6 +3,8 @@ package com.services.active.services;
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
+import com.services.active.exceptions.ConflictException;
+import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.User;
 import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
@@ -13,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -43,8 +44,8 @@ class AuthServiceTest {
         request.setEmail("test@example.com");
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(new User()));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(request));
-        assertEquals("Email already exists", ex.getReason());
+        ConflictException ex = assertThrows(ConflictException.class, () -> authService.signup(request));
+        assertEquals("Email already exists", ex.getMessage());
     }
 
     @Test
@@ -80,8 +81,8 @@ class AuthServiceTest {
         request.setEmail("notfound@example.com");
         when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(request));
-        assertEquals("User not found", ex.getReason());
+        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> authService.login(request));
+        assertEquals("User not found", ex.getMessage());
     }
 
     @Test
@@ -93,8 +94,8 @@ class AuthServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(request));
-        assertEquals("Invalid credentials", ex.getReason());
+        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> authService.login(request));
+        assertEquals("Invalid credentials", ex.getMessage());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.services.active;
 
+import com.services.active.exceptions.ApiException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,12 @@ import java.util.Map;
 @Slf4j
 @ControllerAdvice
 public class GlobalErrorHandler {
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<Map<String, String>> handleApiException(@NonNull ApiException ex) {
+        log.error("Handling API exception: {}", ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Unexpected error"));
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> handleResponseStatus(@NonNull ResponseStatusException ex) {

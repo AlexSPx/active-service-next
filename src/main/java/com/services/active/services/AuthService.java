@@ -3,15 +3,15 @@ package com.services.active.services;
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
+import com.services.active.exceptions.ConflictException;
+import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.User;
 import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
@@ -24,7 +24,7 @@ public class AuthService {
 
     public TokenResponse signup(@NonNull AuthRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+            throw new ConflictException("Email already exists");
         }
         var user = User.builder()
                 .username(request.getUsername())
@@ -41,10 +41,10 @@ public class AuthService {
 
     public TokenResponse login(@NonNull LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
         String token = jwtService.generateToken(user);
         return new TokenResponse(token);

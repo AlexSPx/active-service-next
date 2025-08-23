@@ -1,12 +1,15 @@
 package com.services.active.config;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.io.IOException;
 
 @Testcontainers
 public abstract class IntegrationTestBase {
@@ -22,6 +25,11 @@ public abstract class IntegrationTestBase {
     @AfterAll
     static void stopContainer() {
         MONGO.stop();
+    }
+
+    @AfterEach
+    void cleanUpDatabase() throws IOException, InterruptedException {
+        MONGO.execInContainer("mongosh", "--eval", "db.getSiblingDB('test').dropDatabase()");
     }
 
     @DynamicPropertySource

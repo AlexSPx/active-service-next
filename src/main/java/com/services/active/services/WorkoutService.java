@@ -4,6 +4,8 @@ import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.UserWorkoutRecordsResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.dto.WorkoutWithTemplate;
+import com.services.active.exceptions.BadRequestException;
+import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.ExerciseRecord;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
@@ -11,9 +13,7 @@ import com.services.active.models.WorkoutTemplate;
 import com.services.active.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ public class WorkoutService {
 
     public Workout createWorkout(String userId, CreateWorkoutRequest request) {
         if (request.getTemplate() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template is required");
+            throw new BadRequestException("Template is required");
         }
 
         WorkoutTemplate workoutTemplate = WorkoutTemplate.builder()
@@ -62,7 +62,7 @@ public class WorkoutService {
         List<WorkoutWithTemplate> result = new ArrayList<>();
         for (Workout workout : workouts) {
             WorkoutTemplate template = workoutTemplateRepository.findById(workout.getTemplateId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Template not found for workout: " + workout.getId()));
+                    .orElseThrow(() -> new NotFoundException("Template not found for workout: " + workout.getId()));
             result.add(WorkoutWithTemplate.createFromWorkoutAndTemplate(workout, template));
         }
         return result;
