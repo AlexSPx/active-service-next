@@ -17,8 +17,8 @@ WORKDIR /app
 # Copy JAR from builder stage
 COPY --from=builder /app/target/active-*.jar app.jar
 
-# Copy application-local.properties to classpath root as application.properties
-COPY /src/main/resources/application-local.properties ./application.properties
+# Default to the docker profile at runtime; override via env if needed
+ENV SPRING_PROFILES_ACTIVE=docker
 
 # Expose Spring Boot's default port
 EXPOSE 8080

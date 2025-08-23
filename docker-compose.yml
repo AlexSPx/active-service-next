@@ -12,7 +12,7 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
       - SPRING_DATA_MONGODB_DATABASE=${MONGO_DATABASE}
       - JWT_SECRET=${JWT_SECRET}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - mongodb
     networks:
