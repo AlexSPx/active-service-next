@@ -16,6 +16,7 @@ public class UserWorkoutRecordsResponse {
     private String id;
     private String workoutId;
     private String notes;
+    private LocalDateTime startTime;
     private LocalDateTime createdAt;
     private List<ExerciseRecordResponse> exerciseRecords;
 

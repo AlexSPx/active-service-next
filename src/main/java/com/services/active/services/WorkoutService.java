@@ -123,6 +123,7 @@ public class WorkoutService {
                             .workoutId(workoutRecord.getWorkoutId())
                             .notes(workoutRecord.getNotes())
                             .exerciseRecords(exerciseRecords)
+                            .startTime(workoutRecord.getStartTime())
                             .createdAt(workoutRecord.getCreatedAt())
                             .build();
                 })
