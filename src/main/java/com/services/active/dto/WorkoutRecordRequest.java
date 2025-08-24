@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -12,7 +13,9 @@ import java.util.List;
 public class WorkoutRecordRequest {
     private String notes;
     private String workoutId;
+    private LocalDateTime startTime;
     private List<ExerciseRecord> exerciseRecords;
+
 
     @Data
     @AllArgsConstructor

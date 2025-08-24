@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithTestUser
@@ -104,8 +105,20 @@ class WorkoutControllerTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
+                .andDo(print())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.title").value("Push Day Workout"));
+                .andExpect(jsonPath("$.title").value("Push Day Workout"))
+                .andExpect(jsonPath("$.title").value("Push Day Workout"))
+                .andExpect(jsonPath("$.createdAt").isNotEmpty())
+                .andExpect(jsonPath("$.updatedAt").isNotEmpty())
+                .andExpect(jsonPath("$.workoutTemplate.createdAt").isNotEmpty())
+                .andExpect(jsonPath("$.workoutTemplate.updatedAt").isNotEmpty())
+                .andExpect(jsonPath("$.workoutTemplate.exercises").isArray())
+                .andExpect(jsonPath("$.workoutTemplate.exercises[0]").isNotEmpty())
+                .andExpect(jsonPath("$.workoutTemplate.exercises[0].exerciseId").value("exercise-1"))
+                .andExpect(jsonPath("$.workoutTemplate.exercises[0].reps").value(List.of(10, 8, 6)))
+                .andExpect(jsonPath("$.workoutTemplate.exercises[0].weight").value(List.of(50.0, 55.0, 60.0)))
+                .andExpect(jsonPath("$.workoutTemplate.exercises[0].notes").value("Warm up properly"));
     }
 }

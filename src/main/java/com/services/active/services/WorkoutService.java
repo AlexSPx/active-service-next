@@ -90,6 +90,7 @@ public class WorkoutService {
                 .workoutId(request.getWorkoutId())
                 .notes(request.getNotes())
                 .exerciseRecordIds(exerciseRecordIds)
+                .startTime(request.getStartTime())
                 .createdAt(LocalDateTime.now())
                 .build();
 

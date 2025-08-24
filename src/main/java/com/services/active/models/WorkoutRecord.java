@@ -29,5 +29,6 @@ public class WorkoutRecord {
 
     private List<String> exerciseRecordIds; // References to ExerciseRecord documents
 
+    private LocalDateTime startTime;
     private LocalDateTime createdAt;
 }
