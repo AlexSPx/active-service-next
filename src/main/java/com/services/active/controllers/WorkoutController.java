@@ -95,7 +95,7 @@ public class WorkoutController {
     @PostMapping("/record")
     public ResponseEntity<String> createRecord(
             Principal principal,
-            @RequestBody WorkoutRecordRequest record
+            @RequestBody @Valid WorkoutRecordRequest record
     ) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");

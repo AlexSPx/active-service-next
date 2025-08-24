@@ -120,6 +120,8 @@ public class WorkoutService {
                             .collect(Collectors.toList());
 
                     return UserWorkoutRecordsResponse.builder()
+                            .id(workoutRecord.getId())
+                            .startTime(workoutRecord.getStartTime())
                             .workoutId(workoutRecord.getWorkoutId())
                             .notes(workoutRecord.getNotes())
                             .exerciseRecords(exerciseRecords)

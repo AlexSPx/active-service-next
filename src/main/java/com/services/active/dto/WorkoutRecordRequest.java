@@ -6,12 +6,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkoutRecordRequest {
     private String notes;
+    @NotBlank(message = "Workout ID is required")
     private String workoutId;
     private LocalDateTime startTime;
     private List<ExerciseRecord> exerciseRecords;
