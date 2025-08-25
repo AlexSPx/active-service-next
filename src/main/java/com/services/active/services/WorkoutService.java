@@ -170,4 +170,18 @@ public class WorkoutService {
 
         return workoutChanged ? workoutRepository.save(workout) : workout;
     }
+
+    public void deleteWorkout(String userId, String workoutId) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
+        if (!userId.equals(workout.getUserId())) {
+            throw new com.services.active.exceptions.UnauthorizedException("Not authorized to delete this workout");
+        }
+        // Delete the workout and its template; keep records
+        String templateId = workout.getTemplateId();
+        workoutRepository.deleteById(workoutId);
+        if (templateId != null) {
+            workoutTemplateRepository.deleteById(templateId);
+        }
+    }
 }
