@@ -71,6 +71,10 @@ public class WorkoutService {
     public String createWorkoutRecord(String userId, WorkoutRecordRequest request) {
         log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
 
+        // Fetch the workout to get the title for snapshot
+        Workout workout = workoutRepository.findById(request.getWorkoutId())
+                .orElseThrow(() -> new NotFoundException("Workout not found: " + request.getWorkoutId()));
+
         List<ExerciseRecord> exerciseRecords = request.getExerciseRecords().stream()
                 .map(exercise -> ExerciseRecord.builder()
                         .exerciseId(exercise.getExerciseId())
@@ -88,6 +92,7 @@ public class WorkoutService {
         WorkoutRecord workoutRecord = WorkoutRecord.builder()
                 .userId(userId)
                 .workoutId(request.getWorkoutId())
+                .workoutTitle(workout.getTitle())
                 .notes(request.getNotes())
                 .exerciseRecordIds(exerciseRecordIds)
                 .startTime(request.getStartTime())

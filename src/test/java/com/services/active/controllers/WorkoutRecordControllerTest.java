@@ -124,6 +124,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
         assertThat(savedWorkoutRecord.getId()).isEqualTo(workoutRecordId);
         assertThat(savedWorkoutRecord.getUserId()).isEqualTo(user.getId());
         assertThat(savedWorkoutRecord.getWorkoutId()).isEqualTo(createdWorkout.getId());
+        assertThat(savedWorkoutRecord.getWorkoutTitle()).isEqualTo("Push Day Workout");
         assertThat(savedWorkoutRecord.getNotes()).isEqualTo("Great session, feeling stronger");
         assertThat(savedWorkoutRecord.getStartTime()).isNotNull();
         assertThat(savedWorkoutRecord.getCreatedAt()).isNotNull();

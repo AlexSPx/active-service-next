@@ -24,6 +24,7 @@ public class WorkoutRecord {
     private String userId;
 
     private String workoutId;
+    private String workoutTitle;
 
     private String notes;
 
