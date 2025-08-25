@@ -15,6 +15,7 @@ import java.util.List;
 public class UserWorkoutRecordsResponse {
     private String id;
     private String workoutId;
+    private String workoutTitle;
     private String notes;
     private LocalDateTime startTime;
     private LocalDateTime createdAt;

@@ -126,6 +126,7 @@ public class WorkoutService {
 
                     return UserWorkoutRecordsResponse.builder()
                             .id(workoutRecord.getId())
+                            .workoutTitle(workoutRecord.getWorkoutTitle())
                             .startTime(workoutRecord.getStartTime())
                             .workoutId(workoutRecord.getWorkoutId())
                             .notes(workoutRecord.getNotes())
