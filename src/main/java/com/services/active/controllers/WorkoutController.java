@@ -1,8 +1,6 @@
 package com.services.active.controllers;
 
 import com.services.active.dto.CreateWorkoutRequest;
-import com.services.active.dto.UserWorkoutRecordsResponse;
-import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.dto.WorkoutWithTemplate;
 import com.services.active.models.Workout;
 import com.services.active.services.WorkoutService;
@@ -65,43 +63,11 @@ public class WorkoutController {
                 content = @Content(schema = @Schema(implementation = Workout.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public List<WorkoutWithTemplate> getUserWorkouts(
-            Principal principal) {
+    public List<WorkoutWithTemplate> getUserWorkouts(Principal principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         return workoutService.getUserWorkouts(principal.getName());
-    }
-
-    @GetMapping("/record")
-    @Operation(
-        summary = "Get user's workout records",
-        description = "Retrieves all workout records for the authenticated user, ordered by creation time (most recent first)"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Workout records retrieved successfully",
-                content = @Content(schema = @Schema(implementation = UserWorkoutRecordsResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
-    })
-    public List<UserWorkoutRecordsResponse> getUserWorkoutRecords(
-            Principal principal) {
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
-        return workoutService.getWorkoutRecords(principal.getName());
-    }
-
-
-    @PostMapping("/record")
-    public ResponseEntity<String> createRecord(
-            Principal principal,
-            @RequestBody @Valid WorkoutRecordRequest record
-    ) {
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
-        String result = workoutService.createWorkoutRecord(principal.getName(), record);
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping(value = "/{workoutId}", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)

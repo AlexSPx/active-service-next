@@ -15,6 +15,7 @@ import com.services.active.models.WorkoutRecord;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.repository.WorkoutRepository;
 import com.services.active.repository.WorkoutTemplateRepository;
+import com.services.active.services.WorkoutRecordService;
 import com.services.active.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +41,7 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
 
     private final MockMvc mockMvc;
     private final WorkoutService workoutService;
+    private final WorkoutRecordService workoutRecordService;
     private final WorkoutRepository workoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
@@ -86,7 +88,7 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
         recordReq.setNotes("Record to survive delete");
         recordReq.setStartTime(startTime);
         recordReq.setExerciseRecords(List.of(ex));
-        String recordId = workoutService.createWorkoutRecord(user.getId(), recordReq);
+        String recordId = workoutRecordService.createWorkoutRecord(user.getId(), recordReq);
 
         // Sanity: record exists
         WorkoutRecord beforeDelete = workoutRecordRepository.findById(recordId).orElse(null);
