@@ -31,7 +31,7 @@ public class WorkoutRecordService {
     private final WorkoutRecordRepository workoutRecordRepository;
     private final PersonalBestService personalBestService;
 
-    public String createWorkoutRecord(String userId, WorkoutRecordRequest request) {
+    public UserWorkoutRecordsResponse createWorkoutRecord(String userId, WorkoutRecordRequest request) {
         log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
 
         // Fetch the workout to get the title for snapshot
@@ -91,10 +91,12 @@ public class WorkoutRecordService {
             }
         }
 
-        List<String> exerciseRecordIds = exerciseRecordRepository.saveAllAndReturnIds(exerciseRecords);
+        // Save records and get the saved objects (with ids)
+        List<ExerciseRecord> savedRecords = exerciseRecordRepository.saveAllAndReturn(exerciseRecords);
+        List<String> exerciseRecordIds = savedRecords.stream().map(ExerciseRecord::getId).toList();
 
         // Persist PB documents for records that achieved PRs
-        personalBestService.persistPrs(userId, exerciseRecords, exerciseRecordIds);
+        personalBestService.persistPrs(userId, savedRecords);
 
         WorkoutRecord workoutRecord = WorkoutRecord.builder()
                 .userId(userId)
@@ -108,7 +110,34 @@ public class WorkoutRecordService {
 
         WorkoutRecord saved = workoutRecordRepository.save(workoutRecord);
         workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), saved.getId());
-        return saved.getId();
+
+        // Build response from saved data (no need to refetch exercise records)
+        Set<String> savedExIds = savedRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+        Map<String, String> exerciseNameById = new HashMap<>();
+        exerciseRepository.findAllById(savedExIds).forEach(ex -> exerciseNameById.put(ex.getId(), ex.getName()));
+
+        var exerciseResponses = savedRecords.stream()
+                .map(exRecord -> UserWorkoutRecordsResponse.ExerciseRecordResponse.builder()
+                        .exerciseName(exerciseNameById.getOrDefault(exRecord.getExerciseId(), "Unknown"))
+                        .reps(exRecord.getReps())
+                        .weight(exRecord.getWeight())
+                        .durationSeconds(exRecord.getDurationSeconds())
+                        .notes(exRecord.getNotes())
+                        .achievedOneRmValue(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getValue() : null)
+                        .achievedOneRmSetIndex(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getSetIndex() : null)
+                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolume() != null ? exRecord.getAchievedTotalVolume().getValue() : null)
+                        .build())
+                .collect(Collectors.toList());
+
+        return UserWorkoutRecordsResponse.builder()
+                .id(saved.getId())
+                .workoutId(saved.getWorkoutId())
+                .workoutTitle(saved.getWorkoutTitle())
+                .notes(saved.getNotes())
+                .startTime(saved.getStartTime())
+                .createdAt(saved.getCreatedAt())
+                .exerciseRecords(exerciseResponses)
+                .build();
     }
 
     public List<UserWorkoutRecordsResponse> getWorkoutRecords(String userId) {

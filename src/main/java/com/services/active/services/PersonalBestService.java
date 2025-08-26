@@ -24,10 +24,8 @@ public class PersonalBestService {
         return map;
     }
 
-    public void persistPrs(String userId, List<ExerciseRecord> exerciseRecords, List<String> exerciseRecordIds) {
-        for (int i = 0; i < exerciseRecords.size(); i++) {
-            ExerciseRecord record = exerciseRecords.get(i);
-            String recordId = exerciseRecordIds.get(i);
+    public void persistPrs(String userId, List<ExerciseRecord> savedExerciseRecords) {
+        for (ExerciseRecord record : savedExerciseRecords) {
             boolean prOneRm = record.getAchievedOneRm() != null;
             boolean prVolume = record.getAchievedTotalVolume() != null;
             if (!prOneRm && !prVolume) continue;
@@ -43,16 +41,15 @@ public class PersonalBestService {
 
             if (prOneRm) {
                 pb.setOneRm(record.getAchievedOneRm().getValue());
-                pb.setOneRmRecordId(recordId);
+                pb.setOneRmRecordId(record.getId());
                 pb.setOneRmRecordSetIndex(record.getAchievedOneRm().getSetIndex());
             }
             if (prVolume) {
                 pb.setTotalVolume(record.getAchievedTotalVolume().getValue());
-                pb.setTotalVolumeRecordId(recordId);
+                pb.setTotalVolumeRecordId(record.getId());
             }
             pb.setUpdatedAt(LocalDateTime.now());
             personalBestRepository.save(pb);
         }
     }
 }
-

@@ -18,12 +18,12 @@ public class ExerciseRecordRepositoryCustomImpl implements ExerciseRecordReposit
     }
 
     @Override
-    public List<String> saveAllAndReturnIds(Iterable<ExerciseRecord> exerciseRecords) {
-        List<String> ids = new ArrayList<>();
+    public List<ExerciseRecord> saveAllAndReturn(Iterable<ExerciseRecord> exerciseRecords) {
+        List<ExerciseRecord> savedList = new ArrayList<>();
         for (ExerciseRecord record : exerciseRecords) {
             ExerciseRecord saved = mongoTemplate.save(record);
-            ids.add(saved.getId());
+            savedList.add(saved);
         }
-        return ids;
+        return savedList;
     }
 }

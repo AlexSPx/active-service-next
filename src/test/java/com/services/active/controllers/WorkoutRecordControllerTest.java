@@ -1,5 +1,6 @@
 package com.services.active.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
@@ -115,8 +116,9 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                 .getResponse()
                 .getContentAsString();
 
-        // Extract the workout record ID from response
-        String workoutRecordId = responseContent.replace("\"", "");
+        // Extract the workout record ID from response JSON
+        JsonNode node = objectMapper.readTree(responseContent);
+        String workoutRecordId = node.get("id").asText();
 
         // Validate the workout record was saved correctly in the database
         WorkoutRecord savedWorkoutRecord = workoutRecordRepository.findById(workoutRecordId).orElse(null);

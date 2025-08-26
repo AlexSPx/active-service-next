@@ -5,6 +5,7 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
+import com.services.active.dto.UserWorkoutRecordsResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.models.TemplateExercise;
 import com.services.active.models.User;
@@ -85,7 +86,8 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
         recordReq.setNotes("Record to survive delete");
         recordReq.setStartTime(startTime);
         recordReq.setExerciseRecords(List.of(ex));
-        String recordId = workoutRecordService.createWorkoutRecord(user.getId(), recordReq);
+        UserWorkoutRecordsResponse created = workoutRecordService.createWorkoutRecord(user.getId(), recordReq);
+        String recordId = created.getId();
 
         // Sanity: record exists
         WorkoutRecord beforeDelete = workoutRecordRepository.findById(recordId).orElse(null);

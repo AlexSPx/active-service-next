@@ -53,18 +53,19 @@ public class WorkoutRecordController {
         description = "Creates a new workout record with exercise records for the authenticated user"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Workout record created successfully"),
+        @ApiResponse(responseCode = "201", description = "Workout record created successfully",
+                content = @Content(schema = @Schema(implementation = UserWorkoutRecordsResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
         @ApiResponse(responseCode = "404", description = "Referenced workout not found")
     })
-    public ResponseEntity<String> createWorkoutRecord(
+    public ResponseEntity<UserWorkoutRecordsResponse> createWorkoutRecord(
             Principal principal,
             @RequestBody @Valid WorkoutRecordRequest request) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
-        String workoutRecordId = workoutRecordService.createWorkoutRecord(principal.getName(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(workoutRecordId);
+        UserWorkoutRecordsResponse response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
