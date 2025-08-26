@@ -37,4 +37,27 @@ public class ExerciseRecord {
 
     // Common fields
     private String notes;
+
+    // Achievement sub-docs (only present when this record set a new PR)
+    // One-Rep Max (Epley estimate) per-set achievement
+    private OneRmAchievement achievedOneRm;
+    // Total volume across this exercise record (sum of reps*weight)
+    private TotalVolumeAchievement achievedTotalVolume;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OneRmAchievement {
+        private Double value; // estimated 1RM in kg
+        private Integer setIndex; // zero-based index of the set that achieved it
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TotalVolumeAchievement {
+        private Double value; // total volume in kg across all sets
+    }
 }

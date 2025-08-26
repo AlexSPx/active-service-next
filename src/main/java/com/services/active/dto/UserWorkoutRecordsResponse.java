@@ -34,5 +34,10 @@ public class UserWorkoutRecordsResponse {
         private List<Integer> durationSeconds;
 
         private String notes;
+
+        // Achievement fields (only populated if this record set a new PR)
+        private Double achievedOneRmValue; // estimated 1RM in kg
+        private Integer achievedOneRmSetIndex; // zero-based set index that achieved 1RM
+        private Double achievedTotalVolumeValue; // total volume in kg across all sets
     }
 }

@@ -3,6 +3,8 @@ package com.services.active.services;
 import com.services.active.dto.UserWorkoutRecordsResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.domain.AchievementCalculator;
+import com.services.active.models.ExercisePersonalBest;
 import com.services.active.models.ExerciseRecord;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
@@ -15,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,6 +29,7 @@ public class WorkoutRecordService {
     private final ExerciseRepository exerciseRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
+    private final PersonalBestService personalBestService;
 
     public String createWorkoutRecord(String userId, WorkoutRecordRequest request) {
         log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
@@ -47,7 +50,51 @@ public class WorkoutRecordService {
                         .build())
                 .toList();
 
+        // Load current PBs for all exerciseIds involved, once
+        Set<String> exerciseIds = exerciseRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+        Map<String, ExercisePersonalBest> currentPbByExercise = personalBestService.getCurrentPbs(userId, exerciseIds);
+
+        // Compute achievements per record using progressive PBs (within this batch)
+        for (ExerciseRecord record : exerciseRecords) {
+            String exId = record.getExerciseId();
+            ExercisePersonalBest currentPb = currentPbByExercise.get(exId);
+
+            List<Integer> reps = record.getReps();
+            List<Double> weight = record.getWeight();
+            boolean hasStrength = reps != null && weight != null && !reps.isEmpty() && !weight.isEmpty();
+            if (!hasStrength) continue;
+
+            var bestOneRmResult = AchievementCalculator.computeBestEstimatedOneRm(reps, weight);
+            Double bestOneRm = bestOneRmResult.bestOneRm();
+            Integer bestSetIdx = bestOneRmResult.bestSetIndex();
+
+            Double previousOneRm = (currentPb != null) ? currentPb.getOneRm() : null;
+            if (bestOneRm != null && (previousOneRm == null || bestOneRm > previousOneRm)) {
+                record.setAchievedOneRm(ExerciseRecord.OneRmAchievement.builder()
+                        .value(bestOneRm)
+                        .setIndex(bestSetIdx)
+                        .build());
+                if (currentPb == null) currentPb = ExercisePersonalBest.builder().userId(userId).exerciseId(exId).build();
+                currentPb.setOneRm(bestOneRm);
+                currentPbByExercise.put(exId, currentPb);
+            }
+
+            Double totalVolume = AchievementCalculator.computeTotalVolume(reps, weight);
+            Double previousVolume = (currentPb != null) ? currentPb.getTotalVolume() : null;
+            if (totalVolume != null && (previousVolume == null || totalVolume > previousVolume)) {
+                record.setAchievedTotalVolume(ExerciseRecord.TotalVolumeAchievement.builder()
+                        .value(totalVolume)
+                        .build());
+                if (currentPb == null) currentPb = ExercisePersonalBest.builder().userId(userId).exerciseId(exId).build();
+                currentPb.setTotalVolume(totalVolume);
+                currentPbByExercise.put(exId, currentPb);
+            }
+        }
+
         List<String> exerciseRecordIds = exerciseRecordRepository.saveAllAndReturnIds(exerciseRecords);
+
+        // Persist PB documents for records that achieved PRs
+        personalBestService.persistPrs(userId, exerciseRecords, exerciseRecordIds);
 
         WorkoutRecord workoutRecord = WorkoutRecord.builder()
                 .userId(userId)
@@ -68,18 +115,25 @@ public class WorkoutRecordService {
         return workoutRecordRepository.findAllByUserId(userId)
                 .stream()
                 .map(workoutRecord -> {
-                    var exerciseRecords = exerciseRecordRepository.findAllById(workoutRecord.getExerciseRecordIds())
-                            .stream()
+                    var exRecords = exerciseRecordRepository.findAllById(workoutRecord.getExerciseRecordIds());
+
+                    // Batch-load all exercises used in this workout record to avoid N+1
+                    Set<String> exIds = exRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+                    Map<String, String> exerciseNameById = new HashMap<>();
+                    exerciseRepository.findAllById(exIds).forEach(ex -> exerciseNameById.put(ex.getId(), ex.getName()));
+
+                    var exerciseResponses = exRecords.stream()
                             .map(exRecord -> {
-                                var exercise = exerciseRepository.findById(exRecord.getExerciseId())
-                                        .orElse(null);
-                                String exerciseName = exercise != null ? exercise.getName() : "Unknown";
+                                String exerciseName = exerciseNameById.getOrDefault(exRecord.getExerciseId(), "Unknown");
                                 return UserWorkoutRecordsResponse.ExerciseRecordResponse.builder()
                                         .exerciseName(exerciseName)
                                         .reps(exRecord.getReps())
                                         .weight(exRecord.getWeight())
                                         .durationSeconds(exRecord.getDurationSeconds())
                                         .notes(exRecord.getNotes())
+                                        .achievedOneRmValue(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getValue() : null)
+                                        .achievedOneRmSetIndex(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getSetIndex() : null)
+                                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolume() != null ? exRecord.getAchievedTotalVolume().getValue() : null)
                                         .build();
                             })
                             .collect(Collectors.toList());
@@ -90,12 +144,11 @@ public class WorkoutRecordService {
                             .startTime(workoutRecord.getStartTime())
                             .workoutId(workoutRecord.getWorkoutId())
                             .notes(workoutRecord.getNotes())
-                            .exerciseRecords(exerciseRecords)
+                            .exerciseRecords(exerciseResponses)
                             .startTime(workoutRecord.getStartTime())
                             .createdAt(workoutRecord.getCreatedAt())
                             .build();
                 })
                 .collect(Collectors.toList());
     }
-
 }
