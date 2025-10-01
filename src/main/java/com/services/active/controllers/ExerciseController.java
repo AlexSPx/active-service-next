@@ -1,5 +1,6 @@
 package com.services.active.controllers;
 
+import com.services.active.dto.ExerciseLogResponse;
 import com.services.active.models.Exercise;
 import com.services.active.models.types.Category;
 import com.services.active.models.types.Equipment;
@@ -15,8 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -61,5 +65,26 @@ public class ExerciseController {
             @RequestParam(required = false) Equipment equipment) {
 
         return exerciseService.searchExercises(name, category, level, primaryMuscles, secondaryMuscles, equipment);
+    }
+
+    @GetMapping("/{exerciseId}/logs")
+    @Operation(
+        summary = "Get exercise logs for authenticated user",
+        description = "Retrieves all exercise logs (performance records) for the authenticated user for a specific exercise, ordered by creation time (oldest first)"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Exercise logs retrieved successfully",
+                content = @Content(schema = @Schema(implementation = ExerciseLogResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Exercise not found")
+    })
+    public List<ExerciseLogResponse> getExerciseLogs(
+            @Parameter(description = "Exercise ID to get logs for", required = true)
+            @PathVariable String exerciseId,
+            Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return exerciseService.getExerciseLogs(principal.getName(), exerciseId);
     }
 }
