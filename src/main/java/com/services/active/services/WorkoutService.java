@@ -1,11 +1,15 @@
 package com.services.active.services;
 
 import com.services.active.dto.CreateWorkoutRequest;
-import com.services.active.dto.WorkoutWithTemplate;
+import com.services.active.dto.WorkoutTemplateResponse;
+import com.services.active.dto.TemplateExerciseResponse;
+import com.services.active.dto.UserWorkoutResponse;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutTemplate;
+import com.services.active.models.TemplateExercise;
+import com.services.active.models.Exercise;
 import com.services.active.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +18,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -21,6 +28,7 @@ import java.util.List;
 public class WorkoutService {
     private final WorkoutRepository workoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final ExerciseRepository exerciseRepository;
 
     public Workout createWorkout(String userId, CreateWorkoutRequest request) {
         if (request.getTemplate() == null) {
@@ -48,13 +56,15 @@ public class WorkoutService {
         return workoutRepository.save(workout);
     }
 
-    public List<WorkoutWithTemplate> getUserWorkouts(String userId) {
+    public List<UserWorkoutResponse> getUserWorkouts(String userId) {
         List<Workout> workouts = workoutRepository.findAllByUserId(userId);
-        List<WorkoutWithTemplate> result = new ArrayList<>();
+        List<UserWorkoutResponse> result = new ArrayList<>();
         for (Workout workout : workouts) {
             WorkoutTemplate template = workoutTemplateRepository.findById(workout.getTemplateId())
                     .orElseThrow(() -> new NotFoundException("Template not found for workout: " + workout.getId()));
-            result.add(WorkoutWithTemplate.createFromWorkoutAndTemplate(workout, template));
+
+            WorkoutTemplateResponse templateResponse = buildTemplateResponse(template);
+            result.add(UserWorkoutResponse.from(workout, templateResponse));
         }
         return result;
     }
@@ -98,11 +108,42 @@ public class WorkoutService {
         if (!userId.equals(workout.getUserId())) {
             throw new com.services.active.exceptions.UnauthorizedException("Not authorized to delete this workout");
         }
-        // Delete the workout and its template; keep records
         String templateId = workout.getTemplateId();
         workoutRepository.deleteById(workoutId);
         if (templateId != null) {
             workoutTemplateRepository.deleteById(templateId);
         }
+    }
+
+    // TODO: Optimize to avoid N+1 queries
+    private WorkoutTemplateResponse buildTemplateResponse(WorkoutTemplate template) {
+        if (template == null) return null;
+        List<TemplateExercise> templateExercises = template.getExercises();
+        List<TemplateExerciseResponse> exerciseResponses = new ArrayList<>();
+        if (templateExercises != null && !templateExercises.isEmpty()) {
+            Set<String> ids = templateExercises.stream()
+                    .map(TemplateExercise::getExerciseId)
+                    .filter(id -> id != null && !id.isBlank())
+                    .collect(Collectors.toSet());
+            Map<String, Exercise> byId = exerciseRepository.findAllById(ids).stream()
+                    .collect(Collectors.toMap(Exercise::getId, e -> e));
+            for (TemplateExercise te : templateExercises) {
+                Exercise ex = te.getExerciseId() == null ? null : byId.get(te.getExerciseId());
+                exerciseResponses.add(TemplateExerciseResponse.builder()
+                        .exerciseId(te.getExerciseId())
+                        .reps(te.getReps())
+                        .weight(te.getWeight())
+                        .durationSeconds(te.getDurationSeconds())
+                        .notes(te.getNotes())
+                        .category(ex != null ? ex.getCategory() : null)
+                        .build());
+            }
+        }
+        return WorkoutTemplateResponse.builder()
+                .id(template.getId())
+                .exercises(exerciseResponses)
+                .createdAt(template.getCreatedAt())
+                .updatedAt(template.getUpdatedAt())
+                .build();
     }
 }

@@ -46,22 +46,24 @@ public class ExerciseController {
             @Parameter(description = "Exercise name (case-insensitive partial match)")
             @RequestParam(required = false) String name,
 
-            @Parameter(description = "Exercise category", schema = @Schema(allowableValues = {"STRENGTH", "CARDIO", "FLEXIBILITY", "SPORTS"}))
+            @Parameter(description = "Exercise category", schema = @Schema(allowableValues = {"POWERLIFTING", "STRENGTH", "STRETCHING", "CARDIO", "OLYMPIC_WEIGHTLIFTING", "STRONGMAN", "PLYOMETRICS"}))
             @RequestParam(required = false) Category category,
 
-            @Parameter(description = "Difficulty level", schema = @Schema(allowableValues = {"BEGINNER", "INTERMEDIATE", "ADVANCED"}))
+            @Parameter(description = "Difficulty level", schema = @Schema(allowableValues = {"BEGINNER", "INTERMEDIATE", "EXPERT"}))
             @RequestParam(required = false) Level level,
 
             @Parameter(description = "Primary muscle groups (comma-separated) - exercises must target ALL specified muscles",
-                    example = "CHEST,SHOULDERS,TRICEPS")
+                    example = "CHEST,SHOULDERS,TRICEPS",
+                    schema = @Schema(allowableValues = {"ABDOMINALS","ABDUCTORS","ADDUCTORS","BICEPS","CALVES","CHEST","FOREARMS","GLUTES","HAMSTRINGS","LATS","LOWER_BACK","MIDDLE_BACK","NECK","QUADRICEPS","SHOULDERS","TRAPS","TRICEPS"}))
             @RequestParam(required = false) List<MuscleGroup> primaryMuscles,
 
             @Parameter(description = "Secondary muscle groups (comma-separated) - exercises must target ALL specified muscles",
-                    example = "BICEPS,FOREARMS")
+                    example = "BICEPS,FOREARMS",
+                    schema = @Schema(allowableValues = {"ABDOMINALS","ABDUCTORS","ADDUCTORS","BICEPS","CALVES","CHEST","FOREARMS","GLUTES","HAMSTRINGS","LATS","LOWER_BACK","MIDDLE_BACK","NECK","QUADRICEPS","SHOULDERS","TRAPS","TRICEPS"}))
             @RequestParam(required = false) List<MuscleGroup> secondaryMuscles,
 
             @Parameter(description = "Required equipment",
-                    schema = @Schema(allowableValues = {"BARBELL", "DUMBBELL", "BODYWEIGHT", "MACHINE", "CABLE", "KETTLEBELL"}))
+                    schema = @Schema(allowableValues = {"MEDICINE_BALL", "DUMBBELL", "BODY_ONLY", "BANDS", "KETTLEBELLS", "FOAM_ROLL", "CABLE", "MACHINE", "BARBELL", "EXERCISE_BALL", "E_Z_CURL_BAR", "OTHER"}))
             @RequestParam(required = false) Equipment equipment) {
 
         return exerciseService.searchExercises(name, category, level, primaryMuscles, secondaryMuscles, equipment);

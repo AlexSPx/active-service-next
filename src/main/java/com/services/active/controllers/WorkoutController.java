@@ -1,7 +1,7 @@
 package com.services.active.controllers;
 
 import com.services.active.dto.CreateWorkoutRequest;
-import com.services.active.dto.WorkoutWithTemplate;
+import com.services.active.dto.UserWorkoutResponse;
 import com.services.active.models.Workout;
 import com.services.active.services.WorkoutService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,10 +60,10 @@ public class WorkoutController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Workouts retrieved successfully",
-                content = @Content(schema = @Schema(implementation = Workout.class))),
+                content = @Content(schema = @Schema(implementation = UserWorkoutResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public List<WorkoutWithTemplate> getUserWorkouts(Principal principal) {
+    public List<UserWorkoutResponse> getUserWorkouts(Principal principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
