@@ -31,4 +31,6 @@ public class User {
     private AuthProvider provider;
 
     private LocalDate createdAt;
+
+    private String activeRoutineId;
 }
