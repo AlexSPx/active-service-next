@@ -1,6 +1,7 @@
 package com.services.active.controllers;
 
 import com.services.active.dto.UserWorkoutRecordsResponse;
+import com.services.active.dto.WorkoutRecordCreateResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.services.WorkoutRecordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,22 +51,22 @@ public class WorkoutRecordController {
     @PostMapping
     @Operation(
         summary = "Create a workout record",
-        description = "Creates a new workout record with exercise records for the authenticated user"
+        description = "Creates a new workout record with exercise records for the authenticated user. Also returns a streakUpdate with status and next requirement info."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Workout record created successfully",
-                content = @Content(schema = @Schema(implementation = UserWorkoutRecordsResponse.class))),
+                content = @Content(schema = @Schema(implementation = WorkoutRecordCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
         @ApiResponse(responseCode = "404", description = "Referenced workout not found")
     })
-    public ResponseEntity<UserWorkoutRecordsResponse> createWorkoutRecord(
+    public ResponseEntity<WorkoutRecordCreateResponse> createWorkoutRecord(
             Principal principal,
             @RequestBody @Valid WorkoutRecordRequest request) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
-        UserWorkoutRecordsResponse response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
+        var response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

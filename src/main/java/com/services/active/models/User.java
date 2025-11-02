@@ -33,4 +33,7 @@ public class User {
     private LocalDate createdAt;
 
     private String activeRoutineId;
+
+    @Builder.Default
+    private StreakInfo streak = new StreakInfo();
 }

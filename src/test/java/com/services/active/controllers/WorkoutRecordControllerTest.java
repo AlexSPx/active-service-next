@@ -51,7 +51,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("POST /api/workouts/record -> 201 CREATED successfully creates workout record with exercise records")
+    @DisplayName("POST /api/workouts/record -> 201 CREATED successfully creates workout record with exercise records and streakUpdate")
     void createWorkoutRecord_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
         // First, create a workout using service calls
         TemplateExercise exercise1 = TemplateExercise.builder()
@@ -116,9 +116,12 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                 .getResponse()
                 .getContentAsString();
 
-        // Extract the workout record ID from response JSON
+        // Extract the workout record ID from nested response JSON
         JsonNode node = objectMapper.readTree(responseContent);
-        String workoutRecordId = node.get("id").asText();
+        assertThat(node.get("workoutRecord")).isNotNull();
+        assertThat(node.get("streakUpdate")).isNotNull();
+        String workoutRecordId = node.at("/workoutRecord/id").asText();
+        assertThat(workoutRecordId).isNotBlank();
 
         // Validate the workout record was saved correctly in the database
         WorkoutRecord savedWorkoutRecord = workoutRecordRepository.findById(workoutRecordId).orElse(null);

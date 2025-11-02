@@ -92,9 +92,9 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        // parse id from JSON response
+        // parse id from nested JSON response
         var node = objectMapper.readTree(responseContent);
-        return node.get("id").asText();
+        return node.at("/workoutRecord/id").asText();
     }
 
     private ExerciseRecord fetchExerciseRecordByWorkoutRecordId(String workoutRecordId, String exerciseId) {

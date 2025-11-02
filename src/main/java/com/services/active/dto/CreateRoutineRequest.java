@@ -3,7 +3,7 @@ package com.services.active.dto;
 import com.services.active.models.RoutinePattern;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +24,7 @@ public class CreateRoutineRequest {
     @Schema(description = "Routine description", example = "6-day split with rest on Sunday")
     private String description;
 
-    @NotNull(message = "Pattern is required")
+    @NotEmpty(message = "Pattern is required")
     @Schema(description = "Pattern for the routine")
     private List<RoutinePattern> pattern;
 

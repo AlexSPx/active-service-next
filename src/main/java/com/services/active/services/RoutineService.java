@@ -5,6 +5,7 @@ import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.exceptions.UnauthorizedException;
+import com.services.active.exceptions.BadRequestException;
 import com.services.active.models.Routine;
 import com.services.active.models.User;
 import com.services.active.repository.RoutineRepository;
@@ -86,6 +87,9 @@ public class RoutineService {
             changed = true;
         }
         if (request.getPattern() != null) {
+            if (request.getPattern().isEmpty()) {
+                throw new BadRequestException("Pattern is required");
+            }
             existing.setPattern(request.getPattern());
             changed = true;
         }

@@ -30,8 +30,9 @@ public class WorkoutRecordService {
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
     private final PersonalBestService personalBestService;
+    private final StreakService streakService;
 
-    public UserWorkoutRecordsResponse createWorkoutRecord(String userId, WorkoutRecordRequest request) {
+    public com.services.active.dto.WorkoutRecordCreateResponse createWorkoutRecord(String userId, WorkoutRecordRequest request) {
         log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
 
         // Fetch the workout to get the title for snapshot
@@ -111,6 +112,9 @@ public class WorkoutRecordService {
         WorkoutRecord saved = workoutRecordRepository.save(workoutRecord);
         workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), saved.getId());
 
+        // Update streaks for the user based on the completed workout and capture the update status
+        var streakUpdate = streakService.onWorkoutCompleted(userId, request.getWorkoutId());
+
         // Build response from saved data (no need to refetch exercise records)
         Set<String> savedExIds = savedRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
         Map<String, String> exerciseNameById = new HashMap<>();
@@ -129,7 +133,7 @@ public class WorkoutRecordService {
                         .build())
                 .collect(Collectors.toList());
 
-        return UserWorkoutRecordsResponse.builder()
+        var recordResponse = UserWorkoutRecordsResponse.builder()
                 .id(saved.getId())
                 .workoutId(saved.getWorkoutId())
                 .workoutTitle(saved.getWorkoutTitle())
@@ -137,6 +141,11 @@ public class WorkoutRecordService {
                 .startTime(saved.getStartTime())
                 .createdAt(saved.getCreatedAt())
                 .exerciseRecords(exerciseResponses)
+                .build();
+
+        return com.services.active.dto.WorkoutRecordCreateResponse.builder()
+                .workoutRecord(recordResponse)
+                .streakUpdate(streakUpdate)
                 .build();
     }
 
