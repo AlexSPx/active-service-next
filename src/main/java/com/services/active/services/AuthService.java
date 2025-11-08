@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .provider(AuthProvider.LOCAL)
                 .createdAt(LocalDate.now())
+                .timezone(Optional.ofNullable(request.getTimezone()).filter(t -> !t.isBlank()).orElse("UTC"))
                 .build();
         User saved = userRepository.save(user);
         return new TokenResponse(jwtService.generateToken(saved));

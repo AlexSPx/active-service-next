@@ -32,6 +32,8 @@ public class User {
 
     private LocalDate createdAt;
 
+    private String timezone;
+
     private String activeRoutineId;
 
     @Builder.Default

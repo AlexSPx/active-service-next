@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.dto.AuthRequest;
 import com.services.active.services.AuthService;
+import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -26,6 +29,7 @@ class AuthControllerTest extends IntegrationTestBase {
     private final AuthService authService;
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserRepository userRepository;
 
     @Test
     @DisplayName("POST /api/auth/signup -> 200 OK returns token on success")
@@ -132,5 +136,73 @@ class AuthControllerTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badLogin)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/signup -> sets provided timezone")
+    void signup_withTimezone_setsTimezone() throws Exception {
+        Map<String, Object> body = Map.of(
+                "username", "tzjohnny",
+                "email", "tzjohnny@example.com",
+                "firstName", "Tz",
+                "lastName", "Johnny",
+                "password", "StrongP@ssw0rd",
+                "timezone", "America/New_York"
+        );
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+
+        var saved = userRepository.findByEmail("tzjohnny@example.com").orElseThrow();
+        assertEquals("America/New_York", saved.getTimezone());
+        assertEquals(LocalDate.now(), saved.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/signup -> defaults timezone to UTC when missing")
+    void signup_withoutTimezone_defaultsUTC() throws Exception {
+        Map<String, Object> body = Map.of(
+                "username", "utcuser",
+                "email", "utcuser@example.com",
+                "firstName", "Utc",
+                "lastName", "User",
+                "password", "StrongP@ssw0rd"
+        );
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+
+        var saved = userRepository.findByEmail("utcuser@example.com").orElseThrow();
+        assertEquals("UTC", saved.getTimezone());
+        assertEquals(LocalDate.now(), saved.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/signup -> blank timezone defaults to UTC")
+    void signup_blankTimezone_defaultsUTC() throws Exception {
+        Map<String, Object> body = Map.of(
+                "username", "blanktz",
+                "email", "blanktz@example.com",
+                "firstName", "Blank",
+                "lastName", "Tz",
+                "password", "StrongP@ssw0rd",
+                "timezone", "   "
+        );
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+
+        var saved = userRepository.findByEmail("blanktz@example.com").orElseThrow();
+        assertEquals("UTC", saved.getTimezone());
+        assertEquals(LocalDate.now(), saved.getCreatedAt());
     }
 }

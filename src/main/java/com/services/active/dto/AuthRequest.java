@@ -20,4 +20,7 @@ public class AuthRequest {
 
     @Schema(description = "User's password", example = "SecurePassword123!", required = true)
     private String password;
+
+    @Schema(description = "IANA timezone identifier", example = "America/New_York")
+    private String timezone;
 }

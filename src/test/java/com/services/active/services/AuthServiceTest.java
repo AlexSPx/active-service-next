@@ -6,14 +6,14 @@ import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.User;
-import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
     @Mock
     private UserRepository userRepository;
@@ -29,12 +30,11 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtService jwtService;
-    @InjectMocks
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         authService = new AuthService(userRepository, passwordEncoder, jwtService);
     }
 
@@ -58,21 +58,61 @@ class AuthServiceTest {
         request.setPassword("password");
         when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password")).thenReturn("hashed");
-        User user = User.builder()
-                .username("testuser")
-                .email("new@example.com")
-                .firstName("Test")
-                .lastName("User")
-                .passwordHash("hashed")
-                .provider(AuthProvider.LOCAL)
-                .createdAt(LocalDate.now())
-                .build();
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenReturn(user);
-        when(jwtService.generateToken(user)).thenReturn("token");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
 
         TokenResponse response = authService.signup(request);
         assertNotNull(response);
         assertEquals("token", response.getToken());
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
+        assertEquals("testuser", saved.getUsername());
+        assertEquals("new@example.com", saved.getEmail());
+        assertEquals("Test", saved.getFirstName());
+        assertEquals("User", saved.getLastName());
+        assertNotNull(saved.getCreatedAt());
+        assertEquals(LocalDate.now(), saved.getCreatedAt());
+        assertEquals("UTC", saved.getTimezone());
+    }
+
+    @Test
+    void signup_shouldSetDefaultTimezoneWhenMissing() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("tzuser");
+        request.setEmail("tz@example.com");
+        request.setFirstName("Tz");
+        request.setLastName("User");
+        request.setPassword("password");
+        when(userRepository.findByEmail("tz@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("UTC", captor.getValue().getTimezone());
+    }
+
+    @Test
+    void signup_shouldRespectProvidedTimezone() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("tzuser2");
+        request.setEmail("tz2@example.com");
+        request.setFirstName("Tz2");
+        request.setLastName("User");
+        request.setPassword("password");
+        request.setTimezone("America/New_York");
+        when(userRepository.findByEmail("tz2@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("America/New_York", captor.getValue().getTimezone());
     }
 
     @Test
@@ -111,5 +151,25 @@ class AuthServiceTest {
         TokenResponse response = authService.login(request);
         assertNotNull(response);
         assertEquals("token", response.getToken());
+    }
+
+    @Test
+    void signup_blankTimezoneDefaultsToUTC() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("tzblank");
+        request.setEmail("tzblank@example.com");
+        request.setFirstName("Tz");
+        request.setLastName("Blank");
+        request.setPassword("password");
+        request.setTimezone("   ");
+        when(userRepository.findByEmail("tzblank@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("UTC", captor.getValue().getTimezone());
     }
 }
