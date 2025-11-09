@@ -20,7 +20,6 @@ public class UpdateUserRequest {
     private String lastName;
     @Schema(description = "New email; must be unique; if omitted, email unchanged", example = "alice.smith@example.com")
     private String email;
-    @Schema(description = "New timezone; if omitted, timezone unchanged", example = "Europe/London")
+    @Schema(description = "New timezone; if omitted, timezone unchanged", example = "Europe/Sofia")
     private String timezone;
 }
-

@@ -9,6 +9,8 @@ import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -46,7 +48,13 @@ public class UserService {
             user.setLastName(request.getLastName());
         }
         if (request.getTimezone() != null) {
-            user.setTimezone(request.getTimezone());
+            String tz = request.getTimezone();
+            try {
+                ZoneId.of(tz); // validate IANA id, e.g., "Europe/Sofia"
+            } catch (Exception e) {
+                throw new BadRequestException("Invalid timezone. Use an IANA identifier like 'Europe/Sofia'.");
+            }
+            user.setTimezone(tz);
         }
         return userRepository.save(user);
     }
