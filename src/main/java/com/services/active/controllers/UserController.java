@@ -1,5 +1,6 @@
 package com.services.active.controllers;
 
+import com.services.active.dto.RegisterPushTokenRequest;
 import com.services.active.dto.UpdateUserRequest;
 import com.services.active.models.User;
 import com.services.active.services.UserService;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,5 +38,10 @@ public class UserController {
     })
     public User updateCurrentUser(Principal principal, @RequestBody UpdateUserRequest request) {
         return userService.updateUser(principal.getName(), request);
+    }
+
+    @PostMapping("/me/push-token")
+    public User registerPushToken(Principal principal, @RequestBody RegisterPushTokenRequest request) {
+        return userService.registerPushToken(principal.getName(), request.getToken());
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document("users")
 @Data
@@ -38,4 +40,8 @@ public class User {
 
     @Builder.Default
     private StreakInfo streak = new StreakInfo();
+
+    // New field to store push notification tokens (one user can have multiple devices)
+    @Builder.Default
+    private List<String> pushTokens = new ArrayList<>();
 }

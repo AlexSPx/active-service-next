@@ -82,7 +82,11 @@
 			<version>0.12.6</version>
 			<scope>runtime</scope>
 		</dependency>
-
+        <dependency>
+            <groupId>io.github.hlspablo</groupId>
+            <artifactId>expo-server-sdk-java</artifactId>
+            <version>3.1.6</version>
+        </dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

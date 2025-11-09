@@ -1,6 +1,7 @@
 package com.services.active.services;
 
 import com.services.active.dto.UpdateUserRequest;
+import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.User;
@@ -48,5 +49,18 @@ public class UserService {
             user.setTimezone(request.getTimezone());
         }
         return userRepository.save(user);
+    }
+
+    public User registerPushToken(String userId, String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new BadRequestException("Token is required");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        if (!user.getPushTokens().contains(token)) {
+            user.getPushTokens().add(token);
+            user = userRepository.save(user);
+        }
+        return user;
     }
 }
