@@ -3,7 +3,6 @@ package com.services.active.controllers;
 import com.services.active.dto.RegisterPushTokenRequest;
 import com.services.active.dto.UpdateUserRequest;
 import com.services.active.models.User;
-import com.services.active.services.ExpoPushNotificationService;
 import com.services.active.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -25,7 +23,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final ExpoPushNotificationService expoPushNotificationService;
 
     @GetMapping("/me")
     public User getCurrentUser(Principal principal) {
@@ -46,11 +43,5 @@ public class UserController {
     @PostMapping("/me/push-token")
     public User registerPushToken(Principal principal, @RequestBody RegisterPushTokenRequest request) {
         return userService.registerPushToken(principal.getName(), request.getToken());
-    }
-
-    @PostMapping("/send-test-notification")
-    public void sendTestNotification(Principal principal) {
-        User user = userService.getUserById(principal.getName());
-        expoPushNotificationService.sendStreakReminder(List.of(user));
     }
 }
