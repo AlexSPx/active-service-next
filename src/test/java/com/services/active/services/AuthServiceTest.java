@@ -1,10 +1,13 @@
 package com.services.active.services;
 
 import com.services.active.dto.AuthRequest;
+import com.services.active.dto.BodyMeasurementsRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
+import com.services.active.dto.UpdateUserRequest;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
+import com.services.active.models.BodyMeasurements;
 import com.services.active.models.User;
 import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,12 +33,16 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private StreakService streakService; // needed for UserService
 
     private AuthService authService;
+    private UserService userService; // for update tests
 
     @BeforeEach
     void setUp() {
         authService = new AuthService(userRepository, passwordEncoder, jwtService);
+        userService = new UserService(userRepository, streakService);
     }
 
     @Test
@@ -171,5 +178,100 @@ class AuthServiceTest {
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         assertEquals("UTC", captor.getValue().getTimezone());
+    }
+
+    @Test
+    void signup_shouldStoreMeasurementsWhenProvided() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("measureuser");
+        request.setEmail("measure@example.com");
+        request.setFirstName("Measure");
+        request.setLastName("User");
+        request.setPassword("password");
+        var measurements = new com.services.active.dto.BodyMeasurementsRequest();
+        measurements.setWeightKg(81.3);
+        measurements.setHeightCm(182);
+        request.setMeasurements(measurements);
+        when(userRepository.findByEmail("measure@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertNotNull(captor.getValue().getMeasurements());
+        assertEquals(81.3, captor.getValue().getMeasurements().getWeightKg());
+        assertEquals(182, captor.getValue().getMeasurements().getHeightCm());
+    }
+
+    @Test
+    void signup_shouldRejectInvalidMeasurements() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("badmeasure");
+        request.setEmail("badmeasure@example.com");
+        request.setFirstName("Bad");
+        request.setLastName("Measure");
+        request.setPassword("password");
+        var measurements = new com.services.active.dto.BodyMeasurementsRequest();
+        measurements.setWeightKg(-10.0); // invalid
+        request.setMeasurements(measurements);
+        when(userRepository.findByEmail("badmeasure@example.com")).thenReturn(Optional.empty());
+
+        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> authService.signup(request));
+        assertEquals("weightKg must be > 0", ex.getMessage());
+    }
+
+    @Test
+    void updateUser_shouldCreateMeasurementsWhenAbsent() {
+        User user = User.builder().id("u1").build();
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(70.2).heightCm(175).build();
+        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
+
+        User updated = userService.updateUser("u1", update);
+        assertNotNull(updated.getMeasurements());
+        assertEquals(70.2, updated.getMeasurements().getWeightKg());
+        assertEquals(175, updated.getMeasurements().getHeightCm());
+    }
+
+    @Test
+    void updateUser_shouldMergeMeasurementsWhenPresent() {
+        User user = User.builder().id("u2").measurements(BodyMeasurements.builder().weightKg(80.0).heightCm(180).build()).build();
+        when(userRepository.findById("u2")).thenReturn(Optional.of(user));
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(78.5).build(); // only weight
+        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
+
+        User updated = userService.updateUser("u2", update);
+        assertEquals(78.5, updated.getMeasurements().getWeightKg());
+        assertEquals(180, updated.getMeasurements().getHeightCm()); // unchanged
+    }
+
+    @Test
+    void updateUser_shouldRejectInvalidNegativeWeight() {
+        User user = User.builder().id("u3").build();
+        when(userRepository.findById("u3")).thenReturn(Optional.of(user));
+
+        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(-5.0).build();
+        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
+
+        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> userService.updateUser("u3", update));
+        assertEquals("weightKg must be > 0", ex.getMessage());
+    }
+
+    @Test
+    void updateUser_shouldRejectInvalidNegativeHeight() {
+        User user = User.builder().id("u4").build();
+        when(userRepository.findById("u4")).thenReturn(Optional.of(user));
+
+        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().heightCm(-180).build();
+        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
+
+        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> userService.updateUser("u4", update));
+        assertEquals("heightCm must be > 0", ex.getMessage());
     }
 }

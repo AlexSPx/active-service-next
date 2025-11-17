@@ -23,4 +23,7 @@ public class AuthRequest {
 
     @Schema(description = "IANA timezone identifier", example = "America/New_York")
     private String timezone;
+
+    @Schema(description = "Initial body measurements (optional)")
+    private BodyMeasurementsRequest measurements;
 }

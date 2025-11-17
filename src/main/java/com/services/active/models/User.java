@@ -46,4 +46,7 @@ public class User {
     // New field to store push notification tokens (one user can have multiple devices)
     @Builder.Default
     private List<String> pushTokens = new ArrayList<>();
+
+    // Nested body measurements (optional). Null if not provided at signup.
+    private BodyMeasurements measurements;
 }

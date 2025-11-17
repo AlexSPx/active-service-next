@@ -4,6 +4,7 @@ import com.services.active.dto.UpdateUserRequest;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.models.BodyMeasurements;
 import com.services.active.models.User;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +56,30 @@ public class UserService {
                 throw new BadRequestException("Invalid timezone. Use an IANA identifier like 'Europe/Sofia'.");
             }
             user.setTimezone(tz);
+        }
+        if (request.getMeasurements() != null) {
+            var mReq = request.getMeasurements();
+            BodyMeasurements current = user.getMeasurements();
+            Double newWeight = mReq.getWeightKg();
+            Integer newHeight = mReq.getHeightCm();
+            if (newWeight != null && newWeight <= 0) {
+                throw new BadRequestException("weightKg must be > 0");
+            }
+            if (newHeight != null && newHeight <= 0) {
+                throw new BadRequestException("heightCm must be > 0");
+            }
+            if (current == null) {
+                if (newWeight != null || newHeight != null) {
+                    current = BodyMeasurements.builder()
+                            .weightKg(newWeight)
+                            .heightCm(newHeight)
+                            .build();
+                }
+            } else {
+                if (newWeight != null) current.setWeightKg(newWeight);
+                if (newHeight != null) current.setHeightCm(newHeight);
+            }
+            user.setMeasurements(current);
         }
         return userRepository.save(user);
     }

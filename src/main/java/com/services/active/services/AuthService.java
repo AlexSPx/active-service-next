@@ -5,6 +5,7 @@ import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
+import com.services.active.models.BodyMeasurements;
 import com.services.active.models.User;
 import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
@@ -27,6 +28,20 @@ public class AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ConflictException("Email already exists");
         }
+        BodyMeasurements measurements = null;
+        if (request.getMeasurements() != null) {
+            Double w = request.getMeasurements().getWeightKg();
+            Integer h = request.getMeasurements().getHeightCm();
+            if (w != null && w <= 0) {
+                throw new com.services.active.exceptions.BadRequestException("weightKg must be > 0");
+            }
+            if (h != null && h <= 0) {
+                throw new com.services.active.exceptions.BadRequestException("heightCm must be > 0");
+            }
+            if (w != null || h != null) {
+                measurements = BodyMeasurements.builder().weightKg(w).heightCm(h).build();
+            }
+        }
         var user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -36,6 +51,7 @@ public class AuthService {
                 .provider(AuthProvider.LOCAL)
                 .createdAt(LocalDate.now())
                 .timezone(Optional.ofNullable(request.getTimezone()).filter(t -> !t.isBlank()).orElse("UTC"))
+                .measurements(measurements)
                 .build();
         User saved = userRepository.save(user);
         return new TokenResponse(jwtService.generateToken(saved));
