@@ -26,4 +26,7 @@ public class AuthRequest {
 
     @Schema(description = "Initial body measurements (optional)")
     private BodyMeasurementsRequest measurements;
+
+    @Schema(description = "Flag indicating if registration is complete", example = "false")
+    private Boolean registrationCompleted;
 }

@@ -53,4 +53,18 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(@RequestBody @NonNull LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @PostMapping("/google")
+    @Operation(
+        summary = "Authenticate with Google",
+        description = "Authenticate user with Google ID token, returns JWT token on success"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User authenticated successfully",
+                content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid ID token")
+    })
+    public ResponseEntity<TokenResponse> googleLogin(@RequestBody @NonNull com.services.active.dto.GoogleAuthRequest request) {
+        return ResponseEntity.ok(authService.loginWithGoogle(request.getIdToken()));
+    }
 }

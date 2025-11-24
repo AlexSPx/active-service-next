@@ -25,4 +25,7 @@ public class UpdateUserRequest {
 
     @Schema(description = "Updated body measurements object (optional; only provided non-null fields are updated)")
     private BodyMeasurementsRequest measurements;
+
+    @Schema(description = "Flag indicating if registration is complete; if omitted, status unchanged", example = "true")
+    private Boolean registrationCompleted;
 }

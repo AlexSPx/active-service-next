@@ -5,10 +5,12 @@ import com.services.active.dto.BodyMeasurementsRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
 import com.services.active.dto.UpdateUserRequest;
+import com.services.active.dto.GoogleUserInfo;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.BodyMeasurements;
 import com.services.active.models.User;
+import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,14 +36,16 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
     @Mock
-    private StreakService streakService; // needed for UserService
+    private StreakService streakService;
+    @Mock
+    private GoogleTokenVerifier googleTokenVerifier;
 
     private AuthService authService;
-    private UserService userService; // for update tests
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, jwtService);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService, googleTokenVerifier);
         userService = new UserService(userRepository, streakService);
     }
 
@@ -273,5 +277,54 @@ class AuthServiceTest {
 
         var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> userService.updateUser("u4", update));
         assertEquals("heightCm must be > 0", ex.getMessage());
+    }
+
+    // GOOGLE LOGIN TESTS
+    @Test
+    void googleLogin_existingUserReturnsToken() {
+        String idToken = "dummy";
+        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid1", "user@example.com", "Test User", null, "New", "User"));
+        User existing = User.builder().email("user@example.com").provider(AuthProvider.GOOGLE).build();
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
+        when(jwtService.generateToken(existing)).thenReturn("token123");
+
+        TokenResponse resp = authService.loginWithGoogle(idToken);
+        assertEquals("token123", resp.getToken());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void googleLogin_newUserCreatedWhenNotFound() {
+        String idToken = "dummy2";
+        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid2", "newuser@example.com", "newuser", null, "New", "User"));
+        when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(any(User.class))).thenReturn("tokenNew");
+
+        TokenResponse resp = authService.loginWithGoogle(idToken);
+        assertEquals("tokenNew", resp.getToken());
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
+        assertEquals("newuser", saved.getUsername());
+        assertEquals("New", saved.getFirstName());
+        assertEquals("User", saved.getLastName());
+        assertEquals(AuthProvider.GOOGLE, saved.getProvider());
+    }
+
+    @Test
+    void googleLogin_missingEmailFails() {
+        String idToken = "dummy3";
+        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid3", null, "No Email", null, "New", "User"));
+        var ex = assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(idToken));
+        assertEquals("Email missing in token", ex.getMessage());
+    }
+
+    @Test
+    void googleLogin_verifierThrowsUnauthorizedMapped() {
+        String idToken = "bad";
+        when(googleTokenVerifier.verify(idToken)).thenThrow(new RuntimeException("boom"));
+        var ex = assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(idToken));
+        assertEquals("Invalid ID token", ex.getMessage());
     }
 }

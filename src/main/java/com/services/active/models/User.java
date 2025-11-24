@@ -22,6 +22,9 @@ import java.util.List;
 public class User {
     @Id
     private String id;
+
+    private String googleId;
+
     private String email;
     private String username;
 
@@ -39,6 +42,8 @@ public class User {
     private String timezone;
 
     private String activeRoutineId;
+
+    private boolean registrationCompleted = false;
 
     @Builder.Default
     private StreakInfo streak = new StreakInfo();

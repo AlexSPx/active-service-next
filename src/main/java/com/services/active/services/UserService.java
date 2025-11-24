@@ -48,6 +48,9 @@ public class UserService {
         if (request.getLastName() != null) {
             user.setLastName(request.getLastName());
         }
+        if(request.getRegistrationCompleted() != null) {
+            user.setRegistrationCompleted(request.getRegistrationCompleted());
+        }
         if (request.getTimezone() != null) {
             String tz = request.getTimezone();
             try {

@@ -23,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final GoogleTokenVerifier googleTokenVerifier; // new verifier
 
     public TokenResponse signup(@NonNull AuthRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -66,5 +67,35 @@ public class AuthService {
         }
         String token = jwtService.generateToken(user);
         return new TokenResponse(token);
+    }
+
+    public TokenResponse loginWithGoogle(String idTokenString) {
+        try {
+            var info = googleTokenVerifier.verify(idTokenString);
+            String email = info.email();
+            if (email == null || email.isBlank()) {
+                throw new UnauthorizedException("Email missing in token");
+            }
+            return userRepository.findByEmail(email)
+                    .map(user -> new TokenResponse(jwtService.generateToken(user)))
+                    .orElseGet(() -> {
+                        User newUser = User.builder()
+                                .email(email)
+                                .googleId(info.googleId())
+                                .username(info.name())
+                                .firstName(info.givenName())
+                                .lastName(info.familyName())
+                                .provider(AuthProvider.GOOGLE)
+                                .createdAt(LocalDate.now())
+                                .timezone(null)
+                                .build();
+                        User saved = userRepository.save(newUser);
+                        return new TokenResponse(jwtService.generateToken(saved));
+                    });
+        } catch (UnauthorizedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UnauthorizedException("Invalid ID token");
+        }
     }
 }
