@@ -7,7 +7,7 @@ import com.services.active.exceptions.NotFoundException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.models.Routine;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.repository.RoutineRepository;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

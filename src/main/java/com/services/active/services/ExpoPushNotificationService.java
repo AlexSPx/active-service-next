@@ -2,7 +2,7 @@ package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
 import com.niamedtech.expo.exposerversdk.request.PushNotification;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;

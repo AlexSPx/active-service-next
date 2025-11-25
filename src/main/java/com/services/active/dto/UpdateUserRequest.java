@@ -22,6 +22,8 @@ public class UpdateUserRequest {
     private String email;
     @Schema(description = "New timezone; if omitted, timezone unchanged", example = "Europe/Sofia")
     private String timezone;
+    @Schema(description = "Amount of notifications per week; if omitted, preferences unchanged", example = "3")
+    private Integer notificationFrequency;
 
     @Schema(description = "Updated body measurements object (optional; only provided non-null fields are updated)")
     private BodyMeasurementsRequest measurements;

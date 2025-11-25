@@ -29,4 +29,7 @@ public class AuthRequest {
 
     @Schema(description = "Flag indicating if registration is complete", example = "false")
     private Boolean registrationCompleted;
+
+    @Schema(description = "Preferred notification frequency per day", example = "3")
+    private Integer notificationFrequency;
 }

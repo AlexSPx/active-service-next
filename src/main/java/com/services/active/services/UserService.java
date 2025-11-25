@@ -4,8 +4,8 @@ import com.services.active.dto.UpdateUserRequest;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
-import com.services.active.models.BodyMeasurements;
-import com.services.active.models.User;
+import com.services.active.models.user.BodyMeasurements;
+import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,6 +50,9 @@ public class UserService {
         }
         if(request.getRegistrationCompleted() != null) {
             user.setRegistrationCompleted(request.getRegistrationCompleted());
+        }
+        if(request.getNotificationFrequency() != null) {
+            user.setNotificationPreferences(request.getNotificationFrequency());
         }
         if (request.getTimezone() != null) {
             String tz = request.getTimezone();

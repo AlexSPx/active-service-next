@@ -9,7 +9,7 @@ import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.models.ExercisePersonalBest;
 import com.services.active.models.ExerciseRecord;
 import com.services.active.models.TemplateExercise;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
 import com.services.active.repository.ExercisePersonalBestRepository;

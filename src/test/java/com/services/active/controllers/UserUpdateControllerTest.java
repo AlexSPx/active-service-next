@@ -6,7 +6,7 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.UpdateUserRequest;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
 import com.services.active.services.AuthService;
 import org.junit.jupiter.api.DisplayName;

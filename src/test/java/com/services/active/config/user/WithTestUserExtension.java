@@ -3,7 +3,7 @@ package com.services.active.config.user;
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
 import com.services.active.services.AuthService;
 import org.junit.jupiter.api.extension.*;

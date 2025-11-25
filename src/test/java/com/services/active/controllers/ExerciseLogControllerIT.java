@@ -6,7 +6,7 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.models.Exercise;
 import com.services.active.models.ExerciseRecord;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.models.types.Category;
 import com.services.active.models.types.Equipment;
 import com.services.active.models.types.Level;

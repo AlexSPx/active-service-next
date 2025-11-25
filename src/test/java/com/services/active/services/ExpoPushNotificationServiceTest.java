@@ -1,8 +1,8 @@
 package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
-import com.services.active.models.StreakInfo;
-import com.services.active.models.User;
+import com.services.active.models.user.StreakInfo;
+import com.services.active.models.user.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

@@ -1,6 +1,6 @@
 package com.services.active.services;
 
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

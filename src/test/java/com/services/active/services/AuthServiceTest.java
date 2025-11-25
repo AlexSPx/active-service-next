@@ -8,8 +8,8 @@ import com.services.active.dto.UpdateUserRequest;
 import com.services.active.dto.GoogleUserInfo;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
-import com.services.active.models.BodyMeasurements;
-import com.services.active.models.User;
+import com.services.active.models.user.BodyMeasurements;
+import com.services.active.models.user.User;
 import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -326,5 +327,109 @@ class AuthServiceTest {
         when(googleTokenVerifier.verify(idToken)).thenThrow(new RuntimeException("boom"));
         var ex = assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(idToken));
         assertEquals("Invalid ID token", ex.getMessage());
+    }
+
+    @Test
+    void signup_shouldConfigureSingleNotificationSchedule() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("nf1");
+        request.setEmail("nf1@example.com");
+        request.setFirstName("N");
+        request.setLastName("F");
+        request.setPassword("pwd");
+        request.setNotificationFrequency(1);
+        when(userRepository.findByEmail("nf1@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        var prefs = captor.getValue().getNotificationPreferences();
+        assertTrue(prefs.isEmailNotificationsEnabled());
+        assertEquals(1, prefs.getSchedule().size());
+        assertEquals("09:00", prefs.getSchedule().get(0));
+    }
+
+    @Test
+    void signup_shouldConfigureMultipleNotificationSchedule() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("nf3");
+        request.setEmail("nf3@example.com");
+        request.setFirstName("N");
+        request.setLastName("F");
+        request.setPassword("pwd");
+        request.setNotificationFrequency(3);
+        when(userRepository.findByEmail("nf3@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        var prefs = captor.getValue().getNotificationPreferences();
+        assertTrue(prefs.isEmailNotificationsEnabled());
+        assertEquals(3, prefs.getSchedule().size());
+        assertEquals(List.of("09:00", "15:00", "21:00"), prefs.getSchedule());
+    }
+
+    @Test
+    void signup_zeroFrequencyDisablesNotifications() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("nf0");
+        request.setEmail("nf0@example.com");
+        request.setFirstName("N");
+        request.setLastName("F");
+        request.setPassword("pwd");
+        request.setNotificationFrequency(0);
+        when(userRepository.findByEmail("nf0@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        var prefs = captor.getValue().getNotificationPreferences();
+        assertFalse(prefs.isEmailNotificationsEnabled());
+        assertTrue(prefs.getSchedule().isEmpty());
+    }
+
+    @Test
+    void signup_nullFrequencyLeavesDefaults() {
+        AuthRequest request = new AuthRequest();
+        request.setUsername("nfnull");
+        request.setEmail("nfnull@example.com");
+        request.setFirstName("N");
+        request.setLastName("F");
+        request.setPassword("pwd");
+        // no frequency set
+        when(userRepository.findByEmail("nfnull@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+
+        authService.signup(request);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        var prefs = captor.getValue().getNotificationPreferences();
+        assertFalse(prefs.isEmailNotificationsEnabled());
+        assertTrue(prefs.getSchedule().isEmpty());
+    }
+
+    @Test
+    void updateUser_changesNotificationFrequency() {
+        User existing = User.builder().id("uNF").build();
+        when(userRepository.findById("uNF")).thenReturn(Optional.of(existing));
+        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        UpdateUserRequest req = UpdateUserRequest.builder().notificationFrequency(2).build();
+
+        User updated = userService.updateUser("uNF", req);
+        var prefs = updated.getNotificationPreferences();
+        assertTrue(prefs.isEmailNotificationsEnabled());
+        assertEquals(2, prefs.getSchedule().size());
+        assertEquals(List.of("09:00", "21:00"), prefs.getSchedule());
     }
 }

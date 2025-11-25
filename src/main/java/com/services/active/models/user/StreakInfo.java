@@ -1,4 +1,4 @@
-package com.services.active.models;
+package com.services.active.models.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

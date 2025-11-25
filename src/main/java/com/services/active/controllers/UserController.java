@@ -2,7 +2,7 @@ package com.services.active.controllers;
 
 import com.services.active.dto.RegisterPushTokenRequest;
 import com.services.active.dto.UpdateUserRequest;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

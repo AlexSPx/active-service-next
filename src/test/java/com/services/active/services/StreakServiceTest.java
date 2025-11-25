@@ -2,8 +2,8 @@ package com.services.active.services;
 
 import com.services.active.models.Routine;
 import com.services.active.models.RoutinePattern;
-import com.services.active.models.StreakInfo;
-import com.services.active.models.User;
+import com.services.active.models.user.StreakInfo;
+import com.services.active.models.user.User;
 import com.services.active.models.types.DayType;
 import com.services.active.models.types.StreakUpdateStatus;
 import com.services.active.repository.RoutineRepository;

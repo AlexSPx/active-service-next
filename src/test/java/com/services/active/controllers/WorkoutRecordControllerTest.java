@@ -8,6 +8,7 @@ import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.models.*;
+import com.services.active.models.user.User;
 import com.services.active.repository.ExerciseRecordRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.services.WorkoutService;

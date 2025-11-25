@@ -1,4 +1,4 @@
-package com.services.active.models;
+package com.services.active.models.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

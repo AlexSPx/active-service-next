@@ -1,6 +1,5 @@
 package com.services.active.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
@@ -9,7 +8,7 @@ import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.dto.UpdateWorkoutRequest;
 import com.services.active.models.TemplateExercise;
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutTemplate;
 import com.services.active.repository.WorkoutRepository;

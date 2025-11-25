@@ -1,6 +1,6 @@
 package com.services.active.services;
 
-import com.services.active.models.User;
+import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,7 +11,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -24,46 +23,42 @@ public class StreakReminderScheduler {
     private Clock clock = Clock.systemUTC();
 
     @Autowired
-    public StreakReminderScheduler(UserRepository userRepository,
-                                   ExpoPushNotificationService pushService) {
+    StreakReminderScheduler(UserRepository userRepository, ExpoPushNotificationService pushService) { // package-private
         this.userRepository = userRepository;
         this.pushService = pushService;
     }
 
-    // Optional bean injection
-    @Autowired(required = false)
-    public void setClock(Clock clock) {
+    void setClock(Clock clock) {
         if (clock != null) this.clock = clock;
     }
 
     // Run at second 0 every hour
     @Scheduled(cron = "0 0 * * * *")
-    public void send9amLocalReminders() {
+    public void processHourlyReminders() {
         Instant now = Instant.now(clock);
         Set<String> allZones = ZoneId.getAvailableZoneIds();
-        List<String> zonesAtNine = new ArrayList<>();
 
         for (String zoneId : allZones) {
             try {
                 ZoneId zone = ZoneId.of(zoneId);
                 ZonedDateTime zdt = ZonedDateTime.ofInstant(now, zone);
-                // At top of the hour; match when local hour is 9
-                if (zdt.getHour() == 9) {
-                    zonesAtNine.add(zoneId);
+
+                // FORCE the search string to be "HH:00"
+                // Even if the job runs at 09:00:05, this ensures we look for "09:00"
+                String targetLocalTime = String.format("%02d:00", zdt.getHour());
+
+                // Database Query (Unchanged - Exact Match)
+                // Finds users in 'Europe/London' with '14:00' in their list
+                List<User> usersToNotify = userRepository.findUsersToNotify(zoneId, targetLocalTime);
+
+                if (!usersToNotify.isEmpty()) {
+                    log.info("Sending notifications to {} users in {} at {}", usersToNotify.size(), zoneId, targetLocalTime);
+                    pushService.sendStreakReminder(usersToNotify);
                 }
+
             } catch (Exception e) {
-                // skip invalid zone id (should not happen with availableZoneIds)
+                log.error("Error processing zone {}", zoneId, e);
             }
         }
-
-        if (zonesAtNine.isEmpty()) {
-            return;
-        }
-
-        List<User> users = userRepository.findByTimezoneIn(zonesAtNine);
-        if (users.isEmpty()) return;
-
-        // Bulk send; service handles filtering users without tokens
-        pushService.sendStreakReminder(users);
     }
 }

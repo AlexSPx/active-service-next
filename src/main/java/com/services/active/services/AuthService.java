@@ -5,8 +5,8 @@ import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
-import com.services.active.models.BodyMeasurements;
-import com.services.active.models.User;
+import com.services.active.models.user.BodyMeasurements;
+import com.services.active.models.user.User;
 import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import lombok.NonNull;
@@ -54,6 +54,7 @@ public class AuthService {
                 .timezone(Optional.ofNullable(request.getTimezone()).filter(t -> !t.isBlank()).orElse("UTC"))
                 .measurements(measurements)
                 .build();
+        user.setNotificationPreferences(request.getNotificationFrequency());
         User saved = userRepository.save(user);
         return new TokenResponse(jwtService.generateToken(saved));
     }
