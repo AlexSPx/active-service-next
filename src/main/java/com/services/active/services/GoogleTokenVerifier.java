@@ -22,7 +22,7 @@ public class GoogleTokenVerifier {
     private static final String GOOGLE_ISSUER = "https://accounts.google.com";
     private static final String GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 
-    @Value("${google.client-id}")
+    @Value("${google.client.id}")
     private String googleClientId;
 
     public GoogleUserInfo verify(String idToken) {
