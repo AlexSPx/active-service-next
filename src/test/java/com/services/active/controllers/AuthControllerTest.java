@@ -47,7 +47,8 @@ class AuthControllerTest extends IntegrationTestBase {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token").isNotEmpty());
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
 
     @Test
@@ -97,7 +98,8 @@ class AuthControllerTest extends IntegrationTestBase {
                         .content(objectMapper.writeValueAsString(login)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token").isNotEmpty());
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
 
     @Test
@@ -204,5 +206,27 @@ class AuthControllerTest extends IntegrationTestBase {
         var saved = userRepository.findByEmail("blanktz@example.com").orElseThrow();
         assertEquals("UTC", saved.getTimezone());
         assertEquals(LocalDate.now(), saved.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/refresh -> 200 OK returns new tokens")
+    void refresh_success() throws Exception {
+        AuthRequest setup = new AuthRequest();
+        setup.setUsername("refreshuser");
+        setup.setEmail("refresh@example.com");
+        setup.setFirstName("Refresh");
+        setup.setLastName("User");
+        setup.setPassword("password");
+        var tokenResponse = authService.signup(setup);
+        String refreshToken = tokenResponse.getRefreshToken();
+
+        Map<String, Object> body = Map.of("refreshToken", refreshToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
 }

@@ -56,7 +56,7 @@ public class AuthService {
                 .build();
         user.setNotificationPreferences(request.getNotificationFrequency());
         User saved = userRepository.save(user);
-        return new TokenResponse(jwtService.generateToken(saved));
+        return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
     }
 
     public TokenResponse login(@NonNull LoginRequest request) {
@@ -67,7 +67,8 @@ public class AuthService {
             throw new UnauthorizedException("Invalid credentials");
         }
         String token = jwtService.generateToken(user);
-        return new TokenResponse(token);
+        String refreshToken = jwtService.generateRefreshToken(user);
+        return new TokenResponse(token, refreshToken);
     }
 
     public TokenResponse loginWithGoogle(String idTokenString) {
@@ -78,7 +79,7 @@ public class AuthService {
                 throw new UnauthorizedException("Email missing in token");
             }
             return userRepository.findByEmail(email)
-                    .map(user -> new TokenResponse(jwtService.generateToken(user)))
+                    .map(user -> new TokenResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user)))
                     .orElseGet(() -> {
                         User newUser = User.builder()
                                 .email(email)
@@ -91,12 +92,27 @@ public class AuthService {
                                 .timezone(null)
                                 .build();
                         User saved = userRepository.save(newUser);
-                        return new TokenResponse(jwtService.generateToken(saved));
+                        return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
                     });
         } catch (UnauthorizedException e) {
             throw e;
         } catch (Exception e) {
             throw new UnauthorizedException("Invalid ID token");
+        }
+    }
+
+    public TokenResponse refreshToken(String refreshToken) {
+        try {
+            var claims = jwtService.parseRefreshToken(refreshToken);
+            String userId = claims.getSubject();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+            String newToken = jwtService.generateToken(user);
+            String newRefreshToken = jwtService.generateRefreshToken(user);
+            return new TokenResponse(newToken, newRefreshToken);
+        } catch (Exception e) {
+            throw new UnauthorizedException("Invalid refresh token");
         }
     }
 }

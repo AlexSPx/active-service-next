@@ -30,6 +30,7 @@ public class JwtService {
     private long clockSkewSeconds;
 
     private final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; // 24h
+    private final long REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 7; // 7 days
 
     @PostConstruct
     void validateSecret() {
@@ -51,6 +52,22 @@ public class JwtService {
                 .issuer(issuer)
                 .audience().add(audience).and()
                 .id(UUID.randomUUID().toString())
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(key(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(User user) {
+        Date now = new Date();
+        Date exp = new Date(System.currentTimeMillis() + REFRESH_EXPIRATION_TIME);
+
+        return Jwts.builder()
+                .subject(user.getId())
+                .issuer(issuer)
+                .audience().add(audience).and()
+                .id(UUID.randomUUID().toString())
+                .claim("type", "refresh")
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key(), Jwts.SIG.HS256)
@@ -86,5 +103,13 @@ public class JwtService {
         } catch (Exception e) {
             throw new JwtException("Token parsing error", e);
         }
+    }
+
+    public Claims parseRefreshToken(String token) {
+        Claims claims = parseToken(token);
+        if (!"refresh".equals(claims.get("type"))) {
+            throw new JwtException("Invalid token type");
+        }
+        return claims;
     }
 }

@@ -72,10 +72,12 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         TokenResponse response = authService.signup(request);
         assertNotNull(response);
         assertEquals("token", response.getToken());
+        assertEquals("refreshToken", response.getRefreshToken());
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         User saved = captor.getValue();
@@ -100,6 +102,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -120,6 +123,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -159,10 +163,12 @@ class AuthServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("correct", "hashed")).thenReturn(true);
         when(jwtService.generateToken(user)).thenReturn("token");
+        when(jwtService.generateRefreshToken(user)).thenReturn("refreshToken");
 
         TokenResponse response = authService.login(request);
         assertNotNull(response);
         assertEquals("token", response.getToken());
+        assertEquals("refreshToken", response.getRefreshToken());
     }
 
     @Test
@@ -178,6 +184,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -201,6 +208,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -287,10 +295,13 @@ class AuthServiceTest {
         when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid1", "user@example.com", "Test User", null, "New", "User"));
         User existing = User.builder().email("user@example.com").provider(AuthProvider.GOOGLE).build();
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
         when(jwtService.generateToken(existing)).thenReturn("token123");
+        when(jwtService.generateRefreshToken(existing)).thenReturn("refresh123");
 
         TokenResponse resp = authService.loginWithGoogle(idToken);
         assertEquals("token123", resp.getToken());
+        assertEquals("refresh123", resp.getRefreshToken());
         verify(userRepository, never()).save(any());
     }
 
@@ -301,9 +312,11 @@ class AuthServiceTest {
         when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(any(User.class))).thenReturn("tokenNew");
+        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refreshNew");
 
         TokenResponse resp = authService.loginWithGoogle(idToken);
         assertEquals("tokenNew", resp.getToken());
+        assertEquals("refreshNew", resp.getRefreshToken());
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         User saved = captor.getValue();
@@ -342,6 +355,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("pwd")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -365,6 +379,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("pwd")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -388,6 +403,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("pwd")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -410,6 +426,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("pwd")).thenReturn("hashed");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
+        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
 
         authService.signup(request);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -431,5 +448,43 @@ class AuthServiceTest {
         assertTrue(prefs.isEmailNotificationsEnabled());
         assertEquals(2, prefs.getSchedule().size());
         assertEquals(List.of("09:00", "21:00"), prefs.getSchedule());
+        assertEquals(List.of("09:00", "21:00"), prefs.getSchedule());
+    }
+
+    @Test
+    void refreshToken_shouldReturnNewTokens() {
+        String refreshToken = "validRefresh";
+        User user = User.builder().id("u1").build();
+        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("u1");
+
+        when(jwtService.parseRefreshToken(refreshToken)).thenReturn(claims);
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(user)).thenReturn("newToken");
+        when(jwtService.generateRefreshToken(user)).thenReturn("newRefresh");
+
+        TokenResponse response = authService.refreshToken(refreshToken);
+        assertEquals("newToken", response.getToken());
+        assertEquals("newRefresh", response.getRefreshToken());
+    }
+
+    @Test
+    void refreshToken_shouldThrowUnauthorizedIfTokenInvalid() {
+        String refreshToken = "invalid";
+        when(jwtService.parseRefreshToken(refreshToken)).thenThrow(new RuntimeException("invalid"));
+
+        assertThrows(UnauthorizedException.class, () -> authService.refreshToken(refreshToken));
+    }
+
+    @Test
+    void refreshToken_shouldThrowUnauthorizedIfUserNotFound() {
+        String refreshToken = "validRefresh";
+        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("u1");
+
+        when(jwtService.parseRefreshToken(refreshToken)).thenReturn(claims);
+        when(userRepository.findById("u1")).thenReturn(Optional.empty());
+
+        assertThrows(UnauthorizedException.class, () -> authService.refreshToken(refreshToken));
     }
 }

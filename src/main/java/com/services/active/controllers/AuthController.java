@@ -67,4 +67,18 @@ public class AuthController {
     public ResponseEntity<TokenResponse> googleLogin(@RequestBody @NonNull com.services.active.dto.GoogleAuthRequest request) {
         return ResponseEntity.ok(authService.loginWithGoogle(request.getIdToken()));
     }
+
+    @PostMapping("/refresh")
+    @Operation(
+        summary = "Refresh access token",
+        description = "Obtain a new access token using a valid refresh token"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token refreshed successfully",
+                content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+    })
+    public ResponseEntity<TokenResponse> refresh(@RequestBody @NonNull com.services.active.dto.RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
+    }
 }
