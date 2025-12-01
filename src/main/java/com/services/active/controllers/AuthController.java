@@ -2,6 +2,7 @@ package com.services.active.controllers;
 
 import com.services.active.dto.AuthRequest;
 import com.services.active.dto.LoginRequest;
+import com.services.active.dto.RefreshTokenRequest;
 import com.services.active.dto.TokenResponse;
 import com.services.active.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,7 +79,7 @@ public class AuthController {
                 content = @Content(schema = @Schema(implementation = TokenResponse.class))),
         @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
     })
-    public ResponseEntity<TokenResponse> refresh(@RequestBody @NonNull com.services.active.dto.RefreshTokenRequest request) {
+    public ResponseEntity<TokenResponse> refresh(@RequestBody @NonNull RefreshTokenRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
     }
 }
