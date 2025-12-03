@@ -8,4 +8,5 @@ import java.util.List;
 public interface ExerciseRecordRepository extends MongoRepository<ExerciseRecord, String>, ExerciseRecordRepositoryCustom {
     List<ExerciseRecord> findByUserIdAndExerciseIdOrderByCreatedAtAsc(String userId, String exerciseId);
     List<ExerciseRecord> findByUserIdOrderByCreatedAtAsc(String userId);
+    void deleteByUserId(String userId);
 }

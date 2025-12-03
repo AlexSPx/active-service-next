@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface WorkoutRecordRepository extends MongoRepository<WorkoutRecord, String> {
     List<WorkoutRecord> findAllByUserId(String userId);
+    void deleteByUserId(String userId);
 }

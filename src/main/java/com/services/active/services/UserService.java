@@ -4,19 +4,27 @@ import com.services.active.dto.UpdateUserRequest;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.models.Workout;
 import com.services.active.models.user.BodyMeasurements;
 import com.services.active.models.user.User;
-import com.services.active.repository.UserRepository;
+import com.services.active.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final StreakService streakService;
+    private final WorkoutRepository workoutRepository;
+    private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final WorkoutRecordRepository workoutRecordRepository;
+    private final ExerciseRecordRepository exerciseRecordRepository;
+    private final ExercisePersonalBestRepository exercisePersonalBestRepository;
+    private final RoutineRepository routineRepository;
 
     public User getUserById(String userId) {
         User user = userRepository.findById(userId)
@@ -101,5 +109,31 @@ public class UserService {
             user = userRepository.save(user);
         }
         return user;
+    }
+
+    public void deleteUserAndData(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<Workout> workouts = workoutRepository.findAllByUserId(userId);
+        List<String> templateIds = workouts.stream()
+                .map(Workout::getTemplateId)
+                .filter(id -> id != null && !id.isBlank())
+                .toList();
+
+        // Delete user-scoped records first
+        workoutRecordRepository.deleteByUserId(userId);
+        exerciseRecordRepository.deleteByUserId(userId);
+        exercisePersonalBestRepository.deleteByUserId(userId);
+        routineRepository.deleteByUserId(userId);
+
+        // Delete workouts and their templates
+        workoutRepository.deleteByUserId(userId);
+        if (!templateIds.isEmpty()) {
+            workoutTemplateRepository.deleteAllById(templateIds);
+        }
+
+        // Finally, delete the user document
+        userRepository.deleteById(user.getId());
     }
 }

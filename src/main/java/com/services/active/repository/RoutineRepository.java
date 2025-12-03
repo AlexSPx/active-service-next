@@ -12,4 +12,5 @@ public interface RoutineRepository extends MongoRepository<Routine, String> {
     List<Routine> findAllByUserIdOrderByCreatedAtDesc(String userId);
     Optional<Routine> findByIdAndUserId(String id, String userId);
     boolean existsByUserIdAndNameIgnoreCase(String userId, String name);
+    void deleteByUserId(String userId);
 }

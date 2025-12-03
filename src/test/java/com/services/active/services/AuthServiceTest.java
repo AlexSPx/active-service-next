@@ -11,7 +11,7 @@ import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.user.BodyMeasurements;
 import com.services.active.models.user.User;
 import com.services.active.models.types.AuthProvider;
-import com.services.active.repository.UserRepository;
+import com.services.active.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +40,18 @@ class AuthServiceTest {
     private StreakService streakService;
     @Mock
     private GoogleTokenVerifier googleTokenVerifier;
+    @Mock
+    private WorkoutRepository workoutRepository;
+    @Mock
+    private WorkoutTemplateRepository workoutTemplateRepository;
+    @Mock
+    private WorkoutRecordRepository workoutRecordRepository;
+    @Mock
+    private ExerciseRecordRepository exerciseRecordRepository;
+    @Mock
+    private ExercisePersonalBestRepository exercisePersonalBestRepository;
+    @Mock
+    private RoutineRepository routineRepository;
 
     private AuthService authService;
     private UserService userService;
@@ -47,7 +59,17 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         authService = new AuthService(userRepository, passwordEncoder, jwtService, googleTokenVerifier);
-        userService = new UserService(userRepository, streakService);
+        // Updated constructor with all required repositories
+        userService = new UserService(
+                userRepository,
+                streakService,
+                workoutRepository,
+                workoutTemplateRepository,
+                workoutRecordRepository,
+                exerciseRecordRepository,
+                exercisePersonalBestRepository,
+                routineRepository
+        );
     }
 
     @Test
