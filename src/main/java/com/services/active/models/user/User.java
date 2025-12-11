@@ -52,7 +52,6 @@ public class User {
     @Builder.Default
     private List<String> pushTokens = new ArrayList<>();
 
-    @JsonIgnore
     @Builder.Default
     private NotificationPreferences notificationPreferences = new NotificationPreferences(false, new ArrayList<>());
 
