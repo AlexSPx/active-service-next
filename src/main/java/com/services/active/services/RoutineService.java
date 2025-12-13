@@ -13,7 +13,10 @@ import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -35,6 +38,11 @@ public class RoutineService {
                 .userId(userId)
                 .createdAt(now)
                 .updatedAt(now)
+                .startDate((request.getStartDate() != null
+                        ? request.getStartDate()
+                        : LocalDate.now())
+                        .atStartOfDay(ZoneOffset.UTC)
+                        .toInstant())
                 .pattern(request.getPattern())
                 .build();
         Routine saved = routineRepository.save(routine);
@@ -91,6 +99,10 @@ public class RoutineService {
                 throw new BadRequestException("Pattern is required");
             }
             existing.setPattern(request.getPattern());
+            changed = true;
+        }
+        if (request.getStartDate() != null) {
+            existing.setStartDate(request.getStartDate().atStartOfDay(ZoneOffset.UTC).toInstant());
             changed = true;
         }
         if (request.getActive() != null) {

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -26,4 +27,7 @@ public class UpdateRoutineRequest {
 
     @Schema(description = "Whether this routine should be active; if true, other routines will be deactivated")
     private Boolean active;
+
+    @Schema(description = "Start date for the routine; if null, not changed", example = "2025-12-11")
+    private LocalDate startDate;
 }
