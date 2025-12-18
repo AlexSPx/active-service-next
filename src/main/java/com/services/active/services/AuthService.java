@@ -63,6 +63,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
+        if (user.getProvider() == AuthProvider.GOOGLE) {
+            throw new UnauthorizedException("Use Google Sign-In for this account");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new UnauthorizedException("Invalid credentials");
         }
@@ -113,6 +117,39 @@ public class AuthService {
             return new TokenResponse(newToken, newRefreshToken);
         } catch (Exception e) {
             throw new UnauthorizedException("Invalid refresh token");
+        }
+    }
+
+    public TokenResponse linkGoogleAccount(@NonNull String userId, @NonNull String idTokenString) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        if (user.getProvider() == AuthProvider.GOOGLE) {
+            throw new ConflictException("Account already linked to Google");
+        }
+
+        try {
+            var info = googleTokenVerifier.verify(idTokenString);
+            String email = info.email();
+            if (email == null || email.isBlank()) {
+                throw new UnauthorizedException("Email missing in token");
+            }
+
+            if (info.googleId() != null) {
+                userRepository.findByGoogleId(info.googleId())
+                        .filter(u -> !u.getId().equals(user.getId()))
+                        .ifPresent(u -> { throw new ConflictException("Google account already linked to another user"); });
+            }
+
+            user.setGoogleId(info.googleId());
+            user.setProvider(AuthProvider.GOOGLE);
+            user.setPasswordHash(null);
+            User saved = userRepository.save(user);
+            return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
+        } catch (UnauthorizedException | ConflictException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UnauthorizedException("Invalid ID token");
         }
     }
 }

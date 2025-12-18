@@ -13,4 +13,6 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     @Query("{ 'timezone': ?0, 'notificationPreferences.emailNotificationsEnabled': true, 'notificationPreferences.schedule': ?1 }")
     List<User> findUsersToNotify(String timezone, String localTime);
+
+    Optional<User> findByGoogleId(String googleId); // New finder to ensure a Google account is not already linked to another user
 }
