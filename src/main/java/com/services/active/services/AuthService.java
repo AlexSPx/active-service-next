@@ -83,7 +83,12 @@ public class AuthService {
                 throw new UnauthorizedException("Email missing in token");
             }
             return userRepository.findByEmail(email)
-                    .map(user -> new TokenResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user)))
+                    .map(user -> {
+                        if(user.getProvider() != AuthProvider.GOOGLE) {
+                            throw new UnauthorizedException("Email already registered with different provider");
+                        }
+                       return new TokenResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user));
+                    })
                     .orElseGet(() -> {
                         User newUser = User.builder()
                                 .email(email)
