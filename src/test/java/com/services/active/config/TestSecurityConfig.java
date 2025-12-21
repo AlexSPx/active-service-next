@@ -145,12 +145,11 @@ public class TestSecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
-                        .requestMatchers("/api/exercises/**").authenticated()
-                        .requestMatchers("/api/workouts/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwt -> jwt.decoder(testJwtDecoder())))
+                        oauth2.jwt(jwt -> jwt.decoder(testJwtDecoder()))
+                )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.setStatus(HttpStatus.UNAUTHORIZED.value()))
