@@ -1,512 +1,119 @@
 package com.services.active.services;
 
-import com.services.active.dto.AuthRequest;
-import com.services.active.dto.BodyMeasurementsRequest;
-import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
-import com.services.active.dto.UpdateUserRequest;
-import com.services.active.dto.GoogleUserInfo;
-import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.UnauthorizedException;
-import com.services.active.models.user.BodyMeasurements;
 import com.services.active.models.user.User;
-import com.services.active.models.types.AuthProvider;
-import com.services.active.repository.*;
+import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
+
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private PasswordEncoder passwordEncoder;
-    @Mock
-    private JwtService jwtService;
-    @Mock
-    private StreakService streakService;
-    @Mock
-    private GoogleTokenVerifier googleTokenVerifier;
-    @Mock
-    private WorkoutRepository workoutRepository;
-    @Mock
-    private WorkoutTemplateRepository workoutTemplateRepository;
-    @Mock
-    private WorkoutRecordRepository workoutRecordRepository;
-    @Mock
-    private ExerciseRecordRepository exerciseRecordRepository;
-    @Mock
-    private ExercisePersonalBestRepository exercisePersonalBestRepository;
-    @Mock
-    private RoutineRepository routineRepository;
 
+    @Mock
+    private WorkosService workosService;
+
+    @InjectMocks
     private AuthService authService;
-    private UserService userService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, jwtService, googleTokenVerifier);
-        // Updated constructor with all required repositories
-        userService = new UserService(
-                userRepository,
-                streakService,
-                workoutRepository,
-                workoutTemplateRepository,
-                workoutRecordRepository,
-                exerciseRecordRepository,
-                exercisePersonalBestRepository,
-                routineRepository
-        );
+        // Common setup if needed
     }
 
     @Test
-    void signup_shouldReturnConflictIfEmailExists() {
-        AuthRequest request = new AuthRequest();
-        request.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(new User()));
+    @DisplayName("authenticateWithWorkos -> creates new user on first login")
+    void testAuthenticateWithWorkos_NewUser() {
+        // Given
+        String code = "auth_code_123";
+        String workosUserId = "user_workos_123";
+        String email = "newuser@example.com";
 
-        ConflictException ex = assertThrows(ConflictException.class, () -> authService.signup(request));
-        assertEquals("Email already exists", ex.getMessage());
-    }
+        WorkosService.WorkosAuthResult authResult = new WorkosService.WorkosAuthResult(
+                workosUserId, email, "New", "User", "access_token_123", "refresh_token_123");
+        when(workosService.authenticateWithCode(code)).thenReturn(authResult);
+        when(userRepository.findByWorkosId(workosUserId)).thenReturn(Optional.empty());
 
-    @Test
-    void signup_shouldCreateUserIfEmailNotExists() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("testuser");
-        request.setEmail("new@example.com");
-        request.setFirstName("Test");
-        request.setLastName("User");
-        request.setPassword("password");
-        when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
+        User newUser = User.builder()
+                .id("user_mongo_123")
+                .workosId(workosUserId)
+                .createdAt(LocalDate.now())
+                .timezone("UTC")
+                .build();
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
 
-        TokenResponse response = authService.signup(request);
+        // When
+        TokenResponse response = authService.authenticateWithWorkos(code);
+
+        // Then
         assertNotNull(response);
-        assertEquals("token", response.getToken());
-        assertEquals("refreshToken", response.getRefreshToken());
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        User saved = captor.getValue();
-        assertEquals("testuser", saved.getUsername());
-        assertEquals("new@example.com", saved.getEmail());
-        assertEquals("Test", saved.getFirstName());
-        assertEquals("User", saved.getLastName());
-        assertNotNull(saved.getCreatedAt());
-        assertEquals(LocalDate.now(), saved.getCreatedAt());
-        assertEquals("UTC", saved.getTimezone());
+        assertEquals("access_token_123", response.getToken());
+        assertEquals("refresh_token_123", response.getRefreshToken());
+        verify(workosService).authenticateWithCode(code);
+        verify(userRepository).findByWorkosId(workosUserId);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void signup_shouldSetDefaultTimezoneWhenMissing() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("tzuser");
-        request.setEmail("tz@example.com");
-        request.setFirstName("Tz");
-        request.setLastName("User");
-        request.setPassword("password");
-        when(userRepository.findByEmail("tz@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
+    @DisplayName("authenticateWithWorkos -> returns existing user on subsequent login")
+    void testAuthenticateWithWorkos_ExistingUser() {
+        // Given
+        String code = "auth_code_456";
+        String workosUserId = "user_workos_456";
+        String email = "existinguser@example.com";
 
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertEquals("UTC", captor.getValue().getTimezone());
-    }
+        WorkosService.WorkosAuthResult authResult = new WorkosService.WorkosAuthResult(
+                workosUserId, email, "Existing", "User", "access_token_456", "refresh_token_456");
+        when(workosService.authenticateWithCode(code)).thenReturn(authResult);
 
-    @Test
-    void signup_shouldRespectProvidedTimezone() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("tzuser2");
-        request.setEmail("tz2@example.com");
-        request.setFirstName("Tz2");
-        request.setLastName("User");
-        request.setPassword("password");
-        request.setTimezone("America/New_York");
-        when(userRepository.findByEmail("tz2@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
+        User existingUser = User.builder()
+                .id("user_mongo_456")
+                .workosId(workosUserId)
+                .createdAt(LocalDate.now().minusDays(30))
+                .timezone("America/New_York")
+                .build();
+        when(userRepository.findByWorkosId(workosUserId)).thenReturn(Optional.of(existingUser));
 
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertEquals("America/New_York", captor.getValue().getTimezone());
-    }
+        // When
+        TokenResponse response = authService.authenticateWithWorkos(code);
 
-    @Test
-    void login_shouldReturnUnauthorizedIfUserNotFound() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("notfound@example.com");
-        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
-
-        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> authService.login(request));
-        assertEquals("User not found", ex.getMessage());
-    }
-
-    @Test
-    void login_shouldReturnUnauthorizedIfPasswordInvalid() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("user@example.com");
-        request.setPassword("wrong");
-        User user = User.builder().passwordHash("hashed").build();
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
-
-        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> authService.login(request));
-        assertEquals("Invalid credentials", ex.getMessage());
-    }
-
-    @Test
-    void login_shouldReturnTokenIfCredentialsValid() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("user@example.com");
-        request.setPassword("correct");
-        User user = User.builder().passwordHash("hashed").build();
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("correct", "hashed")).thenReturn(true);
-        when(jwtService.generateToken(user)).thenReturn("token");
-        when(jwtService.generateRefreshToken(user)).thenReturn("refreshToken");
-
-        TokenResponse response = authService.login(request);
+        // Then
         assertNotNull(response);
-        assertEquals("token", response.getToken());
-        assertEquals("refreshToken", response.getRefreshToken());
+        assertEquals("access_token_456", response.getToken());
+        assertEquals("refresh_token_456", response.getRefreshToken());
+        verify(workosService).authenticateWithCode(code);
+        verify(userRepository).findByWorkosId(workosUserId);
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void signup_blankTimezoneDefaultsToUTC() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("tzblank");
-        request.setEmail("tzblank@example.com");
-        request.setFirstName("Tz");
-        request.setLastName("Blank");
-        request.setPassword("password");
-        request.setTimezone("   ");
-        when(userRepository.findByEmail("tzblank@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
+    @DisplayName("authenticateWithWorkos -> throws exception on invalid code")
+    void testAuthenticateWithWorkos_InvalidCode() {
+        // Given
+        String invalidCode = "invalid_code";
+        when(workosService.authenticateWithCode(invalidCode))
+                .thenThrow(new UnauthorizedException("Invalid authentication code"));
 
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertEquals("UTC", captor.getValue().getTimezone());
-    }
-
-    @Test
-    void signup_shouldStoreMeasurementsWhenProvided() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("measureuser");
-        request.setEmail("measure@example.com");
-        request.setFirstName("Measure");
-        request.setLastName("User");
-        request.setPassword("password");
-        var measurements = new com.services.active.dto.BodyMeasurementsRequest();
-        measurements.setWeightKg(81.3);
-        measurements.setHeightCm(182);
-        request.setMeasurements(measurements);
-        when(userRepository.findByEmail("measure@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
-
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertNotNull(captor.getValue().getMeasurements());
-        assertEquals(81.3, captor.getValue().getMeasurements().getWeightKg());
-        assertEquals(182, captor.getValue().getMeasurements().getHeightCm());
-    }
-
-    @Test
-    void signup_shouldRejectInvalidMeasurements() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("badmeasure");
-        request.setEmail("badmeasure@example.com");
-        request.setFirstName("Bad");
-        request.setLastName("Measure");
-        request.setPassword("password");
-        var measurements = new com.services.active.dto.BodyMeasurementsRequest();
-        measurements.setWeightKg(-10.0); // invalid
-        request.setMeasurements(measurements);
-        when(userRepository.findByEmail("badmeasure@example.com")).thenReturn(Optional.empty());
-
-        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> authService.signup(request));
-        assertEquals("weightKg must be > 0", ex.getMessage());
-    }
-
-    @Test
-    void updateUser_shouldCreateMeasurementsWhenAbsent() {
-        User user = User.builder().id("u1").build();
-        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(70.2).heightCm(175).build();
-        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
-
-        User updated = userService.updateUser("u1", update);
-        assertNotNull(updated.getMeasurements());
-        assertEquals(70.2, updated.getMeasurements().getWeightKg());
-        assertEquals(175, updated.getMeasurements().getHeightCm());
-    }
-
-    @Test
-    void updateUser_shouldMergeMeasurementsWhenPresent() {
-        User user = User.builder().id("u2").measurements(BodyMeasurements.builder().weightKg(80.0).heightCm(180).build()).build();
-        when(userRepository.findById("u2")).thenReturn(Optional.of(user));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(78.5).build(); // only weight
-        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
-
-        User updated = userService.updateUser("u2", update);
-        assertEquals(78.5, updated.getMeasurements().getWeightKg());
-        assertEquals(180, updated.getMeasurements().getHeightCm()); // unchanged
-    }
-
-    @Test
-    void updateUser_shouldRejectInvalidNegativeWeight() {
-        User user = User.builder().id("u3").build();
-        when(userRepository.findById("u3")).thenReturn(Optional.of(user));
-
-        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().weightKg(-5.0).build();
-        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
-
-        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> userService.updateUser("u3", update));
-        assertEquals("weightKg must be > 0", ex.getMessage());
-    }
-
-    @Test
-    void updateUser_shouldRejectInvalidNegativeHeight() {
-        User user = User.builder().id("u4").build();
-        when(userRepository.findById("u4")).thenReturn(Optional.of(user));
-
-        BodyMeasurementsRequest mReq = BodyMeasurementsRequest.builder().heightCm(-180).build();
-        UpdateUserRequest update = UpdateUserRequest.builder().measurements(mReq).build();
-
-        var ex = assertThrows(com.services.active.exceptions.BadRequestException.class, () -> userService.updateUser("u4", update));
-        assertEquals("heightCm must be > 0", ex.getMessage());
-    }
-
-    // GOOGLE LOGIN TESTS
-    @Test
-    void googleLogin_existingUserReturnsToken() {
-        String idToken = "dummy";
-        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid1", "user@example.com", "Test User", null, "New", "User"));
-        User existing = User.builder().email("user@example.com").provider(AuthProvider.GOOGLE).build();
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
-        when(jwtService.generateToken(existing)).thenReturn("token123");
-        when(jwtService.generateRefreshToken(existing)).thenReturn("refresh123");
-
-        TokenResponse resp = authService.loginWithGoogle(idToken);
-        assertEquals("token123", resp.getToken());
-        assertEquals("refresh123", resp.getRefreshToken());
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void googleLogin_newUserCreatedWhenNotFound() {
-        String idToken = "dummy2";
-        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid2", "newuser@example.com", "newuser", null, "New", "User"));
-        when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(any(User.class))).thenReturn("tokenNew");
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refreshNew");
-
-        TokenResponse resp = authService.loginWithGoogle(idToken);
-        assertEquals("tokenNew", resp.getToken());
-        assertEquals("refreshNew", resp.getRefreshToken());
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        User saved = captor.getValue();
-        assertEquals("newuser", saved.getUsername());
-        assertEquals("New", saved.getFirstName());
-        assertEquals("User", saved.getLastName());
-        assertEquals(AuthProvider.GOOGLE, saved.getProvider());
-    }
-
-    @Test
-    void googleLogin_missingEmailFails() {
-        String idToken = "dummy3";
-        when(googleTokenVerifier.verify(idToken)).thenReturn(new GoogleUserInfo("gid3", null, "No Email", null, "New", "User"));
-        var ex = assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(idToken));
-        assertEquals("Email missing in token", ex.getMessage());
-    }
-
-    @Test
-    void googleLogin_verifierThrowsUnauthorizedMapped() {
-        String idToken = "bad";
-        when(googleTokenVerifier.verify(idToken)).thenThrow(new RuntimeException("boom"));
-        var ex = assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(idToken));
-        assertEquals("Invalid ID token", ex.getMessage());
-    }
-
-    @Test
-    void signup_shouldConfigureSingleNotificationSchedule() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("nf1");
-        request.setEmail("nf1@example.com");
-        request.setFirstName("N");
-        request.setLastName("F");
-        request.setPassword("pwd");
-        request.setNotificationFrequency(1);
-        when(userRepository.findByEmail("nf1@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
-
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        var prefs = captor.getValue().getNotificationPreferences();
-        assertTrue(prefs.isEmailNotificationsEnabled());
-        assertEquals(1, prefs.getSchedule().size());
-        assertEquals("09:00", prefs.getSchedule().get(0));
-    }
-
-    @Test
-    void signup_shouldConfigureMultipleNotificationSchedule() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("nf3");
-        request.setEmail("nf3@example.com");
-        request.setFirstName("N");
-        request.setLastName("F");
-        request.setPassword("pwd");
-        request.setNotificationFrequency(3);
-        when(userRepository.findByEmail("nf3@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
-
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        var prefs = captor.getValue().getNotificationPreferences();
-        assertTrue(prefs.isEmailNotificationsEnabled());
-        assertEquals(3, prefs.getSchedule().size());
-        assertEquals(List.of("09:00", "15:00", "21:00"), prefs.getSchedule());
-    }
-
-    @Test
-    void signup_zeroFrequencyDisablesNotifications() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("nf0");
-        request.setEmail("nf0@example.com");
-        request.setFirstName("N");
-        request.setLastName("F");
-        request.setPassword("pwd");
-        request.setNotificationFrequency(0);
-        when(userRepository.findByEmail("nf0@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
-
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        var prefs = captor.getValue().getNotificationPreferences();
-        assertFalse(prefs.isEmailNotificationsEnabled());
-        assertTrue(prefs.getSchedule().isEmpty());
-    }
-
-    @Test
-    void signup_nullFrequencyLeavesDefaults() {
-        AuthRequest request = new AuthRequest();
-        request.setUsername("nfnull");
-        request.setEmail("nfnull@example.com");
-        request.setFirstName("N");
-        request.setLastName("F");
-        request.setPassword("pwd");
-        // no frequency set
-        when(userRepository.findByEmail("nfnull@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pwd")).thenReturn("hashed");
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(ArgumentMatchers.any(User.class))).thenReturn("token");
-        when(jwtService.generateRefreshToken(ArgumentMatchers.any(User.class))).thenReturn("refreshToken");
-
-        authService.signup(request);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        var prefs = captor.getValue().getNotificationPreferences();
-        assertFalse(prefs.isEmailNotificationsEnabled());
-        assertTrue(prefs.getSchedule().isEmpty());
-    }
-
-    @Test
-    void updateUser_changesNotificationFrequency() {
-        User existing = User.builder().id("uNF").build();
-        when(userRepository.findById("uNF")).thenReturn(Optional.of(existing));
-        when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        UpdateUserRequest req = UpdateUserRequest.builder().notificationFrequency(2).build();
-
-        User updated = userService.updateUser("uNF", req);
-        var prefs = updated.getNotificationPreferences();
-        assertTrue(prefs.isEmailNotificationsEnabled());
-        assertEquals(2, prefs.getSchedule().size());
-        assertEquals(List.of("09:00", "21:00"), prefs.getSchedule());
-        assertEquals(List.of("09:00", "21:00"), prefs.getSchedule());
-    }
-
-    @Test
-    void refreshToken_shouldReturnNewTokens() {
-        String refreshToken = "validRefresh";
-        User user = User.builder().id("u1").build();
-        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
-        when(claims.getSubject()).thenReturn("u1");
-
-        when(jwtService.parseRefreshToken(refreshToken)).thenReturn(claims);
-        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken(user)).thenReturn("newToken");
-        when(jwtService.generateRefreshToken(user)).thenReturn("newRefresh");
-
-        TokenResponse response = authService.refreshToken(refreshToken);
-        assertEquals("newToken", response.getToken());
-        assertEquals("newRefresh", response.getRefreshToken());
-    }
-
-    @Test
-    void refreshToken_shouldThrowUnauthorizedIfTokenInvalid() {
-        String refreshToken = "invalid";
-        when(jwtService.parseRefreshToken(refreshToken)).thenThrow(new RuntimeException("invalid"));
-
-        assertThrows(UnauthorizedException.class, () -> authService.refreshToken(refreshToken));
-    }
-
-    @Test
-    void refreshToken_shouldThrowUnauthorizedIfUserNotFound() {
-        String refreshToken = "validRefresh";
-        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
-        when(claims.getSubject()).thenReturn("u1");
-
-        when(jwtService.parseRefreshToken(refreshToken)).thenReturn(claims);
-        when(userRepository.findById("u1")).thenReturn(Optional.empty());
-
-        assertThrows(UnauthorizedException.class, () -> authService.refreshToken(refreshToken));
+        // When & Then
+        assertThrows(UnauthorizedException.class,
+                () -> authService.authenticateWithWorkos(invalidCode));
+        verify(workosService).authenticateWithCode(invalidCode);
+        verify(userRepository, never()).save(any(User.class));
     }
 }
+

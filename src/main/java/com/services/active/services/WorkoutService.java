@@ -10,6 +10,7 @@ import com.services.active.models.Workout;
 import com.services.active.models.WorkoutTemplate;
 import com.services.active.models.TemplateExercise;
 import com.services.active.models.Exercise;
+import com.services.active.models.user.User;
 import com.services.active.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +27,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WorkoutService {
+    private final UserRepository userRepository;
     private final WorkoutRepository workoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final ExerciseRepository exerciseRepository;
 
-    public Workout createWorkout(String userId, CreateWorkoutRequest request) {
+    public Workout createWorkout(String workosId, CreateWorkoutRequest request) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         if (request.getTemplate() == null) {
             throw new BadRequestException("Template is required");
         }
@@ -56,7 +62,11 @@ public class WorkoutService {
         return workoutRepository.save(workout);
     }
 
-    public List<UserWorkoutResponse> getUserWorkouts(String userId) {
+    public List<UserWorkoutResponse> getUserWorkouts(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         List<Workout> workouts = workoutRepository.findAllByUserId(userId);
         List<UserWorkoutResponse> result = new ArrayList<>();
         for (Workout workout : workouts) {
@@ -69,7 +79,11 @@ public class WorkoutService {
         return result;
     }
 
-    public Workout updateWorkout(String userId, String workoutId, com.services.active.dto.UpdateWorkoutRequest request) {
+    public Workout updateWorkout(String workosId, String workoutId, com.services.active.dto.UpdateWorkoutRequest request) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         Workout workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
 
@@ -102,7 +116,11 @@ public class WorkoutService {
         return workoutChanged ? workoutRepository.save(workout) : workout;
     }
 
-    public void deleteWorkout(String userId, String workoutId) {
+    public void deleteWorkout(String workosId, String workoutId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         Workout workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
         if (!userId.equals(workout.getUserId())) {

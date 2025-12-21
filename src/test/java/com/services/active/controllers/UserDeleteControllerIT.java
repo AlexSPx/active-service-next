@@ -75,7 +75,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
                 .notes("Focus on form")
                 .template(template)
                 .build();
-        var workout = workoutService.createWorkout(user.getId(), workoutReq);
+        var workout = workoutService.createWorkout(user.getWorkosId(), workoutReq);
 
         // 2) Create a workout record via API (also creates exercise records and personal bests)
         LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
@@ -111,7 +111,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
                 .pattern(List.of(p))
                 .active(true)
                 .build();
-        routineService.createRoutine(user.getId(), routineReq);
+        routineService.createRoutine(user.getWorkosId(), routineReq);
 
         // Sanity checks before deletion
         assertThat(userRepository.findById(user.getId())).isPresent();
@@ -138,4 +138,3 @@ class UserDeleteControllerIT extends IntegrationTestBase {
         assertThat(workoutTemplateRepository.findAll()).isEmpty();
     }
 }
-

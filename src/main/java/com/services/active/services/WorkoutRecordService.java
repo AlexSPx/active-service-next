@@ -8,8 +8,10 @@ import com.services.active.models.ExercisePersonalBest;
 import com.services.active.models.ExerciseRecord;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
+import com.services.active.models.user.User;
 import com.services.active.repository.ExerciseRecordRepository;
 import com.services.active.repository.ExerciseRepository;
+import com.services.active.repository.UserRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorkoutRecordService {
 
+    private final UserRepository userRepository;
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
@@ -32,8 +35,12 @@ public class WorkoutRecordService {
     private final PersonalBestService personalBestService;
     private final StreakService streakService;
 
-    public com.services.active.dto.WorkoutRecordCreateResponse createWorkoutRecord(String userId, WorkoutRecordRequest request) {
-        log.info("createWorkoutRecord userId: {}, workoutId: {}", userId, request.getWorkoutId());
+    public com.services.active.dto.WorkoutRecordCreateResponse createWorkoutRecord(String workosId, WorkoutRecordRequest request) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
+        log.info("createWorkoutRecord workosId: {}, userId: {}, workoutId: {}", workosId, userId, request.getWorkoutId());
 
         // Fetch the workout to get the title for snapshot
         Workout workout = workoutRepository.findById(request.getWorkoutId())
@@ -113,7 +120,7 @@ public class WorkoutRecordService {
         workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), saved.getId());
 
         // Update streaks for the user based on the completed workout and capture the update status
-        var streakUpdate = streakService.onWorkoutCompleted(userId, request.getWorkoutId());
+        var streakUpdate = streakService.onWorkoutCompleted(workosId, request.getWorkoutId());
 
         // Build response from saved data (no need to refetch exercise records)
         Set<String> savedExIds = savedRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
@@ -149,7 +156,11 @@ public class WorkoutRecordService {
                 .build();
     }
 
-    public List<UserWorkoutRecordsResponse> getWorkoutRecords(String userId) {
+    public List<UserWorkoutRecordsResponse> getWorkoutRecords(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         return workoutRecordRepository.findAllByUserId(userId)
                 .stream()
                 .map(workoutRecord -> {

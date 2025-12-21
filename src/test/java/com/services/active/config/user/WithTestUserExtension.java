@@ -1,25 +1,21 @@
 package com.services.active.config.user;
 
-import com.services.active.dto.AuthRequest;
-import com.services.active.dto.LoginRequest;
-import com.services.active.dto.TokenResponse;
 import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
-import com.services.active.services.AuthService;
 import org.junit.jupiter.api.extension.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
+import java.time.LocalDate;
+import java.util.Base64;
 
 public class WithTestUserExtension implements BeforeEachCallback, ParameterResolver {
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(WithTestUserExtension.class);
 
-    private AuthService authService;
     private UserRepository userRepository;
     private String token;
     private User user;
@@ -69,25 +65,19 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
     }
 
     private void resolveBeans(ExtensionContext context, Object testInstance) {
-        if (this.authService != null && this.userRepository != null) return;
+        if (this.userRepository != null) return;
         try {
             ApplicationContext applicationContext = SpringExtension.getApplicationContext(context);
-            if (this.authService == null) this.authService = applicationContext.getBean(AuthService.class);
             if (this.userRepository == null) this.userRepository = applicationContext.getBean(UserRepository.class);
         } catch (Exception ignored) {
             try {
-                if (this.authService == null) {
-                    Field field = testInstance.getClass().getDeclaredField("authService");
-                    field.setAccessible(true);
-                    this.authService = (AuthService) field.get(testInstance);
-                }
                 if (this.userRepository == null) {
                     Field field = testInstance.getClass().getDeclaredField("userRepository");
                     field.setAccessible(true);
                     this.userRepository = (UserRepository) field.get(testInstance);
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalStateException("Required beans not found for WithTestUserExtension", e);
+                throw new IllegalStateException("UserRepository not found for WithTestUserExtension", e);
             }
         }
     }
@@ -108,40 +98,60 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
         // Ensure beans present
         resolveBeans(context, context.getRequiredTestInstance());
 
-        String username = annotation.username();
         String email = annotation.email();
-        String password = annotation.password();
+        String workosId = "test_workos_" + email.replace("@", "_").replace(".", "_");
 
-        AuthRequest signup = new AuthRequest();
-        signup.setUsername(username);
-        signup.setEmail(email);
-        signup.setFirstName("Test");
-        signup.setLastName("User");
-        signup.setPassword(password);
-        try {
-            authService.signup(signup);
-        } catch (ResponseStatusException e) {
-            if (e.getStatusCode().value() != 409) {
-                throw e;
-            }
-            // ignore existing user
-        }
+        // Check if user already exists by workosId
+        this.user = userRepository.findByWorkosId(workosId).orElseGet(() -> {
+            // Create new test user directly in database with mock WorkOS ID
+            User newUser = User.builder()
+                    .workosId(workosId)
+                    .createdAt(LocalDate.now())
+                    .timezone("UTC")
+                    .build();
+            return userRepository.save(newUser);
+        });
 
-        // Fetch user entity
-        this.user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("Failed to load test user by email"));
         context.getStore(NAMESPACE).put("user", this.user);
 
-        // Login to get token
-        LoginRequest login = new LoginRequest();
-        login.setEmail(email);
-        login.setPassword(password);
-        TokenResponse tokenResponse = authService.login(login);
-        if (tokenResponse == null || tokenResponse.getToken() == null) {
-            throw new IllegalStateException("Failed to obtain JWT token in WithTestUserExtension");
-        }
-        this.token = tokenResponse.getToken();
+        // Generate a properly formatted mock JWT token
+        // Format: header.payload.signature (all base64 encoded)
+        // The TestSecurityConfig's mock JwtDecoder will decode this
+        this.token = createMockJwt(this.user.getWorkosId());
         context.getStore(NAMESPACE).put("jwt", this.token);
+
+        System.out.println("========================================");
+        System.out.println("DEBUG: Creating test user context");
+        System.out.println("DEBUG: Email: " + email);
+        System.out.println("DEBUG: WorkosId: " + workosId);
+        System.out.println("DEBUG: User ID: " + this.user.getId());
+        System.out.println("DEBUG: Generated token: " + this.token);
+        System.out.println("========================================");
+    }
+
+    /**
+     * Create a mock JWT token in proper format: header.payload.signature
+     * This looks like a real JWT so Spring Security won't reject it as malformed
+     */
+    private String createMockJwt(String workosId) {
+        // Create a simple header (algorithm and type)
+        String header = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}";
+
+        // Create a simple payload with the workosId as subject
+        long now = System.currentTimeMillis() / 1000;
+        long exp = now + 3600; // 1 hour expiry
+        String payload = String.format("{\"sub\":\"%s\",\"iat\":%d,\"exp\":%d}", workosId, now, exp);
+
+        // Create a mock signature (doesn't need to be valid, just present)
+        String signature = "mock-signature-for-testing";
+
+        // Base64 encode each part (without padding to match JWT format)
+        String encodedHeader = Base64.getUrlEncoder().withoutPadding().encodeToString(header.getBytes());
+        String encodedPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes());
+        String encodedSignature = Base64.getUrlEncoder().withoutPadding().encodeToString(signature.getBytes());
+
+        // Combine into JWT format
+        return encodedHeader + "." + encodedPayload + "." + encodedSignature;
     }
 
     private WithTestUser findWithTestUserAnnotation(ExtensionContext context) {

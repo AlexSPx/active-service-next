@@ -6,8 +6,12 @@ import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.Workout;
 import com.services.active.models.user.BodyMeasurements;
+import com.services.active.models.user.FullUser;
 import com.services.active.models.user.User;
+import com.services.active.models.user.WorkOSUser;
 import com.services.active.repository.*;
+import com.workos.usermanagement.builders.UpdateUserOptionsBuilder;
+import com.workos.usermanagement.types.UpdateUserOptions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,36 +30,36 @@ public class UserService {
     private final ExercisePersonalBestRepository exercisePersonalBestRepository;
     private final RoutineRepository routineRepository;
 
-    public User getUserById(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+    private final WorkosService workosService;
 
+    public FullUser getUserById(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         streakService.checkStreak(user);
-        return user;
+
+        WorkOSUser workOSUser = workosService.getUser(workosId);
+
+        return FullUser.from(user, workOSUser);
     }
 
-    public User updateUser(String userId, UpdateUserRequest request) {
-        User user = userRepository.findById(userId)
+    public FullUser updateUser(String workosId, UpdateUserRequest request) {
+        User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (request.getEmail() != null) {
-            String newEmail = request.getEmail();
-            if (!newEmail.equals(user.getEmail())) {
-                userRepository.findByEmail(newEmail)
-                        .filter(found -> !found.getId().equals(userId))
-                        .ifPresent(found -> { throw new ConflictException("Email already exists"); });
-                user.setEmail(newEmail);
-            }
+        UpdateUserOptionsBuilder workosUpdateBuilder = UpdateUserOptionsBuilder.create(workosId);
+
+        if(request.getFirstName() != null) {
+            workosUpdateBuilder.setFirstName(request.getFirstName());
         }
-        if (request.getUsername() != null) {
+
+        if(request.getLastName() != null) {
+            workosUpdateBuilder.setLastName(request.getLastName());
+        }
+
+        if(request.getUsername() != null) {
             user.setUsername(request.getUsername());
         }
-        if (request.getFirstName() != null) {
-            user.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            user.setLastName(request.getLastName());
-        }
+
         if(request.getRegistrationCompleted() != null) {
             user.setRegistrationCompleted(request.getRegistrationCompleted());
         }
@@ -95,14 +99,18 @@ public class UserService {
             }
             user.setMeasurements(current);
         }
-        return userRepository.save(user);
+
+        WorkOSUser workOSUser = workosService.updateUser(workosId, workosUpdateBuilder.build());
+        User dbUser =  userRepository.save(user);
+
+        return FullUser.from(dbUser, workOSUser);
     }
 
-    public User registerPushToken(String userId, String token) {
+    public User registerPushToken(String workosId, String token) {
         if (token == null || token.trim().isEmpty()) {
             throw new BadRequestException("Token is required");
         }
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (!user.getPushTokens().contains(token)) {
             user.getPushTokens().add(token);
@@ -111,9 +119,11 @@ public class UserService {
         return user;
     }
 
-    public void deleteUserAndData(String userId) {
-        User user = userRepository.findById(userId)
+    public void deleteUserAndData(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+
+        String userId = user.getId();
 
         List<Workout> workouts = workoutRepository.findAllByUserId(userId);
         List<String> templateIds = workouts.stream()
@@ -135,5 +145,6 @@ public class UserService {
 
         // Finally, delete the user document
         userRepository.deleteById(user.getId());
+        workosService.deleteUser(workosId);
     }
 }

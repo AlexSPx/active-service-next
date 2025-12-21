@@ -4,12 +4,14 @@ import com.services.active.dto.ExerciseLogResponse;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.Exercise;
 import com.services.active.models.ExerciseRecord;
+import com.services.active.models.user.User;
 import com.services.active.models.types.Category;
 import com.services.active.models.types.Equipment;
 import com.services.active.models.types.Level;
 import com.services.active.models.types.MuscleGroup;
 import com.services.active.repository.ExerciseRecordRepository;
 import com.services.active.repository.ExerciseRepository;
+import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class ExerciseService {
     private final ExerciseRepository exerciseRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final UserRepository userRepository;
     private final MongoTemplate mongoTemplate;
 
 
@@ -67,14 +70,18 @@ public class ExerciseService {
         return mongoTemplate.find(query, Exercise.class);
     }
 
-    public List<ExerciseLogResponse> getExerciseLogs(String userId, String exerciseId) {
+    public List<ExerciseLogResponse> getExerciseLogs(String workosId, String exerciseId) {
         // Verify the exercise exists
         Exercise exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new NotFoundException("Exercise not found: " + exerciseId));
 
+        // Look up user by workosId to get database userId
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
         // Get all exercise records for this user and exercise, ordered by creation time (most recent first)
         List<ExerciseRecord> exerciseRecords = exerciseRecordRepository
-                .findByUserIdAndExerciseIdOrderByCreatedAtAsc(userId, exerciseId);
+                .findByUserIdAndExerciseIdOrderByCreatedAtAsc(user.getId(), exerciseId);
 
         if (exerciseRecords.isEmpty()) {
             return new ArrayList<>();

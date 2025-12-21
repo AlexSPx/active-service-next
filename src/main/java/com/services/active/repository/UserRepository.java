@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, String> {
-    Optional<User> findByEmail(String email);
+    Optional<User> findByWorkosId(String workosId);
     List<User> findByTimezoneIn(List<String> timezones);
 
     @Query("{ 'timezone': ?0, 'notificationPreferences.emailNotificationsEnabled': true, 'notificationPreferences.schedule': ?1 }")
     List<User> findUsersToNotify(String timezone, String localTime);
-
-    Optional<User> findByGoogleId(String googleId); // New finder to ensure a Google account is not already linked to another user
 }

@@ -26,7 +26,12 @@ public class RoutineService {
     private final RoutineRepository routineRepository;
     private final UserRepository userRepository;
 
-    public Routine createRoutine(String userId, CreateRoutineRequest request) {
+    public Routine createRoutine(String workosId, CreateRoutineRequest request) {
+        // First get the user to obtain the database ID
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         if (routineRepository.existsByUserIdAndNameIgnoreCase(userId, request.getName())) {
             throw new ConflictException("Routine name already exists");
         }
@@ -48,33 +53,41 @@ public class RoutineService {
         Routine saved = routineRepository.save(routine);
 
         if (requestedActive) {
-            User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
             user.setActiveRoutineId(saved.getId());
             userRepository.save(user);
         }
         return saved;
     }
 
-    public List<Routine> listRoutines(String userId) {
-        return routineRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+    public List<Routine> listRoutines(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
     }
 
-    public Routine getRoutine(String userId, String id) {
-        return routineRepository.findByIdAndUserId(id, userId)
+    public Routine getRoutine(String workosId, String id) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return routineRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
     }
 
-    public Routine getActiveRoutine(String userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+    public Routine getActiveRoutine(String workosId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         String activeId = user.getActiveRoutineId();
         if (activeId == null || activeId.isBlank()) {
             throw new NotFoundException("No active routine");
         }
-        return routineRepository.findByIdAndUserId(activeId, userId)
+        return routineRepository.findByIdAndUserId(activeId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Active routine not found"));
     }
 
-    public Routine updateRoutine(String userId, String id, UpdateRoutineRequest request) {
+    public Routine updateRoutine(String workosId, String id, UpdateRoutineRequest request) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         Routine existing = routineRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
@@ -106,7 +119,6 @@ public class RoutineService {
             changed = true;
         }
         if (request.getActive() != null) {
-            User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
             boolean makeActive = request.getActive();
             if (makeActive) {
                 user.setActiveRoutineId(existing.getId());
@@ -125,18 +137,20 @@ public class RoutineService {
         return existing;
     }
 
-    public void deleteRoutine(String userId, String id) {
+    public void deleteRoutine(String workosId, String id) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        String userId = user.getId();
+
         Routine existing = routineRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
             throw new UnauthorizedException("Not authorized to delete this routine");
         }
-        userRepository.findById(userId).ifPresent(user -> {
-            if (id.equals(user.getActiveRoutineId())) {
-                user.setActiveRoutineId(null);
-                userRepository.save(user);
-            }
-        });
+        if (id.equals(user.getActiveRoutineId())) {
+            user.setActiveRoutineId(null);
+            userRepository.save(user);
+        }
         routineRepository.deleteById(id);
     }
 }

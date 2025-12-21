@@ -57,7 +57,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
         objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    private Workout createSimpleWorkout() {
+    private Workout createSimpleWorkout(User user) {
         TemplateExercise ex = TemplateExercise.builder()
                 .exerciseId("exercise-1")
                 .reps(List.of(5, 3, 1))
@@ -72,7 +72,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
                 .notes("PR hunt")
                 .template(template)
                 .build();
-        return workoutService.createWorkout("testuser", req);
+        return workoutService.createWorkout(user.getWorkosId(), req);
     }
 
     private String postWorkoutRecord(String token, String workoutId, String exercisePayload) throws Exception {
@@ -106,7 +106,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("First record sets both 1RM and volume PRs, PB saved and achievements present")
     void firstRecordPersistsAchievementsAndPB(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout();
+        Workout workout = createSimpleWorkout(user);
         String exerciseJson = """
         {
           "exerciseId": "exercise-1",
@@ -137,7 +137,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Non-PR record does not persist achievements and PBs remain unchanged")
     void nonPrRecordDoesNotPersistAchievements(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout();
+        Workout workout = createSimpleWorkout(user);
         // Seed a PR first
         String wr1 = postWorkoutRecord(token, workout.getId(), """
         {
@@ -169,7 +169,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Record with higher 1RM but lower volume updates only 1RM PB")
     void higherOneRmLowerVolumeUpdatesOnlyOneRm(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout();
+        Workout workout = createSimpleWorkout(user);
         // Seed
         postWorkoutRecord(token, workout.getId(), """
         {
@@ -199,7 +199,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Record with higher volume but lower 1RM updates only volume PB")
     void higherVolumeLowerOneRmUpdatesOnlyVolume(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout();
+        Workout workout = createSimpleWorkout(user);
         // Seed best 1RM 125x1 and volume 950 from first
         postWorkoutRecord(token, workout.getId(), """
         {
@@ -236,8 +236,8 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
 
     @Test
     @DisplayName("GET /api/workouts/record returns achievement fields in response for PR records")
-    void getWorkoutRecords_returnsAchievements(@TestUserContext String token) throws Exception {
-        Workout workout = createSimpleWorkout();
+    void getWorkoutRecords_returnsAchievements(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        Workout workout = createSimpleWorkout(user);
         // Create a PR record
         postWorkoutRecord(token, workout.getId(), """
         {

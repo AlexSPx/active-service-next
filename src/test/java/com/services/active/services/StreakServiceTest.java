@@ -92,14 +92,17 @@ class StreakServiceTest {
 
     @Test
     void onWorkoutCompleted_wrongWorkout_noAdvance() {
-        User user = User.builder().id("u1").build();
+        String workosId = "workos-u1";
+        String dbUserId = "u1";
+
+        User user = User.builder().id(dbUserId).workosId(workosId).build();
         user.setStreak(StreakInfo.builder()
                 .nextWorkoutId("W1")
                 .nextWorkoutDeadline(LocalDate.now())
                 .build());
-        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
 
-        streakService.onWorkoutCompleted("u1", "W2");
+        streakService.onWorkoutCompleted(workosId, "W2");
 
         assertEquals(0, user.getStreak().getCurrentStreak());
         verify(userRepository, never()).save(any(User.class));
@@ -107,25 +110,28 @@ class StreakServiceTest {
 
     @Test
     void onWorkoutCompleted_correctOnTime_advancesAndSetsNext() {
-        User user = User.builder().id("u1").activeRoutineId("r1").build();
+        String workosId = "workos-u1";
+        String dbUserId = "u1";
+
+        User user = User.builder().id(dbUserId).workosId(workosId).activeRoutineId("r1").build();
         user.setStreak(StreakInfo.builder()
                 .currentStreak(2)
                 .longestStreak(3)
                 .nextWorkoutId("W0")
                 .nextWorkoutDeadline(LocalDate.now())
                 .build());
-        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
         Routine routine = Routine.builder()
-                .id("r1").userId("u1")
+                .id("r1").userId(dbUserId)
                 .createdAt(LocalDateTime.now().minusDays(7))
                 .pattern(List.of(
                         RoutinePattern.builder().dayIndex(0).dayType(DayType.WORKOUT).workoutId("W0").build(),
                         RoutinePattern.builder().dayIndex(1).dayType(DayType.REST).build(),
                         RoutinePattern.builder().dayIndex(2).dayType(DayType.WORKOUT).workoutId("W2").build()))
                 .build();
-        when(routineRepository.findByIdAndUserId("r1", "u1")).thenReturn(Optional.of(routine));
+        when(routineRepository.findByIdAndUserId("r1", dbUserId)).thenReturn(Optional.of(routine));
 
-        streakService.onWorkoutCompleted("u1", "W0");
+        streakService.onWorkoutCompleted(workosId, "W0");
 
         assertEquals(3, user.getStreak().getCurrentStreak());
         assertEquals(3, user.getStreak().getLongestStreak());
@@ -135,17 +141,20 @@ class StreakServiceTest {
 
     @Test
     void doubleCompletionSameDay_doesNotIncrement() {
-        User user = User.builder().id("u1").activeRoutineId(null).build();
+        String workosId = "workos-u1";
+        String dbUserId = "u1";
+
+        User user = User.builder().id(dbUserId).workosId(workosId).activeRoutineId(null).build();
         user.setStreak(new StreakInfo());
-        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
 
         // First completion starts the streak
-        var first = streakService.onWorkoutCompleted("u1", "anyWorkout");
+        var first = streakService.onWorkoutCompleted(workosId, "anyWorkout");
         assertEquals(StreakUpdateStatus.STARTED, first.getStatus());
         assertEquals(1, user.getStreak().getCurrentStreak());
 
         // Second completion same day should not increment; returns WRONG_WORKOUT and no save
-        var second = streakService.onWorkoutCompleted("u1", "anyWorkout");
+        var second = streakService.onWorkoutCompleted(workosId, "anyWorkout");
         assertEquals(StreakUpdateStatus.WRONG_WORKOUT, second.getStatus());
         assertEquals(1, user.getStreak().getCurrentStreak());
         // save invoked only once during the first update

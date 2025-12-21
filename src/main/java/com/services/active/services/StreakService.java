@@ -48,8 +48,8 @@ public class StreakService {
         userRepository.save(user);
     }
 
-    public StreakUpdateResponse onWorkoutCompleted(String userId, String completedWorkoutId) {
-        User user = userRepository.findById(userId)
+    public StreakUpdateResponse onWorkoutCompleted(String workosId, String completedWorkoutId) {
+        User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         StreakInfo streak = safeStreak(user);

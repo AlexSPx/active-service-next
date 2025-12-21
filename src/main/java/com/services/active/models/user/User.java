@@ -1,7 +1,5 @@
 package com.services.active.models.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.services.active.models.types.AuthProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,18 +21,10 @@ public class User {
     @Id
     private String id;
 
-    private String googleId;
+    @Indexed(unique = true)
+    private String workosId;
 
-    private String email;
     private String username;
-
-    private String firstName;
-    private String lastName;
-
-    @JsonIgnore
-    private String passwordHash;
-    @JsonIgnore
-    private AuthProvider provider;
 
     private LocalDate createdAt;
 
