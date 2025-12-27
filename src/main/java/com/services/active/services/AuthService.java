@@ -1,160 +1,48 @@
 package com.services.active.services;
 
-import com.services.active.dto.AuthRequest;
-import com.services.active.dto.LoginRequest;
 import com.services.active.dto.TokenResponse;
-import com.services.active.exceptions.ConflictException;
-import com.services.active.exceptions.UnauthorizedException;
-import com.services.active.models.user.BodyMeasurements;
 import com.services.active.models.user.User;
-import com.services.active.models.types.AuthProvider;
 import com.services.active.repository.UserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final GoogleTokenVerifier googleTokenVerifier; // new verifier
+    private final WorkosService workosService;
 
-    public TokenResponse signup(@NonNull AuthRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new ConflictException("Email already exists");
+    /**
+     * Authenticate user with WorkOS authorization code
+     * Creates new user if first time login, otherwise returns existing user
+     * Returns WorkOS JWT tokens directly
+     */
+    public TokenResponse authenticateWithWorkos(@NonNull String code) {
+        WorkosService.WorkosAuthResult authResult = workosService.authenticateWithCode(code);
+
+        String workosUserId = authResult.userId();
+
+        User user = userRepository.findByWorkosId(workosUserId)
+                .orElseGet(() -> createUser(authResult));
+
+        if(user.getWorkosId() == null) {
+            log.error("User creation failed for WorkOS ID {}", workosUserId);
+            throw new RuntimeException("Failed to create user with WorkOS ID");
         }
-        BodyMeasurements measurements = null;
-        if (request.getMeasurements() != null) {
-            Double w = request.getMeasurements().getWeightKg();
-            Integer h = request.getMeasurements().getHeightCm();
-            if (w != null && w <= 0) {
-                throw new com.services.active.exceptions.BadRequestException("weightKg must be > 0");
-            }
-            if (h != null && h <= 0) {
-                throw new com.services.active.exceptions.BadRequestException("heightCm must be > 0");
-            }
-            if (w != null || h != null) {
-                measurements = BodyMeasurements.builder().weightKg(w).heightCm(h).build();
-            }
-        }
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .provider(AuthProvider.LOCAL)
-                .createdAt(LocalDate.now())
-                .timezone(Optional.ofNullable(request.getTimezone()).filter(t -> !t.isBlank()).orElse("UTC"))
-                .measurements(measurements)
+
+        return new TokenResponse(authResult.accessToken(), authResult.refreshToken());
+    }
+
+    private User createUser(WorkosService.WorkosAuthResult authResult) {
+        log.info("Creating new user for WorkOS ID {}", authResult.userId());
+
+        User newUser = User.builder()
+                .workosId(authResult.userId())
+                .timezone("UTC")
                 .build();
-        user.setNotificationPreferences(request.getNotificationFrequency());
-        User saved = userRepository.save(user);
-        return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
-    }
-
-    public TokenResponse login(@NonNull LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-        if (user.getProvider() == AuthProvider.GOOGLE) {
-            throw new UnauthorizedException("Use Google Sign-In for this account");
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid credentials");
-        }
-        String token = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        return new TokenResponse(token, refreshToken);
-    }
-
-    public TokenResponse loginWithGoogle(String idTokenString) {
-        try {
-            var info = googleTokenVerifier.verify(idTokenString);
-            String email = info.email();
-            if (email == null || email.isBlank()) {
-                throw new UnauthorizedException("Email missing in token");
-            }
-            return userRepository.findByEmail(email)
-                    .map(user -> {
-                        if(user.getProvider() != AuthProvider.GOOGLE) {
-                            throw new UnauthorizedException("Email already registered with different provider");
-                        }
-                       return new TokenResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user));
-                    })
-                    .orElseGet(() -> {
-                        User newUser = User.builder()
-                                .email(email)
-                                .googleId(info.googleId())
-                                .username(info.name())
-                                .firstName(info.givenName())
-                                .lastName(info.familyName())
-                                .provider(AuthProvider.GOOGLE)
-                                .createdAt(LocalDate.now())
-                                .timezone(null)
-                                .build();
-                        User saved = userRepository.save(newUser);
-                        return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
-                    });
-        } catch (UnauthorizedException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UnauthorizedException("Invalid ID token");
-        }
-    }
-
-    public TokenResponse refreshToken(String refreshToken) {
-        try {
-            var claims = jwtService.parseRefreshToken(refreshToken);
-            String userId = claims.getSubject();
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-            String newToken = jwtService.generateToken(user);
-            String newRefreshToken = jwtService.generateRefreshToken(user);
-            return new TokenResponse(newToken, newRefreshToken);
-        } catch (Exception e) {
-            throw new UnauthorizedException("Invalid refresh token");
-        }
-    }
-
-    public TokenResponse linkGoogleAccount(@NonNull String userId, @NonNull String idTokenString) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-        if (user.getProvider() == AuthProvider.GOOGLE) {
-            throw new ConflictException("Account already linked to Google");
-        }
-
-        try {
-            var info = googleTokenVerifier.verify(idTokenString);
-            String email = info.email();
-            if (email == null || email.isBlank()) {
-                throw new UnauthorizedException("Email missing in token");
-            }
-
-            if (info.googleId() != null) {
-                userRepository.findByGoogleId(info.googleId())
-                        .filter(u -> !u.getId().equals(user.getId()))
-                        .ifPresent(u -> { throw new ConflictException("Google account already linked to another user"); });
-            }
-
-            user.setGoogleId(info.googleId());
-            user.setProvider(AuthProvider.GOOGLE);
-            user.setPasswordHash(null);
-            User saved = userRepository.save(user);
-            return new TokenResponse(jwtService.generateToken(saved), jwtService.generateRefreshToken(saved));
-        } catch (UnauthorizedException | ConflictException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UnauthorizedException("Invalid ID token");
-        }
+        return userRepository.save(newUser);
     }
 }

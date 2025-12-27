@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Import(TestMongoConfig.class)
+@Import({TestMongoConfig.class, TestWorkosConfig.class, TestSecurityConfig.class})
 public abstract class IntegrationTestBase {
 
     @Autowired

@@ -61,7 +61,7 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
                 .template(template)
                 .build();
 
-        return workoutService.createWorkout(user.getId(), request);
+        return workoutService.createWorkout(user.getWorkosId(), request);
     }
 
     @Test
@@ -85,7 +85,7 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
         recordReq.setNotes("Record to survive delete");
         recordReq.setStartTime(startTime);
         recordReq.setExerciseRecords(List.of(ex));
-        com.services.active.dto.WorkoutRecordCreateResponse created = workoutRecordService.createWorkoutRecord(user.getId(), recordReq);
+        com.services.active.dto.WorkoutRecordCreateResponse created = workoutRecordService.createWorkoutRecord(user.getWorkosId(), recordReq);
         String recordId = created.getWorkoutRecord().getId();
 
         // Sanity: record exists

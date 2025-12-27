@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +21,12 @@ public class GlobalErrorHandler {
     public ResponseEntity<Map<String, String>> handleApiException(@NonNull ApiException ex) {
         log.error("Handling API exception: {}", ex.getMessage());
         return ResponseEntity.status(ex.getStatus()).body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Unexpected error"));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingParams(@NonNull MissingServletRequestParameterException ex) {
+        String msg = String.format("Missing required parameter: %s", ex.getParameterName());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", msg));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

@@ -80,7 +80,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                 .build();
 
         // Create the workout through service
-        Workout createdWorkout = workoutService.createWorkout("testuser", workoutRequest);
+        Workout createdWorkout = workoutService.createWorkout(user.getWorkosId(), workoutRequest);
 
         // Build JSON payload manually to avoid LocalDateTime serialization issues in test mapper
         LocalDateTime startTime = LocalDateTime.now().minusMinutes(45);

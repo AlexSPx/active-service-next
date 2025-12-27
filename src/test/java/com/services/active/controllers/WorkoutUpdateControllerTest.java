@@ -62,7 +62,7 @@ class WorkoutUpdateControllerTest extends IntegrationTestBase {
                 .template(template)
                 .build();
 
-        return workoutService.createWorkout(user.getId(), request);
+        return workoutService.createWorkout(user.getWorkosId(), request);
     }
 
     @Test
