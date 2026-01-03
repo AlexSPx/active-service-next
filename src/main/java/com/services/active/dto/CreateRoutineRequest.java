@@ -1,6 +1,7 @@
 package com.services.active.dto;
 
 import com.services.active.models.RoutinePattern;
+import com.services.active.models.types.RoutineType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -34,4 +35,8 @@ public class CreateRoutineRequest {
 
     @Schema(description = "Start date for the routine; defaults to creation day if omitted", example = "2025-12-11")
     private LocalDate startDate;
+
+    @Schema(description = "Type of routine scheduling. SEQUENTIAL: workouts on specific days. WEEKLY_COMPLETION: complete all workouts within a week (Mon-Sun) in any order. Defaults to SEQUENTIAL.",
+            example = "WEEKLY_COMPLETION")
+    private RoutineType routineType;
 }

@@ -7,6 +7,8 @@ import com.services.active.exceptions.NotFoundException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.models.Routine;
+import com.services.active.models.types.DayType;
+import com.services.active.models.types.RoutineType;
 import com.services.active.models.user.User;
 import com.services.active.repository.RoutineRepository;
 import com.services.active.repository.UserRepository;
@@ -37,6 +39,9 @@ public class RoutineService {
         }
         LocalDateTime now = LocalDateTime.now();
         boolean requestedActive = Boolean.TRUE.equals(request.getActive());
+        RoutineType routineType = request.getRoutineType() != null
+                ? request.getRoutineType()
+                : RoutineType.SEQUENTIAL;
         Routine routine = Routine.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -49,6 +54,7 @@ public class RoutineService {
                         .atStartOfDay(ZoneOffset.UTC)
                         .toInstant())
                 .pattern(request.getPattern())
+                .routineType(routineType)
                 .build();
         Routine saved = routineRepository.save(routine);
 
@@ -116,6 +122,18 @@ public class RoutineService {
         }
         if (request.getStartDate() != null) {
             existing.setStartDate(request.getStartDate().atStartOfDay(ZoneOffset.UTC).toInstant());
+            changed = true;
+        }
+        if (request.getRoutineType() != null) {
+            existing.setRoutineType(request.getRoutineType());
+            // When changing to WEEKLY_COMPLETION, remove REST days as they don't apply
+            if (request.getRoutineType() == RoutineType.WEEKLY_COMPLETION && existing.getPattern() != null) {
+                existing.setPattern(
+                        existing.getPattern().stream()
+                                .filter(p -> p.getDayType() != DayType.REST)
+                                .toList()
+                );
+            }
             changed = true;
         }
         if (request.getActive() != null) {

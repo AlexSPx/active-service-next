@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @Builder
@@ -19,5 +20,15 @@ public class StreakUpdateResponse {
     private String nextWorkoutId;
     private LocalDate nextWorkoutDeadline;
     private int streakFreezeCount;
+
+    /**
+     * For WEEKLY_COMPLETION routines: workout IDs completed this week.
+     */
+    private Set<String> weeklyCompletedWorkoutIds;
+
+    /**
+     * For WEEKLY_COMPLETION routines: total workouts required this week.
+     */
+    private Integer weeklyWorkoutsRequired;
 }
 

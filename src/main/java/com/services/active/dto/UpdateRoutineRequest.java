@@ -1,6 +1,7 @@
 package com.services.active.dto;
 
 import com.services.active.models.RoutinePattern;
+import com.services.active.models.types.RoutineType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,4 +31,8 @@ public class UpdateRoutineRequest {
 
     @Schema(description = "Start date for the routine; if null, not changed", example = "2025-12-11")
     private LocalDate startDate;
+
+    @Schema(description = "Type of routine scheduling. SEQUENTIAL: workouts on specific days. WEEKLY_COMPLETION: complete all workouts within a week (Mon-Sun) in any order.",
+            example = "WEEKLY_COMPLETION")
+    private RoutineType routineType;
 }
