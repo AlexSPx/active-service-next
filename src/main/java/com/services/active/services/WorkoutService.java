@@ -154,6 +154,8 @@ public class WorkoutService {
                         .durationSeconds(te.getDurationSeconds())
                         .notes(te.getNotes())
                         .category(ex != null ? ex.getCategory() : null)
+                        .primaryMuscles(ex != null ? ex.getPrimaryMuscles() : null)
+                        .secondaryMuscles(ex != null ? ex.getSecondaryMuscles() : null)
                         .build());
             }
         }
