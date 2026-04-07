@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -205,6 +207,76 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/workouts/record")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/workouts/record/{id} -> 204 NO CONTENT deletes record and exercise records")
+    void deleteWorkoutRecord_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        ExerciseRecord ex1 = exerciseRecordRepository.save(ExerciseRecord.builder()
+                .userId(user.getId())
+                .exerciseId("exercise-1")
+                .reps(List.of(10, 8, 6))
+                .weight(List.of(50.0, 55.0, 60.0))
+                .notes("Set 1")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        ExerciseRecord ex2 = exerciseRecordRepository.save(ExerciseRecord.builder()
+                .userId(user.getId())
+                .exerciseId("exercise-2")
+                .reps(List.of(12, 10, 8))
+                .weight(List.of(20.0, 22.5, 25.0))
+                .notes("Set 2")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        List<String> exerciseRecordIds = List.of(ex1.getId(), ex2.getId());
+
+        WorkoutRecord workoutRecord = workoutRecordRepository.save(WorkoutRecord.builder()
+                .userId(user.getId())
+                .workoutId("workout-1")
+                .workoutTitle("History Record")
+                .exerciseRecordIds(exerciseRecordIds)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        assertThat(exerciseRecordRepository.findAllById(exerciseRecordIds)).hasSize(2);
+
+        mockMvc.perform(delete("/api/workouts/record/{id}", workoutRecord.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent())
+                .andDo(print());
+
+        assertThat(workoutRecordRepository.findById(workoutRecord.getId())).isEmpty();
+        assertThat(exerciseRecordRepository.findAllById(exerciseRecordIds)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/workouts/record/{id} -> 404 UNAUTHORIZED when deleting another user's record")
+    void deleteWorkoutRecord_otherUser_forbidden(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        WorkoutRecord otherUsersRecord = workoutRecordRepository.save(WorkoutRecord.builder()
+                .userId("different-user-id")
+                .workoutId("workout-1")
+                .workoutTitle("Other User Record")
+                .exerciseRecordIds(List.of())
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(delete("/api/workouts/record/{id}", otherUsersRecord.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+
+        assertThat(workoutRecordRepository.findById(otherUsersRecord.getId())).isPresent();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("DELETE /api/workouts/record/{id} -> 401 UNAUTHORIZED when no auth token provided")
+    void deleteWorkoutRecord_noAuth_unauthorized() throws Exception {
+        mockMvc.perform(delete("/api/workouts/record/{id}", "some-id"))
                 .andExpect(status().isUnauthorized())
                 .andDo(print());
     }

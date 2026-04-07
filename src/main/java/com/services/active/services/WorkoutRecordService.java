@@ -3,6 +3,7 @@ package com.services.active.services;
 import com.services.active.dto.UserWorkoutRecordsResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.domain.AchievementCalculator;
 import com.services.active.models.ExercisePersonalBest;
 import com.services.active.models.ExerciseRecord;
@@ -199,5 +200,24 @@ public class WorkoutRecordService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public void deleteWorkoutRecord(String workosId, String workoutRecordId) {
+        User user = userRepository.findByWorkosId(workosId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        WorkoutRecord workoutRecord = workoutRecordRepository.findById(workoutRecordId)
+                .orElseThrow(() -> new NotFoundException("Workout record not found"));
+
+        if (!user.getId().equals(workoutRecord.getUserId())) {
+            throw new UnauthorizedException("Not authorized to delete this workout record");
+        }
+
+        List<String> exerciseRecordIds = workoutRecord.getExerciseRecordIds();
+        if (exerciseRecordIds != null && !exerciseRecordIds.isEmpty()) {
+            exerciseRecordRepository.deleteAllById(exerciseRecordIds);
+        }
+
+        workoutRecordRepository.deleteById(workoutRecordId);
     }
 }

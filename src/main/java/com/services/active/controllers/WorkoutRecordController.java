@@ -69,4 +69,23 @@ public class WorkoutRecordController {
         var response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @DeleteMapping("/{recordId}")
+    @Operation(
+        summary = "Delete a workout record",
+        description = "Deletes a workout history record and its associated exercise records for the authenticated user"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Workout record deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Unauthorized - workout record does not belong to user"),
+        @ApiResponse(responseCode = "404", description = "Workout record not found")
+    })
+    public ResponseEntity<Void> deleteWorkoutRecord(Principal principal, @PathVariable String recordId) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        workoutRecordService.deleteWorkoutRecord(principal.getName(), recordId);
+        return ResponseEntity.noContent().build();
+    }
 }
