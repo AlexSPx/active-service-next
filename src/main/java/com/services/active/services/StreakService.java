@@ -3,16 +3,19 @@ package com.services.active.services;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.models.Routine;
 import com.services.active.models.RoutinePattern;
-import com.services.active.models.user.StreakInfo;
 import com.services.active.models.user.User;
+import com.services.active.models.user.UserWeeklyCompletedWorkout;
 import com.services.active.models.types.DayType;
 import com.services.active.models.types.RoutineType;
 import com.services.active.models.types.StreakUpdateStatus;
 import com.services.active.dto.StreakUpdateResponse;
 import com.services.active.repository.RoutineRepository;
+import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.UserRepository;
+import com.services.active.repository.UserWeeklyCompletedWorkoutRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,11 +35,13 @@ import java.util.stream.Collectors;
 public class StreakService {
 
     private final RoutineRepository routineRepository;
+    private final RoutinePatternRepository routinePatternRepository;
     private final UserRepository userRepository;
+    private final UserWeeklyCompletedWorkoutRepository weeklyCompletedRepo;
 
+    @Transactional
     public void checkStreak(User user) {
-        StreakInfo streak = safeStreak(user);
-        LocalDate deadline = streak.getNextWorkoutDeadline();
+        LocalDate deadline = user.getNextWorkoutDeadline();
         if (deadline == null) return;
 
         LocalDate today = LocalDate.now();
@@ -45,140 +51,132 @@ public class StreakService {
         Optional<Routine> activeRoutine = getActiveRoutine(user);
         if (activeRoutine.isPresent() && activeRoutine.get().getRoutineType() == RoutineType.WEEKLY_COMPLETION) {
             // For weekly routines, reset the weekly tracking and handle streak
-            if (streak.getStreakFreezeCount() > 0) {
-                streak.setStreakFreezeCount(streak.getStreakFreezeCount() - 1);
+            if (user.getStreakFreezeCount() > 0) {
+                user.setStreakFreezeCount(user.getStreakFreezeCount() - 1);
             } else {
-                streak.setCurrentStreak(0);
+                user.setCurrentStreak(0);
             }
-            // Reset weekly tracking for the new week
             LocalDate currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            streak.setCurrentWeekStart(currentMonday);
-            streak.setWeeklyCompletedWorkoutIds(new HashSet<>());
-            streak.setNextWorkoutDeadline(currentMonday.plusDays(6)); // End of current week
-            streak.setNextWorkoutId(null);
+            user.setCurrentWeekStart(currentMonday);
+            // Reset weekly completed workouts
+            weeklyCompletedRepo.deleteByUserId(user.getId());
+            user.setNextWorkoutDeadline(currentMonday.plusDays(6));
+            user.setNextWorkoutId(null);
         } else {
             // SEQUENTIAL routine logic
-            if (streak.getStreakFreezeCount() > 0) {
-                streak.setStreakFreezeCount(streak.getStreakFreezeCount() - 1);
+            if (user.getStreakFreezeCount() > 0) {
+                user.setStreakFreezeCount(user.getStreakFreezeCount() - 1);
                 NextWorkout next = calculateNextWorkoutDay(user, deadline);
-                streak.setNextWorkoutId(next.workoutId());
-                streak.setNextWorkoutDeadline(next.deadline());
+                user.setNextWorkoutId(next.workoutId());
+                user.setNextWorkoutDeadline(next.deadline());
             } else {
-                streak.setCurrentStreak(0);
-                streak.setNextWorkoutId(null);
-                streak.setNextWorkoutDeadline(null);
+                user.setCurrentStreak(0);
+                user.setNextWorkoutId(null);
+                user.setNextWorkoutDeadline(null);
             }
         }
         userRepository.save(user);
     }
 
-    public StreakUpdateResponse onWorkoutCompleted(String workosId, String completedWorkoutId) {
+    @Transactional
+    public StreakUpdateResponse onWorkoutCompleted(String workosId, UUID completedWorkoutId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        StreakInfo streak = safeStreak(user);
         LocalDate today = LocalDate.now();
 
         // Check if we should use weekly completion logic
         Optional<Routine> activeRoutine = getActiveRoutine(user);
         if (activeRoutine.isPresent() && activeRoutine.get().getRoutineType() == RoutineType.WEEKLY_COMPLETION) {
-            return onWeeklyWorkoutCompleted(user, streak, activeRoutine.get(), completedWorkoutId, today);
+            return onWeeklyWorkoutCompleted(user, activeRoutine.get(), completedWorkoutId, today);
         }
 
         // SEQUENTIAL routine logic (original behavior)
-        return onSequentialWorkoutCompleted(user, streak, completedWorkoutId, today);
+        return onSequentialWorkoutCompleted(user, completedWorkoutId, today);
     }
 
-    private StreakUpdateResponse onSequentialWorkoutCompleted(User user, StreakInfo streak, String completedWorkoutId, LocalDate today) {
+    private StreakUpdateResponse onSequentialWorkoutCompleted(User user, UUID completedWorkoutId, LocalDate today) {
         // Block multiple streak counts within the same calendar day
-        if (streak.getLastWorkoutCountedDate() != null && today.isEqual(streak.getLastWorkoutCountedDate())) {
-            return snapshot(streak, StreakUpdateStatus.WRONG_WORKOUT);
+        if (user.getLastWorkoutCountedDate() != null && today.isEqual(user.getLastWorkoutCountedDate())) {
+            return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT);
         }
 
-        String expectedWorkoutId = streak.getNextWorkoutId();
+        UUID expectedWorkoutId = user.getNextWorkoutId();
 
         if (expectedWorkoutId != null && !expectedWorkoutId.equals(completedWorkoutId)) {
-            // Wrong workout for the current deadline window; do nothing
-            return snapshot(streak, StreakUpdateStatus.WRONG_WORKOUT);
+            return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT);
         }
 
-        LocalDate deadline = streak.getNextWorkoutDeadline();
+        LocalDate deadline = user.getNextWorkoutDeadline();
         StreakUpdateStatus status;
         if (deadline == null) {
-            // Starting a new streak
-            streak.setCurrentStreak(1);
-            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
-                streak.setLongestStreak(streak.getCurrentStreak());
+            user.setCurrentStreak(1);
+            if (user.getCurrentStreak() > user.getLongestStreak()) {
+                user.setLongestStreak(user.getCurrentStreak());
             }
             NextWorkout next = calculateNextWorkoutDay(user, today);
-            streak.setNextWorkoutId(next.workoutId());
-            streak.setNextWorkoutDeadline(next.deadline());
-            streak.setLastWorkoutCountedDate(today);
+            user.setNextWorkoutId(next.workoutId());
+            user.setNextWorkoutDeadline(next.deadline());
+            user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = StreakUpdateStatus.STARTED;
-            return snapshot(streak, status);
+            return snapshot(user, status);
         }
 
         if (today.isAfter(deadline)) {
-            // Late: reset to 1 for this workout
-            streak.setCurrentStreak(1);
-            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
-                streak.setLongestStreak(streak.getCurrentStreak());
+            user.setCurrentStreak(1);
+            if (user.getCurrentStreak() > user.getLongestStreak()) {
+                user.setLongestStreak(user.getCurrentStreak());
             }
             NextWorkout next = calculateNextWorkoutDay(user, today);
-            streak.setNextWorkoutId(next.workoutId());
-            streak.setNextWorkoutDeadline(next.deadline());
-            streak.setLastWorkoutCountedDate(today);
+            user.setNextWorkoutId(next.workoutId());
+            user.setNextWorkoutDeadline(next.deadline());
+            user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = StreakUpdateStatus.BROKEN_RESET;
         } else {
-            int prev = streak.getCurrentStreak();
-            streak.setCurrentStreak(prev + 1);
-            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
-                streak.setLongestStreak(streak.getCurrentStreak());
+            int prev = user.getCurrentStreak();
+            user.setCurrentStreak(prev + 1);
+            if (user.getCurrentStreak() > user.getLongestStreak()) {
+                user.setLongestStreak(user.getCurrentStreak());
             }
             NextWorkout next = calculateNextWorkoutDay(user, today);
-            streak.setNextWorkoutId(next.workoutId());
-            streak.setNextWorkoutDeadline(next.deadline());
-            streak.setLastWorkoutCountedDate(today);
+            user.setNextWorkoutId(next.workoutId());
+            user.setNextWorkoutDeadline(next.deadline());
+            user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = (prev == 0) ? StreakUpdateStatus.STARTED : StreakUpdateStatus.CONTINUED;
         }
 
-        return snapshot(streak, status);
+        return snapshot(user, status);
     }
 
-    private StreakUpdateResponse onWeeklyWorkoutCompleted(User user, StreakInfo streak, Routine routine,
-                                                          String completedWorkoutId, LocalDate today) {
-        // Get the Monday of the current week
+    private StreakUpdateResponse onWeeklyWorkoutCompleted(User user, Routine routine,
+                                                          UUID completedWorkoutId, LocalDate today) {
         LocalDate currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate endOfWeek = currentMonday.plusDays(6); // Sunday
+        LocalDate endOfWeek = currentMonday.plusDays(6);
 
         // Check if we need to reset weekly tracking (new week started)
-        if (streak.getCurrentWeekStart() == null || !streak.getCurrentWeekStart().equals(currentMonday)) {
-            // Check if previous week was missed (streak broken)
-            if (streak.getCurrentWeekStart() != null) {
-                LocalDate previousWeekMonday = streak.getCurrentWeekStart();
+        if (user.getCurrentWeekStart() == null || !user.getCurrentWeekStart().equals(currentMonday)) {
+            if (user.getCurrentWeekStart() != null) {
+                LocalDate previousWeekMonday = user.getCurrentWeekStart();
                 LocalDate expectedNextMonday = previousWeekMonday.plusWeeks(1);
 
-                // If current week is more than 1 week after the tracked week, we missed at least one week
                 if (currentMonday.isAfter(expectedNextMonday)) {
-                    // Missed at least one week - check if freeze available
-                    if (streak.getStreakFreezeCount() > 0) {
-                        streak.setStreakFreezeCount(streak.getStreakFreezeCount() - 1);
+                    if (user.getStreakFreezeCount() > 0) {
+                        user.setStreakFreezeCount(user.getStreakFreezeCount() - 1);
                     } else {
-                        // Reset streak
-                        streak.setCurrentStreak(0);
+                        user.setCurrentStreak(0);
                     }
                 }
             }
-            // Start tracking new week
-            streak.setCurrentWeekStart(currentMonday);
-            streak.setWeeklyCompletedWorkoutIds(new HashSet<>());
+            user.setCurrentWeekStart(currentMonday);
+            weeklyCompletedRepo.deleteByUserId(user.getId());
         }
 
         // Get all required workout IDs from the routine pattern
-        Set<String> requiredWorkoutIds = routine.getPattern().stream()
+        List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routine.getId());
+        Set<UUID> requiredWorkoutIds = patterns.stream()
                 .filter(p -> p.getDayType() == DayType.WORKOUT)
                 .map(RoutinePattern::getWorkoutId)
                 .collect(Collectors.toSet());
@@ -186,96 +184,94 @@ public class StreakService {
 
         // Check if the completed workout is part of this routine
         if (!requiredWorkoutIds.contains(completedWorkoutId)) {
-            return snapshot(streak, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
+            return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
         }
 
         // Check if this workout was already completed this week
-        if (streak.getWeeklyCompletedWorkoutIds() == null) {
-            streak.setWeeklyCompletedWorkoutIds(new HashSet<>());
-        }
-
-        if (streak.getWeeklyCompletedWorkoutIds().contains(completedWorkoutId)) {
-            // Already completed this workout this week - no streak update
-            return snapshot(streak, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
+        if (weeklyCompletedRepo.existsByUserIdAndWorkoutId(user.getId(), completedWorkoutId)) {
+            return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
         }
 
         // Mark this workout as completed
-        streak.getWeeklyCompletedWorkoutIds().add(completedWorkoutId);
-        streak.setLastWorkoutCountedDate(today);
+        weeklyCompletedRepo.save(UserWeeklyCompletedWorkout.builder()
+                .userId(user.getId())
+                .workoutId(completedWorkoutId)
+                .build());
+        user.setLastWorkoutCountedDate(today);
+
+        // Get currently completed IDs
+        Set<UUID> completedIds = weeklyCompletedRepo.findAllByUserId(user.getId()).stream()
+                .map(UserWeeklyCompletedWorkout::getWorkoutId)
+                .collect(Collectors.toSet());
 
         // Check if all workouts for the week are now complete
-        if (streak.getWeeklyCompletedWorkoutIds().containsAll(requiredWorkoutIds)) {
-            // All workouts completed! Increment streak
-            int prev = streak.getCurrentStreak();
-            streak.setCurrentStreak(prev + 1);
-            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
-                streak.setLongestStreak(streak.getCurrentStreak());
+        if (completedIds.containsAll(requiredWorkoutIds)) {
+            int prev = user.getCurrentStreak();
+            user.setCurrentStreak(prev + 1);
+            if (user.getCurrentStreak() > user.getLongestStreak()) {
+                user.setLongestStreak(user.getCurrentStreak());
             }
-            // Set deadline to end of next week
             LocalDate nextMonday = currentMonday.plusWeeks(1);
-            streak.setNextWorkoutDeadline(nextMonday.plusDays(6)); // Next Sunday
-            streak.setNextWorkoutId(null); // No specific workout required next
+            user.setNextWorkoutDeadline(nextMonday.plusDays(6));
+            user.setNextWorkoutId(null);
 
             userRepository.save(user);
-            return snapshot(streak, prev == 0 ? StreakUpdateStatus.STARTED : StreakUpdateStatus.CONTINUED, requiredCount);
+            return snapshot(user, prev == 0 ? StreakUpdateStatus.STARTED : StreakUpdateStatus.CONTINUED, requiredCount);
         } else {
-            // Still workouts remaining this week
-            // Find a remaining workout to set as next
-            Set<String> remaining = new HashSet<>(requiredWorkoutIds);
-            remaining.removeAll(streak.getWeeklyCompletedWorkoutIds());
-            streak.setNextWorkoutId(remaining.iterator().next());
-            streak.setNextWorkoutDeadline(endOfWeek);
+            Set<UUID> remaining = new HashSet<>(requiredWorkoutIds);
+            remaining.removeAll(completedIds);
+            user.setNextWorkoutId(remaining.iterator().next());
+            user.setNextWorkoutDeadline(endOfWeek);
 
             userRepository.save(user);
-            return snapshot(streak, StreakUpdateStatus.WEEKLY_PROGRESS, requiredCount);
+            return snapshot(user, StreakUpdateStatus.WEEKLY_PROGRESS, requiredCount);
         }
     }
 
     private Optional<Routine> getActiveRoutine(User user) {
-        String activeId = user.getActiveRoutineId();
-        if (activeId == null || activeId.isBlank()) {
+        UUID activeId = user.getActiveRoutineId();
+        if (activeId == null) {
             return Optional.empty();
         }
         return routineRepository.findByIdAndUserId(activeId, user.getId());
     }
 
-    private StreakInfo safeStreak(User user) {
-        if (user.getStreak() == null) {
-            user.setStreak(new StreakInfo());
-        }
-        return user.getStreak();
-    }
-
-    private StreakUpdateResponse snapshot(StreakInfo s, StreakUpdateStatus status) {
+    private StreakUpdateResponse snapshot(User u, StreakUpdateStatus status) {
+        Set<String> weeklyIds = weeklyCompletedRepo.findAllByUserId(u.getId()).stream()
+                .map(w -> w.getWorkoutId().toString())
+                .collect(Collectors.toSet());
         return StreakUpdateResponse.builder()
                 .status(status)
-                .currentStreak(s.getCurrentStreak())
-                .longestStreak(s.getLongestStreak())
-                .nextWorkoutId(s.getNextWorkoutId())
-                .nextWorkoutDeadline(s.getNextWorkoutDeadline())
-                .streakFreezeCount(s.getStreakFreezeCount())
-                .weeklyCompletedWorkoutIds(s.getWeeklyCompletedWorkoutIds())
+                .currentStreak(u.getCurrentStreak())
+                .longestStreak(u.getLongestStreak())
+                .nextWorkoutId(u.getNextWorkoutId() != null ? u.getNextWorkoutId().toString() : null)
+                .nextWorkoutDeadline(u.getNextWorkoutDeadline())
+                .streakFreezeCount(u.getStreakFreezeCount())
+                .weeklyCompletedWorkoutIds(weeklyIds)
                 .build();
     }
 
-    private StreakUpdateResponse snapshot(StreakInfo s, StreakUpdateStatus status, int weeklyWorkoutsRequired) {
+    private StreakUpdateResponse snapshot(User u, StreakUpdateStatus status, int weeklyWorkoutsRequired) {
+        Set<String> weeklyIds = weeklyCompletedRepo.findAllByUserId(u.getId()).stream()
+                .map(w -> w.getWorkoutId().toString())
+                .collect(Collectors.toSet());
         return StreakUpdateResponse.builder()
                 .status(status)
-                .currentStreak(s.getCurrentStreak())
-                .longestStreak(s.getLongestStreak())
-                .nextWorkoutId(s.getNextWorkoutId())
-                .nextWorkoutDeadline(s.getNextWorkoutDeadline())
-                .streakFreezeCount(s.getStreakFreezeCount())
-                .weeklyCompletedWorkoutIds(s.getWeeklyCompletedWorkoutIds())
+                .currentStreak(u.getCurrentStreak())
+                .longestStreak(u.getLongestStreak())
+                .nextWorkoutId(u.getNextWorkoutId() != null ? u.getNextWorkoutId().toString() : null)
+                .nextWorkoutDeadline(u.getNextWorkoutDeadline())
+                .streakFreezeCount(u.getStreakFreezeCount())
+                .weeklyCompletedWorkoutIds(weeklyIds)
                 .weeklyWorkoutsRequired(weeklyWorkoutsRequired)
                 .build();
     }
 
-    private record NextWorkout(String workoutId, LocalDate deadline) {}
+    private record NextWorkout(UUID workoutId, LocalDate deadline) {}
 
     private NextWorkout calculateNextWorkoutDay(User user, LocalDate fromDate) {
-        String activeId = user.getActiveRoutineId();
-        if (activeId == null || activeId.isBlank()) {
+        UUID activeId = user.getActiveRoutineId();
+        if (activeId == null) {
             return new NextWorkout(null, fromDate.plusDays(1));
         }
         Optional<Routine> optRoutine = routineRepository.findByIdAndUserId(activeId, user.getId());
@@ -283,17 +279,15 @@ public class StreakService {
             return new NextWorkout(null, fromDate.plusDays(1));
         }
         Routine activeRoutine = optRoutine.get();
-        List<RoutinePattern> pattern = activeRoutine.getPattern();
+        List<RoutinePattern> pattern = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(activeRoutine.getId());
         if (pattern == null || pattern.isEmpty()) {
             return new NextWorkout(null, fromDate.plusDays(1));
         }
 
-        // Determine the start date for the pattern. Use createdAt's date as a proxy.
         LocalDate startDate = Optional.ofNullable(activeRoutine.getCreatedAt())
                 .map(LocalDateTime::toLocalDate)
                 .orElse(fromDate);
 
-        // Normalize pattern by dayIndex for quick lookups
         int patternLength = pattern.stream()
                 .map(RoutinePattern::getDayIndex)
                 .max(Comparator.naturalOrder())
@@ -313,11 +307,10 @@ public class StreakService {
                     .orElse(null);
             if (nextPattern != null && nextPattern.getDayType() == DayType.WORKOUT) {
                 LocalDate nextDeadline = fromDate.plusDays(i);
-                String nextWorkoutId = nextPattern.getWorkoutId();
+                UUID nextWorkoutId = nextPattern.getWorkoutId();
                 return new NextWorkout(nextWorkoutId, nextDeadline);
             }
         }
         return new NextWorkout(null, fromDate.plusDays(1));
     }
 }
-

@@ -1,0 +1,15 @@
+meta {
+  name: Update Workout
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{service-uri}}/api/workouts
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

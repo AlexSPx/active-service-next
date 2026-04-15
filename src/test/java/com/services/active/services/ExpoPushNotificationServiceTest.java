@@ -1,15 +1,17 @@
 package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
-import com.services.active.models.user.StreakInfo;
 import com.services.active.models.user.User;
+import com.services.active.models.user.UserPushToken;
+import com.services.active.repository.UserPushTokenRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -20,29 +22,36 @@ class ExpoPushNotificationServiceTest {
     @Mock
     private ExpoPushNotificationClient expoClient;
 
+    @Mock
+    private UserPushTokenRepository pushTokenRepository;
+
     private User userWithTokens() {
+        UUID userId = UUID.randomUUID();
         User u = new User();
-        u.setId("u1");
-        u.setPushTokens(new ArrayList<>(List.of("ExponentPushToken[token1]")));
-        u.setStreak(StreakInfo.builder().currentStreak(3).build());
+        u.setId(userId);
+        u.setCurrentStreak(3);
+        u.setNextWorkoutDeadline(LocalDate.now().plusDays(1));
         return u;
     }
 
     private User userWithoutTokens() {
+        UUID userId = UUID.randomUUID();
         User u = new User();
-        u.setId("u2");
-        u.setPushTokens(new ArrayList<>());
+        u.setId(userId);
         return u;
     }
 
     @Test
     void bulkSend_sendsOnlyForUsersWithTokens() throws Exception {
-        ExpoPushNotificationService service = new ExpoPushNotificationService();
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository);
         service.setExpoClient(expoClient);
         User u1 = userWithTokens();
         User u2 = userWithoutTokens();
 
-        // Stub to avoid unexpected IOException when the client is invoked
+        when(pushTokenRepository.findAllByUserId(u1.getId()))
+                .thenReturn(List.of(UserPushToken.builder().userId(u1.getId()).token("ExponentPushToken[token1]").build()));
+        when(pushTokenRepository.findAllByUserId(u2.getId()))
+                .thenReturn(List.of());
         when(expoClient.sendPushNotifications(anyList())).thenReturn(null);
 
         int sent = service.sendStreakReminder(List.of(u1, u2));
@@ -51,9 +60,11 @@ class ExpoPushNotificationServiceTest {
 
     @Test
     void bulkSend_noUsersWithTokens_returnsZeroAndDoesNotCallClient() throws Exception {
-        ExpoPushNotificationService service = new ExpoPushNotificationService();
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository);
         service.setExpoClient(expoClient);
         User u2 = userWithoutTokens();
+
+        when(pushTokenRepository.findAllByUserId(u2.getId())).thenReturn(List.of());
 
         int sent = service.sendStreakReminder(List.of(u2));
         assertThat(sent).isZero();

@@ -13,13 +13,12 @@ import com.services.active.repository.ExerciseRecordRepository;
 import com.services.active.repository.ExerciseRepository;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,82 +27,83 @@ public class ExerciseService {
     private final ExerciseRepository exerciseRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final UserRepository userRepository;
-    private final MongoTemplate mongoTemplate;
-
 
     public List<Exercise> searchExercises(String name, Category category, Level level,
                                           List<MuscleGroup> primaryMuscles, List<MuscleGroup> secondaryMuscles,
                                           Equipment equipment) {
-        List<Criteria> criteriaList = new ArrayList<>();
+        Specification<Exercise> spec = Specification.where(null);
 
         if (name != null && !name.trim().isEmpty()) {
-            criteriaList.add(Criteria.where("name").regex(name, "i"));
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
         }
-
         if (category != null) {
-            criteriaList.add(Criteria.where("category").is(category));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("category"), category));
         }
-
         if (level != null) {
-            criteriaList.add(Criteria.where("level").is(level));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("level"), level));
         }
-
-        if (primaryMuscles != null && !primaryMuscles.isEmpty()) {
-            criteriaList.add(Criteria.where("primaryMuscles").all(primaryMuscles));
-        }
-
-        if (secondaryMuscles != null && !secondaryMuscles.isEmpty()) {
-            criteriaList.add(Criteria.where("secondaryMuscles").all(secondaryMuscles));
-        }
-
         if (equipment != null) {
-            criteriaList.add(Criteria.where("equipment").is(equipment));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("equipment"), equipment));
+        }
+        // Note: Filtering by array-contains for primaryMuscles/secondaryMuscles
+        // requires native queries with PostgreSQL array operators.
+        // For now, we filter in memory for the muscle group search.
+
+        List<Exercise> results = exerciseRepository.findAll(spec);
+
+        // In-memory filter for muscle groups (PostgreSQL array contains)
+        if (primaryMuscles != null && !primaryMuscles.isEmpty()) {
+            List<String> targetMuscles = primaryMuscles.stream()
+                    .map(MuscleGroup::getName)
+                    .collect(Collectors.toList());
+            results = results.stream()
+                    .filter(e -> e.getPrimaryMuscles() != null && e.getPrimaryMuscles().containsAll(targetMuscles))
+                    .collect(Collectors.toList());
+        }
+        if (secondaryMuscles != null && !secondaryMuscles.isEmpty()) {
+            List<String> targetMuscles = secondaryMuscles.stream()
+                    .map(MuscleGroup::getName)
+                    .collect(Collectors.toList());
+            results = results.stream()
+                    .filter(e -> e.getSecondaryMuscles() != null && e.getSecondaryMuscles().containsAll(targetMuscles))
+                    .collect(Collectors.toList());
         }
 
-        if (criteriaList.isEmpty()) {
-            return exerciseRepository.findAll();
-        }
-
-        Criteria combinedCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
-        Query query = new Query(combinedCriteria);
-
-        return mongoTemplate.find(query, Exercise.class);
+        return results;
     }
 
     public List<ExerciseLogResponse> getExerciseLogs(String workosId, String exerciseId) {
-        // Verify the exercise exists
-        Exercise exercise = exerciseRepository.findById(exerciseId)
+        UUID exId = UUID.fromString(exerciseId);
+        Exercise exercise = exerciseRepository.findById(exId)
                 .orElseThrow(() -> new NotFoundException("Exercise not found: " + exerciseId));
 
-        // Look up user by workosId to get database userId
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Get all exercise records for this user and exercise, ordered by creation time (most recent first)
         List<ExerciseRecord> exerciseRecords = exerciseRecordRepository
-                .findByUserIdAndExerciseIdOrderByCreatedAtAsc(user.getId(), exerciseId);
+                .findByUserIdAndExerciseIdOrderByCreatedAtAsc(user.getId(), exId);
 
         if (exerciseRecords.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Build the response
         return exerciseRecords.stream()
                 .map(record -> ExerciseLogResponse.builder()
-                        .exerciseRecordId(record.getId())
-                        .exerciseId(record.getExerciseId())
+                        .exerciseRecordId(record.getId().toString())
+                        .exerciseId(record.getExerciseId().toString())
                         .exerciseName(exercise.getName())
                         .createdAt(record.getCreatedAt())
                         .reps(record.getReps())
                         .weight(record.getWeight())
                         .durationSeconds(record.getDurationSeconds())
                         .notes(record.getNotes())
-                        .achievedOneRmValue(record.getAchievedOneRm() != null ? 
-                                record.getAchievedOneRm().getValue() : null)
-                        .achievedOneRmSetIndex(record.getAchievedOneRm() != null ? 
-                                record.getAchievedOneRm().getSetIndex() : null)
-                        .achievedTotalVolumeValue(record.getAchievedTotalVolume() != null ? 
-                                record.getAchievedTotalVolume().getValue() : null)
+                        .achievedOneRmValue(record.getAchievedOneRmValue())
+                        .achievedOneRmSetIndex(record.getAchievedOneRmSetIndex())
+                        .achievedTotalVolumeValue(record.getAchievedTotalVolumeValue())
                         .build())
                 .collect(Collectors.toList());
     }

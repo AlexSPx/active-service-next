@@ -8,7 +8,8 @@ import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
-import com.services.active.models.RoutinePattern;
+import com.services.active.dto.RoutinePatternRequest;
+import com.services.active.models.Exercise;
 import com.services.active.models.TemplateExercise;
 import com.services.active.models.types.DayType;
 import com.services.active.models.user.User;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -47,6 +49,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
     @Autowired private ExerciseRecordRepository exerciseRecordRepository;
     @Autowired private ExercisePersonalBestRepository exercisePersonalBestRepository;
     @Autowired private RoutineRepository routineRepository;
+    @Autowired private ExerciseRepository exerciseRepository;
 
     @Autowired private WorkoutService workoutService;
     @Autowired private RoutineService routineService;
@@ -54,15 +57,20 @@ class UserDeleteControllerIT extends IntegrationTestBase {
     @Test
     @DisplayName("DELETE /api/user/me removes user and all related data from DB")
     void deleteUserAndAllData_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        UUID ex1 = UUID.randomUUID();
+        UUID ex2 = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder().id(ex1).name("Bench press").build());
+        exerciseRepository.save(Exercise.builder().id(ex2).name("Rows").build());
+
         // 1) Create a workout for the current user
-        TemplateExercise exercise1 = TemplateExercise.builder()
-                .exerciseId("ex-1")
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise1 = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(ex1)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Bench press")
                 .build();
-        TemplateExercise exercise2 = TemplateExercise.builder()
-                .exerciseId("ex-2")
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise2 = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(ex2)
                 .reps(List.of(12, 10, 8))
                 .weight(List.of(20.0, 22.5, 25.0))
                 .notes("Rows")
@@ -85,11 +93,11 @@ class UserDeleteControllerIT extends IntegrationTestBase {
                   "notes": "Great session",
                   "startTime": "%s",
                   "exerciseRecords": [
-                    { "exerciseId": "ex-1", "reps": [10,8,6], "weight": [50.0,55.0,62.5], "notes": "Felt strong" },
-                    { "exerciseId": "ex-2", "reps": [12,10,8], "weight": [20.0,22.5,25.0], "notes": "Solid" }
+                    { "exerciseId": "%s", "reps": [10,8,6], "weight": [50.0,55.0,62.5], "notes": "Felt strong" },
+                    { "exerciseId": "%s", "reps": [12,10,8], "weight": [20.0,22.5,25.0], "notes": "Solid" }
                   ]
                 }
-                """).formatted(workout.getId(), startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                """).formatted(workout.getId(), startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), ex1, ex2);
         String response = mockMvc.perform(post("/api/workouts/record")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +108,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
         assertThat(node.get("workoutRecord")).isNotNull();
 
         // 3) Create a routine for the user
-        RoutinePattern p = RoutinePattern.builder()
+        RoutinePatternRequest p = RoutinePatternRequest.builder()
                 .dayIndex(0)
                 .dayType(DayType.WORKOUT)
                 .workoutId(workout.getId())

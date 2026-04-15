@@ -1,6 +1,5 @@
 package com.services.active.dto;
 
-import com.services.active.models.RoutinePattern;
 import com.services.active.models.types.RoutineType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -28,7 +27,7 @@ public class CreateRoutineRequest {
 
     @NotEmpty(message = "Pattern is required")
     @Schema(description = "Pattern for the routine")
-    private List<RoutinePattern> pattern;
+    private List<RoutinePatternRequest> pattern;
 
     @Schema(description = "Whether this routine should be active")
     private Boolean active;

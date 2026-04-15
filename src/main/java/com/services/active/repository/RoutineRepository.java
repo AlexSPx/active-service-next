@@ -1,16 +1,17 @@
 package com.services.active.repository;
 
 import com.services.active.models.Routine;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface RoutineRepository extends MongoRepository<Routine, String> {
-    List<Routine> findAllByUserIdOrderByCreatedAtDesc(String userId);
-    Optional<Routine> findByIdAndUserId(String id, String userId);
-    boolean existsByUserIdAndNameIgnoreCase(String userId, String name);
-    void deleteByUserId(String userId);
+public interface RoutineRepository extends JpaRepository<Routine, UUID> {
+    List<Routine> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
+    Optional<Routine> findByIdAndUserId(UUID id, UUID userId);
+    boolean existsByUserIdAndNameIgnoreCase(UUID userId, String name);
+    void deleteByUserId(UUID userId);
 }

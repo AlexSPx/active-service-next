@@ -1,38 +1,45 @@
 package com.services.active.services;
 
 import com.services.active.dto.CreateRoutineRequest;
+import com.services.active.dto.RoutineResponse;
 import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.models.Routine;
+import com.services.active.models.RoutinePattern;
 import com.services.active.models.types.DayType;
 import com.services.active.models.types.RoutineType;
 import com.services.active.models.user.User;
 import com.services.active.repository.RoutineRepository;
+import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RoutineService {
 
     private final RoutineRepository routineRepository;
+    private final RoutinePatternRepository routinePatternRepository;
     private final UserRepository userRepository;
 
-    public Routine createRoutine(String workosId, CreateRoutineRequest request) {
-        // First get the user to obtain the database ID
+    @Transactional
+    public RoutineResponse createRoutine(String workosId, CreateRoutineRequest request) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String userId = user.getId();
+        UUID userId = user.getId();
 
         if (routineRepository.existsByUserIdAndNameIgnoreCase(userId, request.getName())) {
             throw new ConflictException("Routine name already exists");
@@ -53,48 +60,70 @@ public class RoutineService {
                         : LocalDate.now())
                         .atStartOfDay(ZoneOffset.UTC)
                         .toInstant())
-                .pattern(request.getPattern())
                 .routineType(routineType)
                 .build();
         Routine saved = routineRepository.save(routine);
+
+        // Save patterns
+        if (request.getPattern() != null) {
+            for (var p : request.getPattern()) {
+                routinePatternRepository.save(RoutinePattern.builder()
+                        .routineId(saved.getId())
+                        .dayIndex(p.getDayIndex())
+                        .dayType(p.getDayType())
+                        .workoutId(p.getWorkoutId())
+                        .build());
+            }
+        }
 
         if (requestedActive) {
             user.setActiveRoutineId(saved.getId());
             userRepository.save(user);
         }
-        return saved;
+
+        List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(saved.getId());
+        return RoutineResponse.from(saved, patterns);
     }
 
-    public List<Routine> listRoutines(String workosId) {
+    public List<RoutineResponse> listRoutines(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        return routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
+        List<Routine> routines = routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
+        return routines.stream()
+                .map(r -> RoutineResponse.from(r, routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(r.getId())))
+                .collect(Collectors.toList());
     }
 
-    public Routine getRoutine(String workosId, String id) {
+    public RoutineResponse getRoutine(String workosId, String id) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        return routineRepository.findByIdAndUserId(id, user.getId())
+        Routine routine = routineRepository.findByIdAndUserId(UUID.fromString(id), user.getId())
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
+        List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routine.getId());
+        return RoutineResponse.from(routine, patterns);
     }
 
-    public Routine getActiveRoutine(String workosId) {
+    public RoutineResponse getActiveRoutine(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String activeId = user.getActiveRoutineId();
-        if (activeId == null || activeId.isBlank()) {
+        UUID activeId = user.getActiveRoutineId();
+        if (activeId == null) {
             throw new NotFoundException("No active routine");
         }
-        return routineRepository.findByIdAndUserId(activeId, user.getId())
+        Routine routine = routineRepository.findByIdAndUserId(activeId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Active routine not found"));
+        List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routine.getId());
+        return RoutineResponse.from(routine, patterns);
     }
 
-    public Routine updateRoutine(String workosId, String id, UpdateRoutineRequest request) {
+    @Transactional
+    public RoutineResponse updateRoutine(String workosId, String id, UpdateRoutineRequest request) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String userId = user.getId();
+        UUID userId = user.getId();
 
-        Routine existing = routineRepository.findById(id)
+        UUID routineId = UUID.fromString(id);
+        Routine existing = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
             throw new UnauthorizedException("Not authorized to update this routine");
@@ -117,7 +146,16 @@ public class RoutineService {
             if (request.getPattern().isEmpty()) {
                 throw new BadRequestException("Pattern is required");
             }
-            existing.setPattern(request.getPattern());
+            // Replace patterns
+            routinePatternRepository.deleteByRoutineId(routineId);
+            for (var p : request.getPattern()) {
+                routinePatternRepository.save(RoutinePattern.builder()
+                        .routineId(routineId)
+                        .dayIndex(p.getDayIndex())
+                        .dayType(p.getDayType())
+                        .workoutId(p.getWorkoutId())
+                        .build());
+            }
             changed = true;
         }
         if (request.getStartDate() != null) {
@@ -126,13 +164,14 @@ public class RoutineService {
         }
         if (request.getRoutineType() != null) {
             existing.setRoutineType(request.getRoutineType());
-            // When changing to WEEKLY_COMPLETION, remove REST days as they don't apply
-            if (request.getRoutineType() == RoutineType.WEEKLY_COMPLETION && existing.getPattern() != null) {
-                existing.setPattern(
-                        existing.getPattern().stream()
-                                .filter(p -> p.getDayType() != DayType.REST)
-                                .toList()
-                );
+            if (request.getRoutineType() == RoutineType.WEEKLY_COMPLETION) {
+                // Remove REST days from patterns
+                List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId);
+                for (RoutinePattern p : patterns) {
+                    if (p.getDayType() == DayType.REST) {
+                        routinePatternRepository.delete(p);
+                    }
+                }
             }
             changed = true;
         }
@@ -150,25 +189,29 @@ public class RoutineService {
         }
         if (changed) {
             existing.setUpdatedAt(LocalDateTime.now());
-            return routineRepository.save(existing);
+            routineRepository.save(existing);
         }
-        return existing;
+        List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId);
+        return RoutineResponse.from(existing, patterns);
     }
 
+    @Transactional
     public void deleteRoutine(String workosId, String id) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String userId = user.getId();
+        UUID userId = user.getId();
 
-        Routine existing = routineRepository.findById(id)
+        UUID routineId = UUID.fromString(id);
+        Routine existing = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
             throw new UnauthorizedException("Not authorized to delete this routine");
         }
-        if (id.equals(user.getActiveRoutineId())) {
+        if (routineId.equals(user.getActiveRoutineId())) {
             user.setActiveRoutineId(null);
             userRepository.save(user);
         }
-        routineRepository.deleteById(id);
+        routinePatternRepository.deleteByRoutineId(routineId);
+        routineRepository.deleteById(routineId);
     }
 }

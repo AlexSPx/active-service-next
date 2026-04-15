@@ -18,7 +18,7 @@ public class UserWorkoutResponse {
 
     public static UserWorkoutResponse from(Workout workout, WorkoutTemplateResponse template) {
         return UserWorkoutResponse.builder()
-                .id(workout.getId())
+                .id(workout.getId().toString())
                 .title(workout.getTitle())
                 .notes(workout.getNotes())
                 .createdAt(workout.getCreatedAt())

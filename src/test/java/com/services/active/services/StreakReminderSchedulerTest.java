@@ -11,8 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -30,9 +30,9 @@ class StreakReminderSchedulerTest {
     @BeforeEach
     void setUp() {
         tokyoUser = new User();
+        tokyoUser.setId(UUID.randomUUID());
         tokyoUser.setTimezone("Asia/Tokyo");
-        tokyoUser.setPushTokens(new ArrayList<>(List.of("ExponentPushToken[abc]")));
-        tokyoUser.setNotificationPreferences(1); // frequency 1 => [09:00]
+        tokyoUser.setEmailNotificationsEnabled(true);
     }
 
     @Test
@@ -60,7 +60,7 @@ class StreakReminderSchedulerTest {
 
     @Test
     void doesNotSend_whenNotificationsDisabled() {
-        tokyoUser.setNotificationPreferences(0); // disabled
+        tokyoUser.setEmailNotificationsEnabled(false);
         Clock clock = Clock.fixed(Instant.parse("2025-03-01T00:00:00Z"), ZoneOffset.UTC); // 09:00 Tokyo
         when(userRepository.findUsersToNotify(anyString(), anyString())).thenReturn(List.of());
         StreakReminderScheduler scheduler = new StreakReminderScheduler(userRepository, pushService);
@@ -72,9 +72,9 @@ class StreakReminderSchedulerTest {
     @Test
     void multiFrequency_userOnlyTriggeredAtScheduledHour() {
         User multi = new User();
+        multi.setId(UUID.randomUUID());
         multi.setTimezone("Asia/Tokyo");
-        multi.setPushTokens(List.of("ExponentPushToken[multi]"));
-        multi.setNotificationPreferences(3); // [09:00, 15:00, 21:00]
+        multi.setEmailNotificationsEnabled(true);
         Clock clockScheduled = Clock.fixed(Instant.parse("2025-03-01T06:00:00Z"), ZoneOffset.UTC); // 15:00 Tokyo
         when(userRepository.findUsersToNotify(anyString(), anyString())).thenReturn(List.of());
         when(userRepository.findUsersToNotify("Asia/Tokyo", "15:00")).thenReturn(List.of(multi));

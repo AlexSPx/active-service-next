@@ -1,11 +1,12 @@
 package com.services.active.repository;
 
 import com.services.active.models.WorkoutRecord;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.UUID;
 
-public interface WorkoutRecordRepository extends MongoRepository<WorkoutRecord, String> {
-    List<WorkoutRecord> findAllByUserId(String userId);
-    void deleteByUserId(String userId);
+public interface WorkoutRecordRepository extends JpaRepository<WorkoutRecord, UUID> {
+    List<WorkoutRecord> findAllByUserId(UUID userId);
+    void deleteByUserId(UUID userId);
 }

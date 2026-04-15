@@ -1,6 +1,8 @@
 package com.services.active.services;
 
 import com.services.active.models.user.User;
+import com.services.active.models.user.UserPushToken;
+import com.services.active.repository.UserPushTokenRepository;
 import com.services.active.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +25,7 @@ public class StreakReminderScheduler {
     private Clock clock = Clock.systemUTC();
 
     @Autowired
-    StreakReminderScheduler(UserRepository userRepository, ExpoPushNotificationService pushService) { // package-private
+    StreakReminderScheduler(UserRepository userRepository, ExpoPushNotificationService pushService) {
         this.userRepository = userRepository;
         this.pushService = pushService;
     }
@@ -43,12 +45,8 @@ public class StreakReminderScheduler {
                 ZoneId zone = ZoneId.of(zoneId);
                 ZonedDateTime zdt = ZonedDateTime.ofInstant(now, zone);
 
-                // FORCE the search string to be "HH:00"
-                // Even if the job runs at 09:00:05, this ensures we look for "09:00"
                 String targetLocalTime = String.format("%02d:00", zdt.getHour());
 
-                // Database Query (Unchanged - Exact Match)
-                // Finds users in 'Europe/London' with '14:00' in their list
                 List<User> usersToNotify = userRepository.findUsersToNotify(zoneId, targetLocalTime);
 
                 if (!usersToNotify.isEmpty()) {

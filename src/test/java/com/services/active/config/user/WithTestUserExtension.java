@@ -83,15 +83,6 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
     }
 
     private void createContextIfAnnotated(ExtensionContext context) {
-        // if already cached, skip
-        String cachedToken = context.getStore(NAMESPACE).get("jwt", String.class);
-        User cachedUser = context.getStore(NAMESPACE).get("user", User.class);
-        if (cachedToken != null && cachedUser != null) {
-            this.token = cachedToken;
-            this.user = cachedUser;
-            return;
-        }
-
         WithTestUser annotation = findWithTestUserAnnotation(context);
         if (annotation == null) return;
 
@@ -101,9 +92,8 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
         String email = annotation.email();
         String workosId = "test_workos_" + email.replace("@", "_").replace(".", "_");
 
-        // Check if user already exists by workosId
+        // Always resolve by workosId to avoid stale cache after DB truncation
         this.user = userRepository.findByWorkosId(workosId).orElseGet(() -> {
-            // Create new test user directly in database with mock WorkOS ID
             User newUser = User.builder()
                     .workosId(workosId)
                     .createdAt(LocalDate.now())
@@ -114,9 +104,6 @@ public class WithTestUserExtension implements BeforeEachCallback, ParameterResol
 
         context.getStore(NAMESPACE).put("user", this.user);
 
-        // Generate a properly formatted mock JWT token
-        // Format: header.payload.signature (all base64 encoded)
-        // The TestSecurityConfig's mock JwtDecoder will decode this
         this.token = createMockJwt(this.user.getWorkosId());
         context.getStore(NAMESPACE).put("jwt", this.token);
 

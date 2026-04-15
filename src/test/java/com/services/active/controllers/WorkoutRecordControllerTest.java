@@ -10,6 +10,8 @@ import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.models.*;
 import com.services.active.models.user.User;
 import com.services.active.repository.ExerciseRecordRepository;
+import com.services.active.repository.ExerciseRepository;
+import com.services.active.repository.UserRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -43,6 +47,8 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     private final WorkoutService workoutService;
     private final WorkoutRecordRepository workoutRecordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final UserRepository userRepository;
+    private final ExerciseRepository exerciseRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -57,15 +63,25 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     @DisplayName("POST /api/workouts/record -> 201 CREATED successfully creates workout record with exercise records and streakUpdate")
     void createWorkoutRecord_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
         // First, create a workout using service calls
-        TemplateExercise exercise1 = TemplateExercise.builder()
-                .exerciseId("exercise-1")
+        UUID exercise1Id = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder()
+                .id(exercise1Id)
+                .name("Bench press")
+                .build());
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise1 = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exercise1Id)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Bench press")
                 .build();
 
-        TemplateExercise exercise2 = TemplateExercise.builder()
-                .exerciseId("exercise-2")
+        UUID exercise2Id = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder()
+                .id(exercise2Id)
+                .name("Dumbbell rows")
+                .build());
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise2 = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exercise2Id)
                 .reps(List.of(12, 10, 8))
                 .weight(List.of(20.0, 22.5, 25.0))
                 .notes("Dumbbell rows")
@@ -93,20 +109,20 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                   "startTime": "%s",
                   "exerciseRecords": [
                     {
-                      "exerciseId": "exercise-1",
+                      "exerciseId": "%s",
                       "reps": [10, 8, 6],
                       "weight": [50.0, 55.0, 62.5],
                       "notes": "Felt strong today, increased final set weight"
                     },
                     {
-                      "exerciseId": "exercise-2",
+                      "exerciseId": "%s",
                       "reps": [12, 10, 8],
                       "weight": [20.0, 22.5, 25.0],
                       "notes": "Good form maintained throughout"
                     }
                   ]
                 }
-                """.formatted(createdWorkout.getId(), startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                """.formatted(createdWorkout.getId(), startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), exercise1Id.toString(), exercise2Id.toString());
 
         // Make request to create workout record
         String responseContent = mockMvc.perform(post("/api/workouts/record")
@@ -127,24 +143,24 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
         assertThat(workoutRecordId).isNotBlank();
 
         // Validate the workout record was saved correctly in the database
-        WorkoutRecord savedWorkoutRecord = workoutRecordRepository.findById(workoutRecordId).orElse(null);
+        WorkoutRecord savedWorkoutRecord = workoutRecordRepository.findById(UUID.fromString(workoutRecordId)).orElse(null);
         assertThat(savedWorkoutRecord).isNotNull();
-        assertThat(savedWorkoutRecord.getId()).isEqualTo(workoutRecordId);
+        assertThat(savedWorkoutRecord.getId().toString()).isEqualTo(workoutRecordId);
         assertThat(savedWorkoutRecord.getUserId()).isEqualTo(user.getId());
         assertThat(savedWorkoutRecord.getWorkoutId()).isEqualTo(createdWorkout.getId());
         assertThat(savedWorkoutRecord.getWorkoutTitle()).isEqualTo("Push Day Workout");
         assertThat(savedWorkoutRecord.getNotes()).isEqualTo("Great session, feeling stronger");
         assertThat(savedWorkoutRecord.getStartTime()).isNotNull();
         assertThat(savedWorkoutRecord.getCreatedAt()).isNotNull();
-        assertThat(savedWorkoutRecord.getExerciseRecordIds()).hasSize(2);
+        assertThat(savedWorkoutRecord.getId()).isNotNull();
 
         // Validate the exercise records were saved correctly
-        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findAllById(savedWorkoutRecord.getExerciseRecordIds());
+        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findAllByWorkoutRecordIdOrderByOrdinalAsc(savedWorkoutRecord.getId());
         assertThat(exerciseRecords).hasSize(2);
 
         // Validate first exercise record
         ExerciseRecord firstExercise = exerciseRecords.stream()
-                .filter(er -> "exercise-1".equals(er.getExerciseId()))
+                .filter(er -> exercise1Id.equals(er.getExerciseId()))
                 .findFirst()
                 .orElse(null);
         assertThat(firstExercise).isNotNull();
@@ -156,7 +172,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
 
         // Validate second exercise record
         ExerciseRecord secondExercise = exerciseRecords.stream()
-                .filter(er -> "exercise-2".equals(er.getExerciseId()))
+                .filter(er -> exercise2Id.equals(er.getExerciseId()))
                 .findFirst()
                 .orElse(null);
         assertThat(secondExercise).isNotNull();
@@ -176,13 +192,13 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                   "startTime": "%s",
                   "exerciseRecords": [
                     {
-                      "exerciseId": "exercise-1",
+                      "exerciseId": "%s",
                       "reps": [10, 8, 6],
                       "weight": [50.0, 55.0, 60.0]
                     }
                   ]
                 }
-                """.formatted(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                """.formatted(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), UUID.randomUUID().toString());
 
         mockMvc.perform(post("/api/workouts/record")
                         .header("Authorization", "Bearer " + token)
@@ -214,33 +230,43 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     @Test
     @DisplayName("DELETE /api/workouts/record/{id} -> 204 NO CONTENT deletes record and exercise records")
     void deleteWorkoutRecord_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        UUID exerciseId = UUID.randomUUID();
+        Workout workout = createWorkout(user, exerciseId);
+        WorkoutRecord workoutRecord = workoutRecordRepository.save(WorkoutRecord.builder()
+                .userId(user.getId())
+                .workoutId(workout.getId())
+                .workoutTitle(workout.getTitle())
+                .createdAt(LocalDateTime.now())
+                .build());
+
         ExerciseRecord ex1 = exerciseRecordRepository.save(ExerciseRecord.builder()
                 .userId(user.getId())
-                .exerciseId("exercise-1")
+                .workoutRecordId(workoutRecord.getId())
+                .exerciseId(exerciseId)
+                .ordinal(0)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Set 1")
                 .createdAt(LocalDateTime.now())
                 .build());
 
+        UUID otherExerciseId = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder()
+                .id(otherExerciseId)
+                .name("Set 2 Exercise")
+                .build());
         ExerciseRecord ex2 = exerciseRecordRepository.save(ExerciseRecord.builder()
                 .userId(user.getId())
-                .exerciseId("exercise-2")
+                .workoutRecordId(workoutRecord.getId())
+                .exerciseId(otherExerciseId)
+                .ordinal(1)
                 .reps(List.of(12, 10, 8))
                 .weight(List.of(20.0, 22.5, 25.0))
                 .notes("Set 2")
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        List<String> exerciseRecordIds = List.of(ex1.getId(), ex2.getId());
-
-        WorkoutRecord workoutRecord = workoutRecordRepository.save(WorkoutRecord.builder()
-                .userId(user.getId())
-                .workoutId("workout-1")
-                .workoutTitle("History Record")
-                .exerciseRecordIds(exerciseRecordIds)
-                .createdAt(LocalDateTime.now())
-                .build());
+        List<UUID> exerciseRecordIds = List.of(ex1.getId(), ex2.getId());
 
         assertThat(exerciseRecordRepository.findAllById(exerciseRecordIds)).hasSize(2);
 
@@ -256,11 +282,17 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     @Test
     @DisplayName("DELETE /api/workouts/record/{id} -> 404 UNAUTHORIZED when deleting another user's record")
     void deleteWorkoutRecord_otherUser_forbidden(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        User otherUser = userRepository.save(User.builder()
+                .workosId("test_workos_other_user")
+                .createdAt(java.time.LocalDate.now())
+                .timezone("UTC")
+                .build());
+        Workout otherWorkout = createWorkout(otherUser, UUID.randomUUID());
+
         WorkoutRecord otherUsersRecord = workoutRecordRepository.save(WorkoutRecord.builder()
-                .userId("different-user-id")
-                .workoutId("workout-1")
+                .userId(otherUser.getId())
+                .workoutId(otherWorkout.getId())
                 .workoutTitle("Other User Record")
-                .exerciseRecordIds(List.of())
                 .createdAt(LocalDateTime.now())
                 .build());
 
@@ -276,8 +308,34 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     @WithAnonymousUser
     @DisplayName("DELETE /api/workouts/record/{id} -> 401 UNAUTHORIZED when no auth token provided")
     void deleteWorkoutRecord_noAuth_unauthorized() throws Exception {
-        mockMvc.perform(delete("/api/workouts/record/{id}", "some-id"))
+        mockMvc.perform(delete("/api/workouts/record/{id}", UUID.randomUUID().toString()))
                 .andExpect(status().isUnauthorized())
                 .andDo(print());
+    }
+
+    private Workout createWorkout(User user, UUID exerciseId) {
+        exerciseRepository.save(Exercise.builder()
+                .id(exerciseId)
+                .name("Test Exercise")
+                .build());
+
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exerciseId)
+                .reps(List.of(10, 8, 6))
+                .weight(List.of(50.0, 55.0, 60.0))
+                .notes("Template exercise")
+                .build();
+
+        CreateWorkoutTemplateRequest template = CreateWorkoutTemplateRequest.builder()
+                .exercises(List.of(exercise))
+                .build();
+
+        CreateWorkoutRequest workoutRequest = CreateWorkoutRequest.builder()
+                .title("History Record")
+                .notes("Test workout")
+                .template(template)
+                .build();
+
+        return workoutService.createWorkout(user.getWorkosId(), workoutRequest);
     }
 }

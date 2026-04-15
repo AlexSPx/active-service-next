@@ -28,8 +28,8 @@ public class BackfillService {
     @Builder
     public static class BackfillResult {
         private String scope; // all|user|user-exercise
-        private String userId;
-        private String exerciseId;
+        private UUID userId;
+        private UUID exerciseId;
         private int recordsEvaluated;
         private int recordsUpdated;
         private int personalBestsUpserted;
@@ -52,11 +52,11 @@ public class BackfillService {
                 .build();
     }
 
-    public BackfillResult backfillUser(String userId) {
+    public BackfillResult backfillUser(UUID userId) {
         List<ExerciseRecord> all = exerciseRecordRepository.findByUserIdOrderByCreatedAtAsc(userId);
-        Map<String, List<ExerciseRecord>> byExercise = all.stream().collect(Collectors.groupingBy(ExerciseRecord::getExerciseId, LinkedHashMap::new, Collectors.toList()));
+        Map<UUID, List<ExerciseRecord>> byExercise = all.stream().collect(Collectors.groupingBy(ExerciseRecord::getExerciseId, LinkedHashMap::new, Collectors.toList()));
         int evaluated = 0, updated = 0, pbUpserts = 0;
-        for (Map.Entry<String, List<ExerciseRecord>> entry : byExercise.entrySet()) {
+        for (Map.Entry<UUID, List<ExerciseRecord>> entry : byExercise.entrySet()) {
             BackfillResult res = backfillUserExerciseInternal(userId, entry.getKey(), entry.getValue());
             evaluated += res.getRecordsEvaluated();
             updated += res.getRecordsUpdated();
@@ -71,17 +71,17 @@ public class BackfillService {
                 .build();
     }
 
-    public BackfillResult backfillUserExercise(String userId, String exerciseId) {
+    public BackfillResult backfillUserExercise(UUID userId, UUID exerciseId) {
         List<ExerciseRecord> list = exerciseRecordRepository.findByUserIdAndExerciseIdOrderByCreatedAtAsc(userId, exerciseId);
         return backfillUserExerciseInternal(userId, exerciseId, list);
     }
 
-    private BackfillResult backfillUserExerciseInternal(String userId, String exerciseId, List<ExerciseRecord> records) {
+    private BackfillResult backfillUserExerciseInternal(UUID userId, UUID exerciseId, List<ExerciseRecord> records) {
         double bestOneRm = Double.NEGATIVE_INFINITY;
         int bestOneRmSetIndex = -1;
-        String bestOneRmRecordId = null;
+        UUID bestOneRmRecordId = null;
         double bestVolume = Double.NEGATIVE_INFINITY;
-        String bestVolumeRecordId = null;
+        UUID bestVolumeRecordId = null;
 
         int evaluated = 0, updated = 0, pbUpserts = 0;
         for (ExerciseRecord r : records) {
@@ -93,12 +93,13 @@ public class BackfillService {
             boolean hasStrength = reps != null && weight != null && !reps.isEmpty() && !weight.isEmpty();
 
             // Default clear
-            if (r.getAchievedOneRm() != null) {
-                r.setAchievedOneRm(null);
+            if (r.getAchievedOneRmValue() != null) {
+                r.setAchievedOneRmValue(null);
+                r.setAchievedOneRmSetIndex(null);
                 changed = true;
             }
-            if (r.getAchievedTotalVolume() != null) {
-                r.setAchievedTotalVolume(null);
+            if (r.getAchievedTotalVolumeValue() != null) {
+                r.setAchievedTotalVolumeValue(null);
                 changed = true;
             }
 
@@ -109,19 +110,15 @@ public class BackfillService {
                 Double vol = AchievementCalculator.computeTotalVolume(reps, weight);
 
                 if (est1Rm != null && est1Rm > bestOneRm) {
-                    r.setAchievedOneRm(ExerciseRecord.OneRmAchievement.builder()
-                            .value(est1Rm)
-                            .setIndex(setIdx)
-                            .build());
+                    r.setAchievedOneRmValue(est1Rm);
+                    r.setAchievedOneRmSetIndex(setIdx);
                     changed = true;
                     bestOneRm = est1Rm;
                     bestOneRmSetIndex = setIdx != null ? setIdx : -1;
                     bestOneRmRecordId = r.getId();
                 }
                 if (vol != null && vol > bestVolume) {
-                    r.setAchievedTotalVolume(ExerciseRecord.TotalVolumeAchievement.builder()
-                            .value(vol)
-                            .build());
+                    r.setAchievedTotalVolumeValue(vol);
                     changed = true;
                     bestVolume = vol;
                     bestVolumeRecordId = r.getId();
@@ -156,7 +153,6 @@ public class BackfillService {
                 personalBestRepository.save(pb);
                 pbUpserts++;
             } else if (pb.getId() == null) {
-                // Ensure PB exists if records exist
                 personalBestRepository.save(pb);
                 pbUpserts++;
             }
@@ -172,4 +168,3 @@ public class BackfillService {
                 .build();
     }
 }
-

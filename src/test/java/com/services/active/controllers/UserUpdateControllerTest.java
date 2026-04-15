@@ -58,7 +58,7 @@ class UserUpdateControllerTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(empty)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(user.getId()));
+                .andExpect(jsonPath("$.id").value(user.getId().toString()));
 
         User refreshed = userRepository.findById(user.getId()).orElseThrow();
         assertThat(refreshed.getTimezone()).isEqualTo(user.getTimezone());

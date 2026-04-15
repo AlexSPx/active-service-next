@@ -18,6 +18,7 @@ import com.services.active.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -36,36 +37,53 @@ public class WorkoutRecordService {
     private final PersonalBestService personalBestService;
     private final StreakService streakService;
 
+    @Transactional
     public com.services.active.dto.WorkoutRecordCreateResponse createWorkoutRecord(String workosId, WorkoutRecordRequest request) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String userId = user.getId();
+        UUID userId = user.getId();
 
         log.info("createWorkoutRecord workosId: {}, userId: {}, workoutId: {}", workosId, userId, request.getWorkoutId());
 
         // Fetch the workout to get the title for snapshot
-        Workout workout = workoutRepository.findById(request.getWorkoutId())
+        UUID workoutId = UUID.fromString(request.getWorkoutId());
+        Workout workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() -> new NotFoundException("Workout not found: " + request.getWorkoutId()));
 
-        List<ExerciseRecord> exerciseRecords = request.getExerciseRecords().stream()
-                .map(exercise -> ExerciseRecord.builder()
-                        .exerciseId(exercise.getExerciseId())
-                        .reps(exercise.getReps())
-                        .weight(exercise.getWeight())
-                        .durationSeconds(exercise.getDurationSeconds())
-                        .notes(exercise.getNotes())
-                        .userId(userId)
-                        .createdAt(LocalDateTime.now())
-                        .build())
-                .toList();
+        // Save the workout record first so we have an ID for exercise records
+        WorkoutRecord workoutRecord = WorkoutRecord.builder()
+                .userId(userId)
+                .workoutId(workoutId)
+                .workoutTitle(workout.getTitle())
+                .notes(request.getNotes())
+                .startTime(request.getStartTime())
+                .createdAt(LocalDateTime.now())
+                .build();
+        WorkoutRecord saved = workoutRecordRepository.save(workoutRecord);
+
+        List<ExerciseRecord> exerciseRecords = new ArrayList<>();
+        for (int i = 0; i < request.getExerciseRecords().size(); i++) {
+            var exercise = request.getExerciseRecords().get(i);
+            exerciseRecords.add(ExerciseRecord.builder()
+                    .exerciseId(UUID.fromString(exercise.getExerciseId()))
+                    .workoutRecordId(saved.getId())
+                    .reps(exercise.getReps())
+                    .weight(exercise.getWeight())
+                    .durationSeconds(exercise.getDurationSeconds())
+                    .notes(exercise.getNotes())
+                    .userId(userId)
+                    .ordinal(i)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+        }
 
         // Load current PBs for all exerciseIds involved, once
-        Set<String> exerciseIds = exerciseRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
-        Map<String, ExercisePersonalBest> currentPbByExercise = personalBestService.getCurrentPbs(userId, exerciseIds);
+        Set<UUID> exerciseIds = exerciseRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+        Map<UUID, ExercisePersonalBest> currentPbByExercise = personalBestService.getCurrentPbs(userId, exerciseIds);
 
         // Compute achievements per record using progressive PBs (within this batch)
         for (ExerciseRecord record : exerciseRecords) {
-            String exId = record.getExerciseId();
+            UUID exId = record.getExerciseId();
             ExercisePersonalBest currentPb = currentPbByExercise.get(exId);
 
             List<Integer> reps = record.getReps();
@@ -79,10 +97,8 @@ public class WorkoutRecordService {
 
             Double previousOneRm = (currentPb != null) ? currentPb.getOneRm() : null;
             if (bestOneRm != null && (previousOneRm == null || bestOneRm > previousOneRm)) {
-                record.setAchievedOneRm(ExerciseRecord.OneRmAchievement.builder()
-                        .value(bestOneRm)
-                        .setIndex(bestSetIdx)
-                        .build());
+                record.setAchievedOneRmValue(bestOneRm);
+                record.setAchievedOneRmSetIndex(bestSetIdx);
                 if (currentPb == null) currentPb = ExercisePersonalBest.builder().userId(userId).exerciseId(exId).build();
                 currentPb.setOneRm(bestOneRm);
                 currentPbByExercise.put(exId, currentPb);
@@ -91,41 +107,25 @@ public class WorkoutRecordService {
             Double totalVolume = AchievementCalculator.computeTotalVolume(reps, weight);
             Double previousVolume = (currentPb != null) ? currentPb.getTotalVolume() : null;
             if (totalVolume != null && (previousVolume == null || totalVolume > previousVolume)) {
-                record.setAchievedTotalVolume(ExerciseRecord.TotalVolumeAchievement.builder()
-                        .value(totalVolume)
-                        .build());
+                record.setAchievedTotalVolumeValue(totalVolume);
                 if (currentPb == null) currentPb = ExercisePersonalBest.builder().userId(userId).exerciseId(exId).build();
                 currentPb.setTotalVolume(totalVolume);
                 currentPbByExercise.put(exId, currentPb);
             }
         }
 
-        // Save records and get the saved objects (with ids)
-        List<ExerciseRecord> savedRecords = exerciseRecordRepository.saveAllAndReturn(exerciseRecords);
-        List<String> exerciseRecordIds = savedRecords.stream().map(ExerciseRecord::getId).toList();
+        // Save records
+        List<ExerciseRecord> savedRecords = exerciseRecordRepository.saveAll(exerciseRecords);
 
         // Persist PB documents for records that achieved PRs
         personalBestService.persistPrs(userId, savedRecords);
 
-        WorkoutRecord workoutRecord = WorkoutRecord.builder()
-                .userId(userId)
-                .workoutId(request.getWorkoutId())
-                .workoutTitle(workout.getTitle())
-                .notes(request.getNotes())
-                .exerciseRecordIds(exerciseRecordIds)
-                .startTime(request.getStartTime())
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        WorkoutRecord saved = workoutRecordRepository.save(workoutRecord);
-        workoutRepository.updateWorkoutRecordIds(request.getWorkoutId(), saved.getId());
-
         // Update streaks for the user based on the completed workout and capture the update status
-        var streakUpdate = streakService.onWorkoutCompleted(workosId, request.getWorkoutId());
+        var streakUpdate = streakService.onWorkoutCompleted(workosId, workoutId);
 
-        // Build response from saved data (no need to refetch exercise records)
-        Set<String> savedExIds = savedRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
-        Map<String, String> exerciseNameById = new HashMap<>();
+        // Build response from saved data
+        Set<UUID> savedExIds = savedRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+        Map<UUID, String> exerciseNameById = new HashMap<>();
         exerciseRepository.findAllById(savedExIds).forEach(ex -> exerciseNameById.put(ex.getId(), ex.getName()));
 
         var exerciseResponses = savedRecords.stream()
@@ -135,15 +135,15 @@ public class WorkoutRecordService {
                         .weight(exRecord.getWeight())
                         .durationSeconds(exRecord.getDurationSeconds())
                         .notes(exRecord.getNotes())
-                        .achievedOneRmValue(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getValue() : null)
-                        .achievedOneRmSetIndex(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getSetIndex() : null)
-                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolume() != null ? exRecord.getAchievedTotalVolume().getValue() : null)
+                        .achievedOneRmValue(exRecord.getAchievedOneRmValue())
+                        .achievedOneRmSetIndex(exRecord.getAchievedOneRmSetIndex())
+                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolumeValue())
                         .build())
                 .collect(Collectors.toList());
 
         var recordResponse = UserWorkoutRecordsResponse.builder()
-                .id(saved.getId())
-                .workoutId(saved.getWorkoutId())
+                .id(saved.getId().toString())
+                .workoutId(saved.getWorkoutId().toString())
                 .workoutTitle(saved.getWorkoutTitle())
                 .notes(saved.getNotes())
                 .startTime(saved.getStartTime())
@@ -160,16 +160,17 @@ public class WorkoutRecordService {
     public List<UserWorkoutRecordsResponse> getWorkoutRecords(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String userId = user.getId();
+        UUID userId = user.getId();
 
         return workoutRecordRepository.findAllByUserId(userId)
                 .stream()
                 .map(workoutRecord -> {
-                    var exRecords = exerciseRecordRepository.findAllById(workoutRecord.getExerciseRecordIds());
+                    // Use proper FK join instead of fetching by ID list
+                    var exRecords = exerciseRecordRepository.findAllByWorkoutRecordIdOrderByOrdinalAsc(workoutRecord.getId());
 
                     // Batch-load all exercises used in this workout record to avoid N+1
-                    Set<String> exIds = exRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
-                    Map<String, String> exerciseNameById = new HashMap<>();
+                    Set<UUID> exIds = exRecords.stream().map(ExerciseRecord::getExerciseId).collect(Collectors.toSet());
+                    Map<UUID, String> exerciseNameById = new HashMap<>();
                     exerciseRepository.findAllById(exIds).forEach(ex -> exerciseNameById.put(ex.getId(), ex.getName()));
 
                     var exerciseResponses = exRecords.stream()
@@ -181,43 +182,43 @@ public class WorkoutRecordService {
                                         .weight(exRecord.getWeight())
                                         .durationSeconds(exRecord.getDurationSeconds())
                                         .notes(exRecord.getNotes())
-                                        .achievedOneRmValue(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getValue() : null)
-                                        .achievedOneRmSetIndex(exRecord.getAchievedOneRm() != null ? exRecord.getAchievedOneRm().getSetIndex() : null)
-                                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolume() != null ? exRecord.getAchievedTotalVolume().getValue() : null)
+                                        .achievedOneRmValue(exRecord.getAchievedOneRmValue())
+                                        .achievedOneRmSetIndex(exRecord.getAchievedOneRmSetIndex())
+                                        .achievedTotalVolumeValue(exRecord.getAchievedTotalVolumeValue())
                                         .build();
                             })
                             .collect(Collectors.toList());
 
                     return UserWorkoutRecordsResponse.builder()
-                            .id(workoutRecord.getId())
+                            .id(workoutRecord.getId().toString())
                             .workoutTitle(workoutRecord.getWorkoutTitle())
-                            .startTime(workoutRecord.getStartTime())
-                            .workoutId(workoutRecord.getWorkoutId())
+                            .workoutId(workoutRecord.getWorkoutId().toString())
                             .notes(workoutRecord.getNotes())
-                            .exerciseRecords(exerciseResponses)
                             .startTime(workoutRecord.getStartTime())
                             .createdAt(workoutRecord.getCreatedAt())
+                            .exerciseRecords(exerciseResponses)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteWorkoutRecord(String workosId, String workoutRecordId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        WorkoutRecord workoutRecord = workoutRecordRepository.findById(workoutRecordId)
+        UUID recordId = UUID.fromString(workoutRecordId);
+        WorkoutRecord workoutRecord = workoutRecordRepository.findById(recordId)
                 .orElseThrow(() -> new NotFoundException("Workout record not found"));
 
         if (!user.getId().equals(workoutRecord.getUserId())) {
             throw new UnauthorizedException("Not authorized to delete this workout record");
         }
 
-        List<String> exerciseRecordIds = workoutRecord.getExerciseRecordIds();
-        if (exerciseRecordIds != null && !exerciseRecordIds.isEmpty()) {
-            exerciseRecordRepository.deleteAllById(exerciseRecordIds);
-        }
+        // Exercise records are deleted via CASCADE, but explicit delete is also fine
+        exerciseRecordRepository.deleteAll(
+                exerciseRecordRepository.findAllByWorkoutRecordIdOrderByOrdinalAsc(workoutRecord.getId()));
 
-        workoutRecordRepository.deleteById(workoutRecordId);
+        workoutRecordRepository.deleteById(recordId);
     }
 }

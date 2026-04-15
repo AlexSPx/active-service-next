@@ -1,7 +1,6 @@
 package com.services.active.dto;
 
 import com.services.active.models.types.Category;
-import com.services.active.models.types.MuscleGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,6 @@ public class TemplateExerciseResponse {
     private List<Integer> durationSeconds;
     private String notes;
     private Category category;
-    private List<MuscleGroup> primaryMuscles;
-    private List<MuscleGroup> secondaryMuscles;
+    private List<String> primaryMuscles;
+    private List<String> secondaryMuscles;
 }
-

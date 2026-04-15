@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.config.user.TestUserContext;
+import com.services.active.models.user.User;
+import com.services.active.repository.UserPushTokenRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -25,25 +28,30 @@ class UserPushTokenControllerTest extends IntegrationTestBase {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private UserPushTokenRepository userPushTokenRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     @DisplayName("POST /api/user/me/push-token -> 200 OK adds token to user")
-    void registerPushToken_success(@TestUserContext String token) throws Exception {
+    void registerPushToken_success(@TestUserContext String token, @TestUserContext User user) throws Exception {
         Map<String, Object> body = Map.of("token", "ExponentPushToken[abcd1234]");
 
         mockMvc.perform(post("/api/user/me/push-token")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pushTokens[0]").value("ExponentPushToken[abcd1234]"))
-                .andExpect(jsonPath("$.pushTokens.length()" ).value(1));
+                .andExpect(status().isOk());
+
+        assertThat(userPushTokenRepository.findAllByUserId(user.getId()))
+                .extracting("token")
+                .containsExactly("ExponentPushToken[abcd1234]");
     }
 
     @Test
     @DisplayName("POST /api/user/me/push-token -> idempotent when token already exists")
-    void registerPushToken_duplicateIdempotent(@TestUserContext String token) throws Exception {
+    void registerPushToken_duplicateIdempotent(@TestUserContext String token, @TestUserContext User user) throws Exception {
         Map<String, Object> body = Map.of("token", "ExponentPushToken[dupToken]");
 
         // First registration
@@ -51,17 +59,18 @@ class UserPushTokenControllerTest extends IntegrationTestBase {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pushTokens.length()" ).value(1));
+                .andExpect(status().isOk());
 
         // Second registration (same token) should not duplicate
         mockMvc.perform(post("/api/user/me/push-token")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pushTokens.length()" ).value(1))
-                .andExpect(jsonPath("$.pushTokens[0]").value("ExponentPushToken[dupToken]"));
+                .andExpect(status().isOk());
+
+        assertThat(userPushTokenRepository.findAllByUserId(user.getId()))
+                .extracting("token")
+                .containsExactly("ExponentPushToken[dupToken]");
     }
 
     @Test
@@ -77,4 +86,3 @@ class UserPushTokenControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("Token is required"));
     }
 }
-

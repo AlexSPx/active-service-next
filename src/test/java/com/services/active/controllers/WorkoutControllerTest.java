@@ -6,7 +6,9 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
+import com.services.active.models.Exercise;
 import com.services.active.models.TemplateExercise;
+import com.services.active.repository.ExerciseRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -30,6 +33,9 @@ class WorkoutControllerTest extends IntegrationTestBase {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ExerciseRepository exerciseRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -54,8 +60,13 @@ class WorkoutControllerTest extends IntegrationTestBase {
     @ValueSource(strings = {"", " ", "null"})
     @DisplayName("POST /api/workouts -> 400 BAD REQUEST when title is missing")
     void createWorkout_missingTitle_badRequest(String title, @TestUserContext String token) throws Exception {
-        TemplateExercise exercise = TemplateExercise.builder()
-                .exerciseId("exercise-1")
+        UUID exerciseId = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder()
+                .id(exerciseId)
+                .name("Test Exercise")
+                .build());
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exerciseId)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Warm up properly")
@@ -83,8 +94,13 @@ class WorkoutControllerTest extends IntegrationTestBase {
     @Test
     @DisplayName("POST /api/workouts -> 201 CREATED returns workout on success when template provided")
     void createWorkout_success_withTemplate(@TestUserContext String token) throws Exception {
-        TemplateExercise exercise = TemplateExercise.builder()
-                .exerciseId("exercise-1")
+        UUID exerciseId = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder()
+                .id(exerciseId)
+                .name("Test Exercise")
+                .build());
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exerciseId)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Warm up properly")

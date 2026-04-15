@@ -1,4 +1,4 @@
-package com.services.active.models;
+package com.services.active.models.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,21 +6,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "user_push_tokens")
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "workout_templates")
-public class WorkoutTemplate {
+@NoArgsConstructor
+public class UserPushToken {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private LocalDateTime createdAt;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
-    private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    private String token;
 }

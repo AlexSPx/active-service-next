@@ -4,42 +4,38 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "exercise_personal_bests")
-@CompoundIndexes({
-        @CompoundIndex(name = "user_exercise_unique", def = "{ 'userId': 1, 'exerciseId': 1 }", unique = true)
-})
+@Entity
+@Table(name = "exercise_personal_bests",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "exercise_id"}))
 public class ExercisePersonalBest {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Indexed
-    private String userId;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
-    @Indexed
-    private String exerciseId;
+    @Column(name = "exercise_id", nullable = false)
+    private UUID exerciseId;
 
     // Best estimated 1RM (kg) and the record that achieved it
     private Double oneRm;
-    private String oneRmRecordId;
+    private UUID oneRmRecordId;
     private Integer oneRmRecordSetIndex;
 
     // Best total volume (kg) across all sets in a record and the record that achieved it
     private Double totalVolume;
-    private String totalVolumeRecordId;
+    private UUID totalVolumeRecordId;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-

@@ -4,60 +4,59 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "exercise_records")
+@Entity
+@Table(name = "exercise_records")
 public class ExerciseRecord {
     @Id
-    private String id;
-    
-    @Indexed
-    private String userId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Indexed
-    private String exerciseId;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Column(name = "workout_record_id", nullable = false)
+    private UUID workoutRecordId;
+
+    @Column(name = "exercise_id", nullable = false)
+    private UUID exerciseId;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int ordinal = 0;
 
     private LocalDateTime createdAt;
-    
+
     // Strength training fields
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "integer[]")
     private List<Integer> reps;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "double precision[]")
     private List<Double> weight;
 
     // Cardio/Time-based fields
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "integer[]")
     private List<Integer> durationSeconds;
 
     // Common fields
     private String notes;
 
-    // Achievement sub-docs (only present when this record set a new PR)
-    // One-Rep Max (Epley estimate) per-set achievement
-    private OneRmAchievement achievedOneRm;
-    // Total volume across this exercise record (sum of reps*weight)
-    private TotalVolumeAchievement achievedTotalVolume;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class OneRmAchievement {
-        private Double value; // estimated 1RM in kg
-        private Integer setIndex; // zero-based index of the set that achieved it
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TotalVolumeAchievement {
-        private Double value; // total volume in kg across all sets
-    }
+    // Achievement data (flattened from OneRmAchievement / TotalVolumeAchievement sub-docs)
+    private Double achievedOneRmValue;
+    private Integer achievedOneRmSetIndex;
+    private Double achievedTotalVolumeValue;
 }

@@ -4,21 +4,21 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "workouts")
+@Entity
+@Table(name = "workouts")
 public class Workout {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     private String title;
 
@@ -28,13 +28,9 @@ public class Workout {
 
     private LocalDateTime updatedAt;
 
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
-    private List<String> workoutRecordIds; // References to WorkoutRecord documents
-
-    @Indexed
-    private String userId;
-
-    @Indexed
-    private String templateId; // Reference to WorkoutTemplate
-
+    @Column(name = "template_id", nullable = false)
+    private UUID templateId;
 }

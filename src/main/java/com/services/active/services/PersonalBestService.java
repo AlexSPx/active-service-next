@@ -15,22 +15,22 @@ public class PersonalBestService {
 
     private final ExercisePersonalBestRepository personalBestRepository;
 
-    public Map<String, ExercisePersonalBest> getCurrentPbs(String userId, Set<String> exerciseIds) {
-        Map<String, ExercisePersonalBest> map = new HashMap<>();
-        for (String exId : exerciseIds) {
+    public Map<UUID, ExercisePersonalBest> getCurrentPbs(UUID userId, Set<UUID> exerciseIds) {
+        Map<UUID, ExercisePersonalBest> map = new HashMap<>();
+        for (UUID exId : exerciseIds) {
             personalBestRepository.findByUserIdAndExerciseId(userId, exId)
                     .ifPresent(pb -> map.put(exId, pb));
         }
         return map;
     }
 
-    public void persistPrs(String userId, List<ExerciseRecord> savedExerciseRecords) {
+    public void persistPrs(UUID userId, List<ExerciseRecord> savedExerciseRecords) {
         for (ExerciseRecord record : savedExerciseRecords) {
-            boolean prOneRm = record.getAchievedOneRm() != null;
-            boolean prVolume = record.getAchievedTotalVolume() != null;
+            boolean prOneRm = record.getAchievedOneRmValue() != null;
+            boolean prVolume = record.getAchievedTotalVolumeValue() != null;
             if (!prOneRm && !prVolume) continue;
 
-            String exerciseId = record.getExerciseId();
+            UUID exerciseId = record.getExerciseId();
             ExercisePersonalBest pb = personalBestRepository
                     .findByUserIdAndExerciseId(userId, exerciseId)
                     .orElse(ExercisePersonalBest.builder()
@@ -40,12 +40,12 @@ public class PersonalBestService {
                             .build());
 
             if (prOneRm) {
-                pb.setOneRm(record.getAchievedOneRm().getValue());
+                pb.setOneRm(record.getAchievedOneRmValue());
                 pb.setOneRmRecordId(record.getId());
-                pb.setOneRmRecordSetIndex(record.getAchievedOneRm().getSetIndex());
+                pb.setOneRmRecordSetIndex(record.getAchievedOneRmSetIndex());
             }
             if (prVolume) {
-                pb.setTotalVolume(record.getAchievedTotalVolume().getValue());
+                pb.setTotalVolume(record.getAchievedTotalVolumeValue());
                 pb.setTotalVolumeRecordId(record.getId());
             }
             pb.setUpdatedAt(LocalDateTime.now());

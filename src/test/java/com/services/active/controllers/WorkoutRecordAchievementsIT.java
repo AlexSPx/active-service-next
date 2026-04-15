@@ -6,14 +6,17 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
+import com.services.active.models.Exercise;
 import com.services.active.models.ExercisePersonalBest;
 import com.services.active.models.ExerciseRecord;
-import com.services.active.models.TemplateExercise;
 import com.services.active.models.user.User;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
+import java.util.UUID;
+
 import com.services.active.repository.ExercisePersonalBestRepository;
 import com.services.active.repository.ExerciseRecordRepository;
+import com.services.active.repository.ExerciseRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +52,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     private final WorkoutRecordRepository workoutRecordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final ExercisePersonalBestRepository personalBestRepository;
+    private final ExerciseRepository exerciseRepository;
 
     @BeforeEach
     void setupMapper() {
@@ -57,9 +61,14 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
         objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    private Workout createSimpleWorkout(User user) {
-        TemplateExercise ex = TemplateExercise.builder()
-                .exerciseId("exercise-1")
+    private Workout createSimpleWorkout(User user, UUID testExerciseId) {
+        exerciseRepository.save(Exercise.builder()
+                .id(testExerciseId)
+                .name("Test Exercise")
+                .build());
+
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest ex = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(testExerciseId)
                 .reps(List.of(5, 3, 1))
                 .weight(List.of(100.0, 110.0, 120.0))
                 .notes("Bench press")
@@ -97,34 +106,36 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
         return node.at("/workoutRecord/id").asText();
     }
 
-    private ExerciseRecord fetchExerciseRecordByWorkoutRecordId(String workoutRecordId, String exerciseId) {
+    private ExerciseRecord fetchExerciseRecordByWorkoutRecordId(UUID workoutRecordId, UUID exerciseId) {
         WorkoutRecord wr = workoutRecordRepository.findById(workoutRecordId).orElseThrow();
-        List<ExerciseRecord> records = exerciseRecordRepository.findAllById(wr.getExerciseRecordIds());
+        List<ExerciseRecord> records = exerciseRecordRepository.findAllByWorkoutRecordIdOrderByOrdinalAsc(wr.getId());
         return records.stream().filter(r -> exerciseId.equals(r.getExerciseId())).findFirst().orElseThrow();
     }
 
     @Test
     @DisplayName("First record sets both 1RM and volume PRs, PB saved and achievements present")
     void firstRecordPersistsAchievementsAndPB(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout(user);
+        UUID testExerciseId = UUID.randomUUID();
+        Workout workout = createSimpleWorkout(user, testExerciseId);
         String exerciseJson = """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [100.0, 110.0, 120.0],
           "notes": "go"
         }
-        """;
-        String wrId = postWorkoutRecord(token, workout.getId(), exerciseJson);
+        """.formatted(testExerciseId.toString());
+        String wrIdStr = postWorkoutRecord(token, workout.getId().toString(), exerciseJson);
+        UUID wrId = UUID.fromString(wrIdStr);
 
-        ExerciseRecord er = fetchExerciseRecordByWorkoutRecordId(wrId, "exercise-1");
-        assertThat(er.getAchievedOneRm()).isNotNull();
-        assertThat(er.getAchievedOneRm().getSetIndex()).isEqualTo(2);
-        assertThat(er.getAchievedOneRm().getValue()).isBetween(123.9, 125.5);
-        assertThat(er.getAchievedTotalVolume()).isNotNull();
-        assertThat(er.getAchievedTotalVolume().getValue()).isEqualTo(950.0);
+        ExerciseRecord er = fetchExerciseRecordByWorkoutRecordId(wrId, testExerciseId);
+        assertThat(er.getAchievedOneRmValue()).isNotNull();
+        assertThat(er.getAchievedOneRmSetIndex()).isEqualTo(2);
+        assertThat(er.getAchievedOneRmValue()).isBetween(123.9, 125.5);
+        assertThat(er.getAchievedTotalVolumeValue()).isNotNull();
+        assertThat(er.getAchievedTotalVolumeValue()).isEqualTo(950.0);
 
-        Optional<ExercisePersonalBest> pbOpt = personalBestRepository.findByUserIdAndExerciseId(user.getId(), "exercise-1");
+        Optional<ExercisePersonalBest> pbOpt = personalBestRepository.findByUserIdAndExerciseId(user.getId(), testExerciseId);
         assertThat(pbOpt).isPresent();
         ExercisePersonalBest pb = pbOpt.get();
         assertThat(pb.getOneRm()).isBetween(123.9, 125.5);
@@ -137,31 +148,34 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Non-PR record does not persist achievements and PBs remain unchanged")
     void nonPrRecordDoesNotPersistAchievements(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout(user);
+        UUID testExerciseId = UUID.randomUUID();
+        Workout workout = createSimpleWorkout(user, testExerciseId);
         // Seed a PR first
-        String wr1 = postWorkoutRecord(token, workout.getId(), """
+        String wr1Str = postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [100.0, 110.0, 120.0]
         }
-        """);
-        ExerciseRecord seed = fetchExerciseRecordByWorkoutRecordId(wr1, "exercise-1");
-        assertThat(seed.getAchievedOneRm()).isNotNull();
+        """.formatted(testExerciseId.toString()));
+        UUID wr1 = UUID.fromString(wr1Str);
+        ExerciseRecord seed = fetchExerciseRecordByWorkoutRecordId(wr1, testExerciseId);
+        assertThat(seed.getAchievedOneRmValue()).isNotNull();
 
         // Post a worse performance
-        String wr2 = postWorkoutRecord(token, workout.getId(), """
+        String wr2Str = postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [90.0, 100.0, 110.0]
         }
-        """);
-        ExerciseRecord er2 = fetchExerciseRecordByWorkoutRecordId(wr2, "exercise-1");
-        assertThat(er2.getAchievedOneRm()).isNull();
-        assertThat(er2.getAchievedTotalVolume()).isNull();
+        """.formatted(testExerciseId.toString()));
+        UUID wr2 = UUID.fromString(wr2Str);
+        ExerciseRecord er2 = fetchExerciseRecordByWorkoutRecordId(wr2, testExerciseId);
+        assertThat(er2.getAchievedOneRmValue()).isNull();
+        assertThat(er2.getAchievedTotalVolumeValue()).isNull();
 
-        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), "exercise-1").orElseThrow();
+        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), testExerciseId).orElseThrow();
         assertThat(pb.getOneRm()).isGreaterThan(123.9);
         assertThat(pb.getTotalVolume()).isEqualTo(950.0);
     }
@@ -169,29 +183,31 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Record with higher 1RM but lower volume updates only 1RM PB")
     void higherOneRmLowerVolumeUpdatesOnlyOneRm(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout(user);
+        UUID testExerciseId = UUID.randomUUID();
+        Workout workout = createSimpleWorkout(user, testExerciseId);
         // Seed
-        postWorkoutRecord(token, workout.getId(), """
+        postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [100.0, 110.0, 120.0]
         }
-        """);
+        """.formatted(testExerciseId.toString()));
         // Better 1RM (125x1) lower volume
-        String wr2 = postWorkoutRecord(token, workout.getId(), """
+        String wr2Str = postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [1],
           "weight": [125.0]
         }
-        """);
-        ExerciseRecord er2 = fetchExerciseRecordByWorkoutRecordId(wr2, "exercise-1");
-        assertThat(er2.getAchievedOneRm()).isNotNull();
-        assertThat(er2.getAchievedOneRm().getSetIndex()).isEqualTo(0);
-        assertThat(er2.getAchievedTotalVolume()).isNull();
+        """.formatted(testExerciseId.toString()));
+        UUID wr2 = UUID.fromString(wr2Str);
+        ExerciseRecord er2 = fetchExerciseRecordByWorkoutRecordId(wr2, testExerciseId);
+        assertThat(er2.getAchievedOneRmValue()).isNotNull();
+        assertThat(er2.getAchievedOneRmSetIndex()).isEqualTo(0);
+        assertThat(er2.getAchievedTotalVolumeValue()).isNull();
 
-        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), "exercise-1").orElseThrow();
+        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), testExerciseId).orElseThrow();
         assertThat(pb.getOneRm()).isBetween(128.5, 130.0);
         assertThat(pb.getTotalVolume()).isEqualTo(950.0);
     }
@@ -199,37 +215,39 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("Record with higher volume but lower 1RM updates only volume PB")
     void higherVolumeLowerOneRmUpdatesOnlyVolume(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout(user);
+        UUID testExerciseId = UUID.randomUUID();
+        Workout workout = createSimpleWorkout(user, testExerciseId);
         // Seed best 1RM 125x1 and volume 950 from first
-        postWorkoutRecord(token, workout.getId(), """
+        postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [100.0, 110.0, 120.0]
         }
-        """);
-        postWorkoutRecord(token, workout.getId(), """
+        """.formatted(testExerciseId.toString()));
+        postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [1],
           "weight": [125.0]
         }
-        """);
+        """.formatted(testExerciseId.toString()));
 
         // Higher volume but lower 1RM (80x15 => vol 1200, 1RM ~120)
-        String wr3 = postWorkoutRecord(token, workout.getId(), """
+        String wr3Str = postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [15],
           "weight": [80.0]
         }
-        """);
-        ExerciseRecord er3 = fetchExerciseRecordByWorkoutRecordId(wr3, "exercise-1");
-        assertThat(er3.getAchievedOneRm()).isNull();
-        assertThat(er3.getAchievedTotalVolume()).isNotNull();
-        assertThat(er3.getAchievedTotalVolume().getValue()).isEqualTo(1200.0);
+        """.formatted(testExerciseId.toString()));
+        UUID wr3 = UUID.fromString(wr3Str);
+        ExerciseRecord er3 = fetchExerciseRecordByWorkoutRecordId(wr3, testExerciseId);
+        assertThat(er3.getAchievedOneRmValue()).isNull();
+        assertThat(er3.getAchievedTotalVolumeValue()).isNotNull();
+        assertThat(er3.getAchievedTotalVolumeValue()).isEqualTo(1200.0);
 
-        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), "exercise-1").orElseThrow();
+        ExercisePersonalBest pb = personalBestRepository.findByUserIdAndExerciseId(user.getId(), testExerciseId).orElseThrow();
         assertThat(pb.getOneRm()).isBetween(128.5, 130.0);
         assertThat(pb.getTotalVolume()).isEqualTo(1200.0);
     }
@@ -237,15 +255,16 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/workouts/record returns achievement fields in response for PR records")
     void getWorkoutRecords_returnsAchievements(@TestUserContext String token, @TestUserContext User user) throws Exception {
-        Workout workout = createSimpleWorkout(user);
+        UUID testExerciseId = UUID.randomUUID();
+        Workout workout = createSimpleWorkout(user, testExerciseId);
         // Create a PR record
-        postWorkoutRecord(token, workout.getId(), """
+        postWorkoutRecord(token, workout.getId().toString(), """
         {
-          "exerciseId": "exercise-1",
+          "exerciseId": "%s",
           "reps": [5, 3, 1],
           "weight": [100.0, 110.0, 120.0]
         }
-        """);
+        """.formatted(testExerciseId.toString()));
 
         mockMvc.perform(get("/api/workouts/record")
                         .header("Authorization", "Bearer " + token))

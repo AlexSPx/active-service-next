@@ -1,8 +1,8 @@
 package com.services.active.controllers;
 
 import com.services.active.dto.CreateRoutineRequest;
+import com.services.active.dto.RoutineResponse;
 import com.services.active.dto.UpdateRoutineRequest;
-import com.services.active.models.Routine;
 import com.services.active.services.RoutineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,12 +37,12 @@ public class RoutineController {
     @Operation(summary = "Create a new routine")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Routine created successfully",
-                    content = @Content(schema = @Schema(implementation = Routine.class))),
+                    content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "409", description = "Duplicate routine name")
     })
-    public Routine createRoutine(Principal principal, @RequestBody @Valid CreateRoutineRequest request) {
+    public RoutineResponse createRoutine(Principal principal, @RequestBody @Valid CreateRoutineRequest request) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -53,10 +53,10 @@ public class RoutineController {
     @Operation(summary = "List user's routines")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Routines retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Routine.class))),
+                    content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
-    public List<Routine> listRoutines(Principal principal) {
+    public List<RoutineResponse> listRoutines(Principal principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -67,11 +67,11 @@ public class RoutineController {
     @Operation(summary = "Get a routine by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Routine retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Routine.class))),
+                    content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "404", description = "Routine not found")
     })
-    public Routine getRoutine(Principal principal, @PathVariable("routineId") String routineId) {
+    public RoutineResponse getRoutine(Principal principal, @PathVariable("routineId") String routineId) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -82,13 +82,13 @@ public class RoutineController {
     @Operation(summary = "Update a routine")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Routine updated successfully",
-                    content = @Content(schema = @Schema(implementation = Routine.class))),
+                    content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "404", description = "Routine not found"),
             @ApiResponse(responseCode = "409", description = "Duplicate routine name")
     })
-    public Routine updateRoutine(Principal principal, @PathVariable("routineId") String routineId, @RequestBody UpdateRoutineRequest request) {
+    public RoutineResponse updateRoutine(Principal principal, @PathVariable("routineId") String routineId, @RequestBody UpdateRoutineRequest request) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -114,11 +114,11 @@ public class RoutineController {
     @Operation(summary = "Get the active routine")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Active routine retrieved",
-                    content = @Content(schema = @Schema(implementation = Routine.class))),
+                    content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "404", description = "No active routine")
     })
-    public Routine getActiveRoutine(Principal principal) {
+    public RoutineResponse getActiveRoutine(Principal principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

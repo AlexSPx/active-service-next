@@ -19,7 +19,7 @@ public class WorkoutWithTemplate {
 
     public static WorkoutWithTemplate createFromWorkoutAndTemplate(Workout workout, WorkoutTemplate template) {
         return WorkoutWithTemplate.builder()
-                .id(workout.getId())
+                .id(workout.getId().toString())
                 .title(workout.getTitle())
                 .notes(workout.getNotes())
                 .createdAt(workout.getCreatedAt())

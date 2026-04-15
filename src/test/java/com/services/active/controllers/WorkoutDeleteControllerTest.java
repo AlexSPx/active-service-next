@@ -6,10 +6,12 @@ import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.dto.WorkoutRecordRequest;
+import com.services.active.models.Exercise;
 import com.services.active.models.TemplateExercise;
 import com.services.active.models.user.User;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutRecord;
+import com.services.active.repository.ExerciseRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.repository.WorkoutRepository;
 import com.services.active.repository.WorkoutTemplateRepository;
@@ -25,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -42,10 +45,15 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
     private final WorkoutRepository workoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
+    private final ExerciseRepository exerciseRepository;
 
-    private Workout createWorkout(User user) {
-        TemplateExercise exercise = TemplateExercise.builder()
-                .exerciseId("exercise-1")
+    private Workout createWorkout(User user, UUID exerciseId) {
+        exerciseRepository.save(Exercise.builder()
+                .id(exerciseId)
+                .name("Test Exercise")
+                .build());
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(exerciseId)
                 .reps(List.of(10, 8, 6))
                 .weight(List.of(50.0, 55.0, 60.0))
                 .notes("Warm up properly")
@@ -67,26 +75,27 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
     @Test
     @DisplayName("DELETE /api/workouts/{id} -> 204 NO CONTENT deletes workout and template but keeps records")
     void deleteWorkout_deletesWorkoutAndTemplate_keepsRecords(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        UUID exerciseId = UUID.randomUUID();
         // Create workout
-        Workout workout = createWorkout(user);
-        String templateId = workout.getTemplateId();
+        Workout workout = createWorkout(user, exerciseId);
+        UUID templateId = workout.getTemplateId();
 
         // Create a record for this workout
         LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
         WorkoutRecordRequest.ExerciseRecord ex = new WorkoutRecordRequest.ExerciseRecord(
-                "exercise-1",
+                exerciseId.toString(),
                 List.of(10, 8, 6),
                 List.of(50.0, 55.0, 60.0),
                 null,
                 null
         );
         WorkoutRecordRequest recordReq = new WorkoutRecordRequest();
-        recordReq.setWorkoutId(workout.getId());
+        recordReq.setWorkoutId(workout.getId().toString());
         recordReq.setNotes("Record to survive delete");
         recordReq.setStartTime(startTime);
         recordReq.setExerciseRecords(List.of(ex));
         com.services.active.dto.WorkoutRecordCreateResponse created = workoutRecordService.createWorkoutRecord(user.getWorkosId(), recordReq);
-        String recordId = created.getWorkoutRecord().getId();
+        UUID recordId = UUID.fromString(created.getWorkoutRecord().getId());
 
         // Sanity: record exists
         WorkoutRecord beforeDelete = workoutRecordRepository.findById(recordId).orElse(null);

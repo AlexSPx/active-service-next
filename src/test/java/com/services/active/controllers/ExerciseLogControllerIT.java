@@ -1,18 +1,23 @@
 package com.services.active.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
+import com.services.active.dto.CreateWorkoutRequest;
+import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.models.Exercise;
 import com.services.active.models.ExerciseRecord;
+import com.services.active.models.Workout;
+import com.services.active.models.WorkoutRecord;
 import com.services.active.models.user.User;
 import com.services.active.models.types.Category;
 import com.services.active.models.types.Equipment;
 import com.services.active.models.types.Level;
-import com.services.active.models.types.MuscleGroup;
 import com.services.active.repository.ExerciseRecordRepository;
 import com.services.active.repository.ExerciseRepository;
+import com.services.active.repository.UserRepository;
+import com.services.active.repository.WorkoutRecordRepository;
+import com.services.active.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,9 +43,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ExerciseLogControllerIT extends IntegrationTestBase {
 
     private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
     private final ExerciseRepository exerciseRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final WorkoutService workoutService;
+    private final WorkoutRecordRepository workoutRecordRepository;
+    private final UserRepository userRepository;
 
     private Exercise testExercise;
 
@@ -47,16 +55,46 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
     void setupTestData() {
         // Create a test exercise
         testExercise = Exercise.builder()
-                .id("test-exercise-id")
+                .id(UUID.randomUUID())
                 .name("Bench Press")
                 .category(Category.STRENGTH)
                 .level(Level.INTERMEDIATE)
-                .primaryMuscles(List.of(MuscleGroup.CHEST))
-                .secondaryMuscles(List.of(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS))
+                .primaryMuscles(List.of("CHEST"))
+                .secondaryMuscles(List.of("SHOULDERS", "TRICEPS"))
                 .equipment(Equipment.BARBELL)
                 .instructions(List.of("Lie on bench", "Press weight"))
                 .build();
         exerciseRepository.save(testExercise);
+    }
+
+    private Workout createWorkout(User user) {
+        CreateWorkoutTemplateRequest.TemplateExerciseRequest exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(testExercise.getId())
+                .reps(List.of(10, 8, 6))
+                .weight(List.of(100.0, 105.0, 110.0))
+                .notes("Template exercise")
+                .build();
+
+        CreateWorkoutTemplateRequest template = CreateWorkoutTemplateRequest.builder()
+                .exercises(List.of(exercise))
+                .build();
+
+        CreateWorkoutRequest request = CreateWorkoutRequest.builder()
+                .title("Test Workout")
+                .notes("Exercise log test")
+                .template(template)
+                .build();
+
+        return workoutService.createWorkout(user.getWorkosId(), request);
+    }
+
+    private WorkoutRecord createWorkoutRecord(User user, Workout workout) {
+        return workoutRecordRepository.save(WorkoutRecord.builder()
+                .userId(user.getId())
+                .workoutId(workout.getId())
+                .workoutTitle(workout.getTitle())
+                .createdAt(LocalDateTime.now())
+                .build());
     }
 
     @Test
@@ -72,11 +110,15 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/exercises/{exerciseId}/logs returns exercise logs ordered by creation time")
     void getExerciseLogs_withLogs_returnsOrderedLogs(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        Workout workout = createWorkout(user);
+        WorkoutRecord workoutRecord = createWorkoutRecord(user, workout);
+
         // Create test exercise records
         LocalDateTime baseTime = LocalDateTime.now().minusDays(2);
-        
+
         ExerciseRecord record1 = ExerciseRecord.builder()
                 .userId(user.getId())
+                .workoutRecordId(workoutRecord.getId())
                 .exerciseId(testExercise.getId())
                 .createdAt(baseTime)
                 .reps(List.of(10, 8, 6))
@@ -86,6 +128,7 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
 
         ExerciseRecord record2 = ExerciseRecord.builder()
                 .userId(user.getId())
+                .workoutRecordId(workoutRecord.getId())
                 .exerciseId(testExercise.getId())
                 .createdAt(baseTime.plusDays(1))
                 .reps(List.of(12, 10, 8))
@@ -110,7 +153,8 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/exercises/{exerciseId}/logs returns 404 for non-existent exercise")
     void getExerciseLogs_nonExistentExercise_returns404(@TestUserContext String token) throws Exception {
-        mockMvc.perform(get("/api/exercises/{exerciseId}/logs", "non-existent-id")
+        String missingExerciseId = java.util.UUID.randomUUID().toString();
+        mockMvc.perform(get("/api/exercises/{exerciseId}/logs", missingExerciseId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andDo(print());
@@ -127,9 +171,13 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/exercises/{exerciseId}/logs only returns logs for authenticated user")
     void getExerciseLogs_onlyUserLogs_returnsUserSpecificLogs(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        Workout workout = createWorkout(user);
+        WorkoutRecord workoutRecord = createWorkoutRecord(user, workout);
+
         // Create records for the test user
         ExerciseRecord userRecord = ExerciseRecord.builder()
                 .userId(user.getId())
+                .workoutRecordId(workoutRecord.getId())
                 .exerciseId(testExercise.getId())
                 .createdAt(LocalDateTime.now())
                 .reps(List.of(10))
@@ -138,8 +186,17 @@ class ExerciseLogControllerIT extends IntegrationTestBase {
                 .build();
 
         // Create records for another user
+        User otherUser = userRepository.save(User.builder()
+                .workosId("test_workos_exercise_log_other")
+                .createdAt(java.time.LocalDate.now())
+                .timezone("UTC")
+                .build());
+        Workout otherWorkout = createWorkout(otherUser);
+        WorkoutRecord otherWorkoutRecord = createWorkoutRecord(otherUser, otherWorkout);
+
         ExerciseRecord otherUserRecord = ExerciseRecord.builder()
-                .userId("other-user-id")
+                .userId(otherUser.getId())
+                .workoutRecordId(otherWorkoutRecord.getId())
                 .exerciseId(testExercise.getId())
                 .createdAt(LocalDateTime.now())
                 .reps(List.of(15))

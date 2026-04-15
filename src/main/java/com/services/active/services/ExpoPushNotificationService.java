@@ -3,6 +3,8 @@ package com.services.active.services;
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
 import com.niamedtech.expo.exposerversdk.request.PushNotification;
 import com.services.active.models.user.User;
+import com.services.active.models.user.UserPushToken;
+import com.services.active.repository.UserPushTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -18,11 +20,11 @@ import java.util.List;
 public class ExpoPushNotificationService {
 
     private ExpoPushNotificationClient expoClient;
+    private final UserPushTokenRepository pushTokenRepository;
 
-    // Default constructor for Spring
-    public ExpoPushNotificationService() {
+    public ExpoPushNotificationService(UserPushTokenRepository pushTokenRepository) {
+        this.pushTokenRepository = pushTokenRepository;
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        // TODO: Extract into a bean
         this.expoClient = ExpoPushNotificationClient.builder()
                 .setHttpClient(httpClient)
                 .build();
@@ -37,15 +39,15 @@ public class ExpoPushNotificationService {
         if (users == null || users.isEmpty()) return 0;
         List<PushNotification> notifications = new ArrayList<>();
         for (User user : users) {
-            List<String> tokens = user.getPushTokens();
-            if (tokens == null || tokens.isEmpty()) continue;
+            List<String> tokens = pushTokenRepository.findAllByUserId(user.getId())
+                    .stream().map(UserPushToken::getToken).toList();
+            if (tokens.isEmpty()) continue;
             String title = "Keep your streak going";
             String body;
-            if (user.getStreak() != null && user.getStreak().getCurrentStreak() > 0) {
-                var streak = user.getStreak();
-                var deadline = streak.getNextWorkoutDeadline();
+            if (user.getCurrentStreak() > 0) {
+                var deadline = user.getNextWorkoutDeadline();
                 String deadlineStr = deadline != null ? deadline.format(DateTimeFormatter.ISO_DATE) : "today";
-                body = "You're on a " + streak.getCurrentStreak() + " day streak. Next workout deadline: " + deadlineStr + ".";
+                body = "You're on a " + user.getCurrentStreak() + " day streak. Next workout deadline: " + deadlineStr + ".";
             } else {
                 body = "Start your streak today with your next workout!";
             }

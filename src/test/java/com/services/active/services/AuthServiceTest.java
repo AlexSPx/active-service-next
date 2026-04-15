@@ -4,6 +4,8 @@ import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +52,7 @@ class AuthServiceTest {
         when(userRepository.findByWorkosId(workosUserId)).thenReturn(Optional.empty());
 
         User newUser = User.builder()
-                .id("user_mongo_123")
+                .id(UUID.randomUUID())
                 .workosId(workosUserId)
                 .createdAt(LocalDate.now())
                 .timezone("UTC")
@@ -82,7 +84,7 @@ class AuthServiceTest {
         when(workosService.authenticateWithCode(code)).thenReturn(authResult);
 
         User existingUser = User.builder()
-                .id("user_mongo_456")
+                .id(UUID.randomUUID())
                 .workosId(workosUserId)
                 .createdAt(LocalDate.now().minusDays(30))
                 .timezone("America/New_York")

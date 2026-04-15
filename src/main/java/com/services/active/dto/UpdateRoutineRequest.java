@@ -1,6 +1,5 @@
 package com.services.active.dto;
 
-import com.services.active.models.RoutinePattern;
 import com.services.active.models.types.RoutineType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,7 @@ public class UpdateRoutineRequest {
     private String description;
 
     @Schema(description = "Updated pattern for the routine; if null, pattern is not changed")
-    private List<RoutinePattern> pattern;
+    private List<RoutinePatternRequest> pattern;
 
     @Schema(description = "Whether this routine should be active; if true, other routines will be deactivated")
     private Boolean active;

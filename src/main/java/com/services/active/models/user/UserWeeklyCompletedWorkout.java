@@ -1,4 +1,4 @@
-package com.services.active.models;
+package com.services.active.models.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,16 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "user_weekly_completed_workouts")
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "workout_records")
-public class WorkoutRecord {
+@NoArgsConstructor
+public class UserWeeklyCompletedWorkout {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -23,13 +22,6 @@ public class WorkoutRecord {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "workout_id")
+    @Column(name = "workout_id", nullable = false)
     private UUID workoutId;
-
-    private String workoutTitle;
-
-    private String notes;
-
-    private LocalDateTime startTime;
-    private LocalDateTime createdAt;
 }

@@ -4,80 +4,54 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
-@Document("users")
+@Entity
+@Table(name = "users")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Indexed(unique = true)
+    @Column(name = "workos_id", unique = true, nullable = false)
     private String workosId;
 
     private String username;
 
     private LocalDate createdAt;
 
-    @Indexed
     private String timezone;
 
-    private String activeRoutineId;
+    @Column(name = "active_routine_id")
+    private UUID activeRoutineId;
 
+    @Builder.Default
     private boolean registrationCompleted = false;
 
+    // Streak Info (flattened from StreakInfo sub-document)
     @Builder.Default
-    private StreakInfo streak = new StreakInfo();
-
-    // New field to store push notification tokens (one user can have multiple devices)
+    private int currentStreak = 0;
     @Builder.Default
-    private List<String> pushTokens = new ArrayList<>();
-
+    private int longestStreak = 0;
+    private UUID nextWorkoutId;
+    private LocalDate nextWorkoutDeadline;
     @Builder.Default
-    private NotificationPreferences notificationPreferences = new NotificationPreferences(false, new ArrayList<>());
+    private int streakFreezeCount = 0;
+    private LocalDate lastWorkoutCountedDate;
+    private LocalDate currentWeekStart;
 
-    // Nested body measurements (optional). Null if not provided at signup.
-    private BodyMeasurements measurements;
+    // Body Measurements (flattened from BodyMeasurements sub-document)
+    private Double weightKg;
+    private Integer heightCm;
 
-    public void setNotificationPreferences(Integer notificationPreferences) {
-        if (notificationPreferences == null) {
-            return; // ignore null frequency updates
-        }
-        setNotificationPreferences(notificationPreferences.intValue());
-    }
-
-    public void setNotificationPreferences(int notificationPreferences) {
-        if (this.notificationPreferences == null) {
-            this.notificationPreferences = new NotificationPreferences(false, new ArrayList<>());
-        }
-        if (notificationPreferences <= 0) {
-            this.notificationPreferences.setEmailNotificationsEnabled(false);
-            this.notificationPreferences.getSchedule().clear();
-        } else {
-            this.notificationPreferences.setEmailNotificationsEnabled(true);
-            List<String> newSchedule = new ArrayList<>();
-            java.time.LocalTime startTime = java.time.LocalTime.of(9, 0);  // 09:00
-            java.time.LocalTime endTime = java.time.LocalTime.of(21, 0);   // 21:00
-            if (notificationPreferences == 1) {
-                newSchedule.add(startTime.toString());
-            } else {
-                long totalMinutes = java.time.temporal.ChronoUnit.MINUTES.between(startTime, endTime);
-                long intervalMinutes = totalMinutes / (notificationPreferences - 1);
-                for (int i = 0; i < notificationPreferences; i++) {
-                    java.time.LocalTime nextTime = startTime.plusMinutes(intervalMinutes * i);
-                    newSchedule.add(nextTime.toString());
-                }
-            }
-            this.notificationPreferences.setSchedule(newSchedule);
-        }
-    }
+    // Notification Preferences (flag flattened; schedule in separate table)
+    @Builder.Default
+    private boolean emailNotificationsEnabled = false;
 }

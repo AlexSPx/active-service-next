@@ -5,28 +5,32 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document
+@Entity
+@Table(name = "routines")
 public class Routine {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
     private String name;
     private String description;
-    private String userId;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Instant startDate;
-    private List<RoutinePattern> pattern;
 
     /**
      * The type of routine scheduling.
@@ -34,6 +38,7 @@ public class Routine {
      * WEEKLY_COMPLETION: All workouts must be completed within a week (Mon-Sun), any order.
      * Defaults to SEQUENTIAL.
      */
+    @Enumerated(EnumType.STRING)
     @Builder.Default
     private RoutineType routineType = RoutineType.SEQUENTIAL;
 }

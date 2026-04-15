@@ -6,7 +6,7 @@ import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.UpdateRoutineRequest;
-import com.services.active.models.RoutinePattern;
+import com.services.active.dto.RoutinePatternRequest;
 import com.services.active.models.types.DayType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -33,8 +34,8 @@ class RoutineControllerTest extends IntegrationTestBase {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private CreateRoutineRequest buildRequest(String name, boolean active) {
-        RoutinePattern d1 = RoutinePattern.builder().dayIndex(1).dayType(DayType.WORKOUT).workoutId("w1").build();
-        RoutinePattern d2 = RoutinePattern.builder().dayIndex(2).dayType(DayType.REST).workoutId(null).build();
+        RoutinePatternRequest d1 = RoutinePatternRequest.builder().dayIndex(1).dayType(DayType.WORKOUT).workoutId(null).build();
+        RoutinePatternRequest d2 = RoutinePatternRequest.builder().dayIndex(2).dayType(DayType.REST).workoutId(null).build();
         return CreateRoutineRequest.builder()
                 .name(name)
                 .description("desc")

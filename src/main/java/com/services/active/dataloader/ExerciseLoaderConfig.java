@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
@@ -36,14 +37,20 @@ public class ExerciseLoaderConfig {
             }
             long count = exerciseRepository.count();
             if (count == 0) {
-                log.info("Exercises collection empty — loading remote JSON.");
+                log.info("Exercises table empty — loading remote JSON.");
                 String json = RestClient.create()
                         .get()
                         .uri("https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json")
                         .retrieve()
                         .body(String.class);
 
+                // Parse into intermediate objects, then assign UUIDs
                 List<Exercise> list = mapper.readValue(json, new TypeReference<List<Exercise>>() {});
+                for (Exercise ex : list) {
+                    if (ex.getId() == null) {
+                        ex.setId(UUID.randomUUID());
+                    }
+                }
                 exerciseRepository.saveAll(list);
                 log.info("Imported {} exercises", list.size());
             } else {
