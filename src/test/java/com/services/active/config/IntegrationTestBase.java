@@ -15,17 +15,18 @@ public abstract class IntegrationTestBase {
     void cleanUpDatabase() {
         // Preserve users/exercises so TestUserContext remains valid across tests.
         jdbcTemplate.execute("""
-            DELETE FROM exercise_records;
-            DELETE FROM workout_records;
-            DELETE FROM routine_patterns;
-            DELETE FROM routines;
-            DELETE FROM template_exercises;
-            DELETE FROM workouts;
-            DELETE FROM workout_templates;
-            DELETE FROM exercise_personal_bests;
-            DELETE FROM user_weekly_completed_workouts;
-            DELETE FROM user_notification_schedule;
-            DELETE FROM user_push_tokens;
+            DO $$ DECLARE
+                r RECORD;
+            BEGIN
+                FOR r IN (
+                    SELECT tablename
+                    FROM pg_tables
+                    WHERE schemaname = 'public'
+                      AND tablename NOT IN ('flyway_schema_history', 'users', 'exercises')
+                ) LOOP
+                    EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
+                END LOOP;
+            END $$;
         """);
     }
 }
