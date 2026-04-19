@@ -16,6 +16,7 @@ import com.services.active.repository.RoutineRepository;
 import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RoutineService {
 
@@ -40,6 +42,7 @@ public class RoutineService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Creating routine for user (userId={}, name={})", userId, request.getName());
 
         if (routineRepository.existsByUserIdAndNameIgnoreCase(userId, request.getName())) {
             throw new ConflictException("Routine name already exists");
@@ -79,33 +82,42 @@ public class RoutineService {
         if (requestedActive) {
             user.setActiveRoutineId(saved.getId());
             userRepository.save(user);
+            log.info("Marked new routine as active for user (userId={}, routineId={})", userId, saved.getId());
         }
 
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(saved.getId());
+        log.info("Created routine successfully (userId={}, routineId={}, patternDays={}, active={})",
+                userId, saved.getId(), patterns.size(), requestedActive);
         return RoutineResponse.from(saved, patterns);
     }
 
     public List<RoutineResponse> listRoutines(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Listing routines for user (userId={})", user.getId());
         List<Routine> routines = routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
-        return routines.stream()
+        List<RoutineResponse> responses = routines.stream()
                 .map(r -> RoutineResponse.from(r, routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(r.getId())))
                 .collect(Collectors.toList());
+        log.info("Listed routines for user (userId={}, routineCount={})", user.getId(), responses.size());
+        return responses;
     }
 
     public RoutineResponse getRoutine(String workosId, String id) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Fetching routine for user (userId={}, routineId={})", user.getId(), id);
         Routine routine = routineRepository.findByIdAndUserId(UUID.fromString(id), user.getId())
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routine.getId());
+        log.info("Fetched routine for user (userId={}, routineId={}, patternDays={})", user.getId(), routine.getId(), patterns.size());
         return RoutineResponse.from(routine, patterns);
     }
 
     public RoutineResponse getActiveRoutine(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Fetching active routine for user (userId={})", user.getId());
         UUID activeId = user.getActiveRoutineId();
         if (activeId == null) {
             throw new NotFoundException("No active routine");
@@ -113,6 +125,7 @@ public class RoutineService {
         Routine routine = routineRepository.findByIdAndUserId(activeId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Active routine not found"));
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routine.getId());
+        log.info("Fetched active routine for user (userId={}, routineId={}, patternDays={})", user.getId(), routine.getId(), patterns.size());
         return RoutineResponse.from(routine, patterns);
     }
 
@@ -121,11 +134,13 @@ public class RoutineService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Updating routine for user (userId={}, routineId={})", userId, id);
 
         UUID routineId = UUID.fromString(id);
         Routine existing = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
+            log.warn("Routine update denied: routine does not belong to user (userId={}, routineId={})", userId, routineId);
             throw new UnauthorizedException("Not authorized to update this routine");
         }
         boolean changed = false;
@@ -186,12 +201,16 @@ public class RoutineService {
                     userRepository.save(user);
                 }
             }
+            log.info("Updated active routine assignment for user (userId={}, routineId={}, active={})",
+                    userId, existing.getId(), request.getActive());
         }
         if (changed) {
             existing.setUpdatedAt(LocalDateTime.now());
             routineRepository.save(existing);
         }
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId);
+        log.info("Completed routine update (userId={}, routineId={}, changed={}, patternDays={})",
+                userId, routineId, changed, patterns.size());
         return RoutineResponse.from(existing, patterns);
     }
 
@@ -200,11 +219,13 @@ public class RoutineService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Deleting routine for user (userId={}, routineId={})", userId, id);
 
         UUID routineId = UUID.fromString(id);
         Routine existing = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
         if (!userId.equals(existing.getUserId())) {
+            log.warn("Routine deletion denied: routine does not belong to user (userId={}, routineId={})", userId, routineId);
             throw new UnauthorizedException("Not authorized to delete this routine");
         }
         if (routineId.equals(user.getActiveRoutineId())) {
@@ -213,5 +234,6 @@ public class RoutineService {
         }
         routinePatternRepository.deleteByRoutineId(routineId);
         routineRepository.deleteById(routineId);
+        log.info("Deleted routine successfully (userId={}, routineId={})", userId, routineId);
     }
 }

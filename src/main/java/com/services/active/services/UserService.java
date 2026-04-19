@@ -12,6 +12,7 @@ import com.services.active.models.user.WorkOSUser;
 import com.services.active.repository.*;
 import com.workos.usermanagement.builders.UpdateUserOptionsBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
@@ -42,17 +44,21 @@ public class UserService {
     public FullUser getUserById(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Fetching current user profile (userId={})", user.getId());
         streakService.checkStreak(user);
 
         WorkOSUser workOSUser = workosService.getUser(workosId);
 
-        return FullUser.from(user, workOSUser);
+        FullUser response = FullUser.from(user, workOSUser);
+        log.info("Fetched current user profile successfully (userId={})", user.getId());
+        return response;
     }
 
     @Transactional
     public FullUser updateUser(String workosId, UpdateUserRequest request) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Updating current user profile (userId={})", user.getId());
 
         UpdateUserOptionsBuilder workosUpdateBuilder = UpdateUserOptionsBuilder.create(workosId);
 
@@ -96,6 +102,8 @@ public class UserService {
 
         WorkOSUser workOSUser = workosService.updateUser(workosId, workosUpdateBuilder.build());
         User dbUser = userRepository.save(user);
+        log.info("Updated current user profile successfully (userId={}, registrationCompleted={}, notificationsEnabled={})",
+                dbUser.getId(), dbUser.isRegistrationCompleted(), dbUser.isEmailNotificationsEnabled());
 
         return FullUser.from(dbUser, workOSUser);
     }
@@ -107,13 +115,17 @@ public class UserService {
         }
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Registering push token for user (userId={})", user.getId());
 
+        boolean created = false;
         if (!pushTokenRepository.existsByUserIdAndToken(user.getId(), token)) {
             pushTokenRepository.save(UserPushToken.builder()
                     .userId(user.getId())
                     .token(token)
                     .build());
+            created = true;
         }
+        log.info("Completed push token registration (userId={}, tokenCreated={})", user.getId(), created);
         return user;
     }
 
@@ -123,6 +135,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         UUID userId = user.getId();
+        log.info("Deleting user and related data (userId={})", userId);
 
         List<Workout> workouts = workoutRepository.findAllByUserId(userId);
         List<UUID> templateIds = workouts.stream()
@@ -152,6 +165,7 @@ public class UserService {
         // Finally, delete the user
         userRepository.deleteById(userId);
         workosService.deleteUser(workosId);
+        log.info("Deleted user and related data successfully (userId={}, deletedWorkoutTemplates={})", userId, templateIds.size());
     }
 
     private void updateNotificationPreferences(User user, Integer notificationFrequency) {

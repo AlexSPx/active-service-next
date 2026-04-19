@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/workouts")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Workouts", description = "Workout management endpoints")
 @SecurityRequirement(name = "bearerAuth")
 @Validated
@@ -48,8 +50,10 @@ public class WorkoutController {
             Principal principal,
             @RequestBody @Valid CreateWorkoutRequest request) {
         if (principal == null) {
+            log.warn("Rejecting workout creation request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout creation request (title={})", request.getTitle());
         return workoutService.createWorkout(principal.getName(), request);
     }
 
@@ -65,8 +69,10 @@ public class WorkoutController {
     })
     public List<UserWorkoutResponse> getUserWorkouts(Principal principal) {
         if (principal == null) {
+            log.warn("Rejecting workout listing request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout listing request");
         return workoutService.getUserWorkouts(principal.getName());
     }
 
@@ -87,8 +93,10 @@ public class WorkoutController {
             @PathVariable("workoutId") String workoutId,
             @RequestBody com.services.active.dto.UpdateWorkoutRequest request) {
         if (principal == null) {
+            log.warn("Rejecting workout update request because principal is missing (workoutId={})", workoutId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout update request (workoutId={})", workoutId);
         return workoutService.updateWorkout(principal.getName(), workoutId, request);
     }
 
@@ -106,8 +114,10 @@ public class WorkoutController {
             Principal principal,
             @PathVariable("workoutId") String workoutId) {
         if (principal == null) {
+            log.warn("Rejecting workout deletion request because principal is missing (workoutId={})", workoutId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout deletion request (workoutId={})", workoutId);
         workoutService.deleteWorkout(principal.getName(), workoutId);
         return ResponseEntity.noContent().build();
     }

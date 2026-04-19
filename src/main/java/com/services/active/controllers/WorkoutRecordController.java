@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/workouts/record")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Workout Records", description = "Workout record management endpoints")
 @SecurityRequirement(name = "bearerAuth")
 @Validated
@@ -43,8 +45,10 @@ public class WorkoutRecordController {
     })
     public List<UserWorkoutRecordsResponse> getUserWorkoutRecords(Principal principal) {
         if (principal == null) {
+            log.warn("Rejecting workout record listing request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout record listing request");
         return workoutRecordService.getWorkoutRecords(principal.getName());
     }
 
@@ -64,8 +68,11 @@ public class WorkoutRecordController {
             Principal principal,
             @RequestBody @Valid WorkoutRecordRequest request) {
         if (principal == null) {
+            log.warn("Rejecting workout record creation request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout record creation request (workoutId={}, exerciseRecords={})",
+                request.getWorkoutId(), request.getExerciseRecords() != null ? request.getExerciseRecords().size() : 0);
         var response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -83,8 +90,10 @@ public class WorkoutRecordController {
     })
     public ResponseEntity<Void> deleteWorkoutRecord(Principal principal, @PathVariable String recordId) {
         if (principal == null) {
+            log.warn("Rejecting workout record deletion request because principal is missing (recordId={})", recordId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received workout record deletion request (recordId={})", recordId);
         workoutRecordService.deleteWorkoutRecord(principal.getName(), recordId);
         return ResponseEntity.noContent().build();
     }

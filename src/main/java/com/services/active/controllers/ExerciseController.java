@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/exercises")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Exercises", description = "Exercise library and search endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class ExerciseController {
@@ -66,6 +68,11 @@ public class ExerciseController {
                     schema = @Schema(allowableValues = {"MEDICINE_BALL", "DUMBBELL", "BODY_ONLY", "BANDS", "KETTLEBELLS", "FOAM_ROLL", "CABLE", "MACHINE", "BARBELL", "EXERCISE_BALL", "E_Z_CURL_BAR", "OTHER"}))
             @RequestParam(required = false) Equipment equipment) {
 
+        log.info("Received exercise search request (hasName={}, category={}, level={}, primaryMusclesCount={}, secondaryMusclesCount={}, equipment={})",
+                name != null && !name.isBlank(), category, level,
+                primaryMuscles != null ? primaryMuscles.size() : 0,
+                secondaryMuscles != null ? secondaryMuscles.size() : 0,
+                equipment);
         return exerciseService.searchExercises(name, category, level, primaryMuscles, secondaryMuscles, equipment);
     }
 
@@ -85,8 +92,10 @@ public class ExerciseController {
             @PathVariable String exerciseId,
             Principal principal) {
         if (principal == null) {
+            log.warn("Rejecting exercise log fetch request because principal is missing (exerciseId={})", exerciseId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
+        log.info("Received exercise log fetch request (exerciseId={})", exerciseId);
         return exerciseService.getExerciseLogs(principal.getName(), exerciseId);
     }
 }

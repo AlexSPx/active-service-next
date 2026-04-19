@@ -41,6 +41,7 @@ public class WorkoutService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Creating workout for user (userId={}, title={})", userId, request.getTitle());
 
         if (request.getTemplate() == null) {
             throw new BadRequestException("Template is required");
@@ -79,13 +80,18 @@ public class WorkoutService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return workoutRepository.save(workout);
+        Workout savedWorkout = workoutRepository.save(workout);
+        int templateExerciseCount = request.getTemplate().getExercises() != null ? request.getTemplate().getExercises().size() : 0;
+        log.info("Created workout successfully (userId={}, workoutId={}, templateId={}, templateExercises={})",
+                userId, savedWorkout.getId(), savedTemplate.getId(), templateExerciseCount);
+        return savedWorkout;
     }
 
     public List<UserWorkoutResponse> getUserWorkouts(String workosId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Fetching workouts for user (userId={})", userId);
 
         List<Workout> workouts = workoutRepository.findAllByUserId(userId);
         List<UserWorkoutResponse> result = new ArrayList<>();
@@ -97,6 +103,7 @@ public class WorkoutService {
             WorkoutTemplateResponse templateResponse = buildTemplateResponse(template, templateExercises);
             result.add(UserWorkoutResponse.from(workout, templateResponse));
         }
+        log.info("Fetched workouts for user (userId={}, workoutCount={})", userId, result.size());
         return result;
     }
 
@@ -105,12 +112,14 @@ public class WorkoutService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Updating workout for user (userId={}, workoutId={})", userId, workoutId);
 
         UUID wId = UUID.fromString(workoutId);
         Workout workout = workoutRepository.findById(wId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
 
         if (!userId.equals(workout.getUserId())) {
+            log.warn("Workout update denied: workout does not belong to user (userId={}, workoutId={})", userId, wId);
             throw new com.services.active.exceptions.UnauthorizedException("Not authorized to update this workout");
         }
 
@@ -149,9 +158,14 @@ public class WorkoutService {
                         .build();
                 templateExerciseRepository.save(entity);
             }
+            log.info("Replaced workout template exercises (workoutId={}, templateId={}, exerciseCount={})",
+                    workout.getId(), template.getId(), request.getTemplate().getExercises().size());
         }
 
-        return workoutChanged ? workoutRepository.save(workout) : workout;
+        Workout updatedWorkout = workoutChanged ? workoutRepository.save(workout) : workout;
+        log.info("Completed workout update (userId={}, workoutId={}, workoutMetadataChanged={})",
+                userId, updatedWorkout.getId(), workoutChanged);
+        return updatedWorkout;
     }
 
     @Transactional
@@ -159,11 +173,13 @@ public class WorkoutService {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
+        log.info("Deleting workout for user (userId={}, workoutId={})", userId, workoutId);
 
         UUID wId = UUID.fromString(workoutId);
         Workout workout = workoutRepository.findById(wId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
         if (!userId.equals(workout.getUserId())) {
+            log.warn("Workout deletion denied: workout does not belong to user (userId={}, workoutId={})", userId, wId);
             throw new com.services.active.exceptions.UnauthorizedException("Not authorized to delete this workout");
         }
         UUID templateId = workout.getTemplateId();
@@ -172,6 +188,7 @@ public class WorkoutService {
             templateExerciseRepository.deleteByTemplateId(templateId);
             workoutTemplateRepository.deleteById(templateId);
         }
+        log.info("Deleted workout successfully (userId={}, workoutId={}, deletedTemplate={})", userId, wId, templateId != null);
     }
 
     private WorkoutTemplateResponse buildTemplateResponse(WorkoutTemplate template, List<TemplateExercise> templateExercises) {

@@ -14,6 +14,7 @@ import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.UserRepository;
 import com.services.active.repository.UserWeeklyCompletedWorkoutRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StreakService {
 
@@ -47,6 +49,8 @@ public class StreakService {
         LocalDate today = LocalDate.now();
         if (!today.isAfter(deadline)) return;
 
+        log.info("Checking overdue streak state (userId={}, deadline={}, today={})", user.getId(), deadline, today);
+
         // Check if this is a WEEKLY_COMPLETION routine
         Optional<Routine> activeRoutine = getActiveRoutine(user);
         if (activeRoutine.isPresent() && activeRoutine.get().getRoutineType() == RoutineType.WEEKLY_COMPLETION) {
@@ -62,6 +66,8 @@ public class StreakService {
             weeklyCompletedRepo.deleteByUserId(user.getId());
             user.setNextWorkoutDeadline(currentMonday.plusDays(6));
             user.setNextWorkoutId(null);
+            log.info("Reset weekly streak tracking after missed deadline (userId={}, freezeRemaining={}, currentStreak={})",
+                    user.getId(), user.getStreakFreezeCount(), user.getCurrentStreak());
         } else {
             // SEQUENTIAL routine logic
             if (user.getStreakFreezeCount() > 0) {
@@ -69,10 +75,13 @@ public class StreakService {
                 NextWorkout next = calculateNextWorkoutDay(user, deadline);
                 user.setNextWorkoutId(next.workoutId());
                 user.setNextWorkoutDeadline(next.deadline());
+                log.info("Consumed streak freeze after missed deadline (userId={}, freezeRemaining={}, nextWorkoutId={}, nextDeadline={})",
+                        user.getId(), user.getStreakFreezeCount(), user.getNextWorkoutId(), user.getNextWorkoutDeadline());
             } else {
                 user.setCurrentStreak(0);
                 user.setNextWorkoutId(null);
                 user.setNextWorkoutDeadline(null);
+                log.info("Streak reset after missed deadline with no freeze available (userId={})", user.getId());
             }
         }
         userRepository.save(user);
@@ -82,28 +91,39 @@ public class StreakService {
     public StreakUpdateResponse onWorkoutCompleted(String workosId, UUID completedWorkoutId) {
         User user = userRepository.findByWorkosId(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        log.info("Processing completed workout for streak update (userId={}, workoutId={})", user.getId(), completedWorkoutId);
 
         LocalDate today = LocalDate.now();
 
         // Check if we should use weekly completion logic
         Optional<Routine> activeRoutine = getActiveRoutine(user);
         if (activeRoutine.isPresent() && activeRoutine.get().getRoutineType() == RoutineType.WEEKLY_COMPLETION) {
-            return onWeeklyWorkoutCompleted(user, activeRoutine.get(), completedWorkoutId, today);
+            StreakUpdateResponse response = onWeeklyWorkoutCompleted(user, activeRoutine.get(), completedWorkoutId, today);
+            log.info("Finished weekly streak update (userId={}, status={}, currentStreak={}, nextWorkoutId={}, nextDeadline={})",
+                    user.getId(), response.getStatus(), response.getCurrentStreak(), response.getNextWorkoutId(), response.getNextWorkoutDeadline());
+            return response;
         }
 
         // SEQUENTIAL routine logic (original behavior)
-        return onSequentialWorkoutCompleted(user, completedWorkoutId, today);
+        StreakUpdateResponse response = onSequentialWorkoutCompleted(user, completedWorkoutId, today);
+        log.info("Finished sequential streak update (userId={}, status={}, currentStreak={}, nextWorkoutId={}, nextDeadline={})",
+                user.getId(), response.getStatus(), response.getCurrentStreak(), response.getNextWorkoutId(), response.getNextWorkoutDeadline());
+        return response;
     }
 
     private StreakUpdateResponse onSequentialWorkoutCompleted(User user, UUID completedWorkoutId, LocalDate today) {
         // Block multiple streak counts within the same calendar day
         if (user.getLastWorkoutCountedDate() != null && today.isEqual(user.getLastWorkoutCountedDate())) {
+            log.warn("Ignoring workout completion because streak was already counted today (userId={}, workoutId={}, date={})",
+                    user.getId(), completedWorkoutId, today);
             return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT);
         }
 
         UUID expectedWorkoutId = user.getNextWorkoutId();
 
         if (expectedWorkoutId != null && !expectedWorkoutId.equals(completedWorkoutId)) {
+            log.warn("Ignoring workout completion because it does not match expected workout (userId={}, expectedWorkoutId={}, receivedWorkoutId={})",
+                    user.getId(), expectedWorkoutId, completedWorkoutId);
             return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT);
         }
 
@@ -120,6 +140,8 @@ public class StreakService {
             user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = StreakUpdateStatus.STARTED;
+            log.info("Started streak from first counted workout (userId={}, nextWorkoutId={}, nextDeadline={})",
+                    user.getId(), user.getNextWorkoutId(), user.getNextWorkoutDeadline());
             return snapshot(user, status);
         }
 
@@ -134,6 +156,8 @@ public class StreakService {
             user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = StreakUpdateStatus.BROKEN_RESET;
+            log.info("Reset and restarted streak after late completion (userId={}, nextWorkoutId={}, nextDeadline={})",
+                    user.getId(), user.getNextWorkoutId(), user.getNextWorkoutDeadline());
         } else {
             int prev = user.getCurrentStreak();
             user.setCurrentStreak(prev + 1);
@@ -146,6 +170,8 @@ public class StreakService {
             user.setLastWorkoutCountedDate(today);
             userRepository.save(user);
             status = (prev == 0) ? StreakUpdateStatus.STARTED : StreakUpdateStatus.CONTINUED;
+            log.info("Advanced streak after on-time completion (userId={}, previousStreak={}, currentStreak={}, nextWorkoutId={}, nextDeadline={})",
+                    user.getId(), prev, user.getCurrentStreak(), user.getNextWorkoutId(), user.getNextWorkoutDeadline());
         }
 
         return snapshot(user, status);
@@ -172,6 +198,7 @@ public class StreakService {
             }
             user.setCurrentWeekStart(currentMonday);
             weeklyCompletedRepo.deleteByUserId(user.getId());
+            log.info("Initialized weekly streak tracking window (userId={}, weekStart={}, weekEnd={})", user.getId(), currentMonday, endOfWeek);
         }
 
         // Get all required workout IDs from the routine pattern
@@ -184,11 +211,15 @@ public class StreakService {
 
         // Check if the completed workout is part of this routine
         if (!requiredWorkoutIds.contains(completedWorkoutId)) {
+            log.warn("Ignoring weekly completion because workout is not in active routine pattern (userId={}, workoutId={})",
+                    user.getId(), completedWorkoutId);
             return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
         }
 
         // Check if this workout was already completed this week
         if (weeklyCompletedRepo.existsByUserIdAndWorkoutId(user.getId(), completedWorkoutId)) {
+            log.warn("Ignoring weekly completion because workout is already recorded this week (userId={}, workoutId={})",
+                    user.getId(), completedWorkoutId);
             return snapshot(user, StreakUpdateStatus.WRONG_WORKOUT, requiredCount);
         }
 
@@ -216,6 +247,8 @@ public class StreakService {
             user.setNextWorkoutId(null);
 
             userRepository.save(user);
+            log.info("Completed all required weekly workouts and advanced streak (userId={}, requiredWorkouts={}, currentStreak={}, nextDeadline={})",
+                    user.getId(), requiredCount, user.getCurrentStreak(), user.getNextWorkoutDeadline());
             return snapshot(user, prev == 0 ? StreakUpdateStatus.STARTED : StreakUpdateStatus.CONTINUED, requiredCount);
         } else {
             Set<UUID> remaining = new HashSet<>(requiredWorkoutIds);
@@ -224,6 +257,8 @@ public class StreakService {
             user.setNextWorkoutDeadline(endOfWeek);
 
             userRepository.save(user);
+            log.info("Recorded weekly workout progress (userId={}, completedWorkouts={}, requiredWorkouts={}, nextWorkoutId={}, nextDeadline={})",
+                    user.getId(), completedIds.size(), requiredCount, user.getNextWorkoutId(), user.getNextWorkoutDeadline());
             return snapshot(user, StreakUpdateStatus.WEEKLY_PROGRESS, requiredCount);
         }
     }
