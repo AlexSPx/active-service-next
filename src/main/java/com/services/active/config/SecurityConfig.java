@@ -62,7 +62,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain publicEndpointsFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/auth/**", "/api/legal/**", "/actuator/health", "/actuator/info",
+                .securityMatcher("/api/auth/**", "/api/legal/**", "/actuator/health", "/actuator/info", "/actuator/prometheus",
                         "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**")
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
