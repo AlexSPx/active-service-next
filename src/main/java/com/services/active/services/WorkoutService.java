@@ -1,7 +1,6 @@
 package com.services.active.services;
 
 import com.services.active.dto.CreateWorkoutRequest;
-import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.dto.WorkoutTemplateResponse;
 import com.services.active.dto.TemplateExerciseResponse;
 import com.services.active.dto.UserWorkoutResponse;
@@ -205,6 +204,7 @@ public class WorkoutService {
                 Exercise ex = te.getExerciseId() == null ? null : byId.get(te.getExerciseId());
                 exerciseResponses.add(TemplateExerciseResponse.builder()
                         .exerciseId(te.getExerciseId() != null ? te.getExerciseId().toString() : null)
+                        .exerciseTitle(ex != null ? ex.getName() : null)
                         .reps(te.getReps())
                         .weight(te.getWeight())
                         .durationSeconds(te.getDurationSeconds())

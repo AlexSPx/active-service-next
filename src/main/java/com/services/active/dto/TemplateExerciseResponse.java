@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TemplateExerciseResponse {
     private String exerciseId;
+    private String exerciseTitle;
     private List<Integer> reps;
     private List<Double> weight;
     private List<Integer> durationSeconds;
