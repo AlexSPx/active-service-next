@@ -1,19 +1,32 @@
-name: Push to Docker Hub
+name: CI Pipeline
 
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     uses: ./.github/workflows/validator.yml
 
-  docker:
+  sast:
     needs: validate
+    uses: ./.github/workflows/sast.yml
+
+  security:
+    needs: sast
+    uses: ./.github/workflows/security.yml
+
+  docker:
+    needs: security
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -21,17 +34,14 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build image (no push on PR)
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/active-service-next:latest
             ${{ vars.DOCKERHUB_USERNAME }}/active-service-next:${{ github.sha }}

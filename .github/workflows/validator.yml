@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,11 +17,9 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '24'
-          cache: 'maven'
+          cache: maven
 
-      - name: Validate with Maven (tests + package)
-        run: |
-          mvn -B -ntp -DskipITs=false verify
-
+      - name: Build and test
+        run: mvn -B -ntp verify

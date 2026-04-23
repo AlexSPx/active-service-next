@@ -1,0 +1,47 @@
+name: SAST (CodeQL)
+
+on:
+  workflow_call:
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+
+      - name: Build
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          output: sarif-results
+
+      - name: Check for critical issues
+        run: |
+          FILE=$(find sarif-results -name "*.sarif" | head -n 1)
+
+          if [ -z "$FILE" ]; then
+            echo "No SARIF file found"
+            exit 1
+          fi
+
+          COUNT=$(jq '[.runs[].results[] | select(.level=="error")] | length' $FILE)
+
+          echo "Critical issues found: $COUNT"
+
+          if [ "$COUNT" -gt 0 ]; then
+            echo "❌ Failing due to critical CodeQL findings"
+            exit 1
+          fi
