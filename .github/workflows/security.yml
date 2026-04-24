@@ -20,7 +20,8 @@ jobs:
 
       - name: OWASP Dependency Check
         run: |
-          mvn -B org.owasp:dependency-check-maven:check
+          mvn -B org.owasp:dependency-check-maven:check \
+          -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
 
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@v0.36.0
