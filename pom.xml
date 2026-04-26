@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>24</java.version>
-		<lombok.version>1.18.38</lombok.version>
+		<lombok.version>1.18.46</lombok.version>
 		<logstash.logback.encoder.version>9.0</logstash.logback.encoder.version>
 		<workos.version>4.18.1</workos.version>
 		<springdoc.openapi.version>2.2.0</springdoc.openapi.version>
