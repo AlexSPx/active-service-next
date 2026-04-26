@@ -1,7 +1,5 @@
 package com.services.active.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
@@ -19,10 +17,12 @@ import com.services.active.services.WorkoutService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserDeleteControllerIT extends IntegrationTestBase {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper jsonMapper;
 
     @Autowired private UserRepository userRepository;
     @Autowired private WorkoutRepository workoutRepository;
@@ -104,7 +104,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
                         .content(payload))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode node = objectMapper.readTree(response);
+        JsonNode node = jsonMapper.readTree(response);
         assertThat(node.get("workoutRecord")).isNotNull();
 
         // 3) Create a routine for the user

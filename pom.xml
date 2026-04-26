@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.4</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.services</groupId>
@@ -33,6 +33,7 @@
 		<workos.version>4.18.1</workos.version>
 		<springdoc.openapi.version>2.2.0</springdoc.openapi.version>
 		<expo.server.sdk.version>3.1.6</expo.server.sdk.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -114,6 +115,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
@@ -125,18 +131,20 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- Testcontainers JUnit 5 integration -->
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- Testcontainers PostgreSQL module -->
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<!-- Testcontainers PostgreSQL module -->
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
 
 	<build>
 		<plugins>

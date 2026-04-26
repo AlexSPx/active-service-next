@@ -31,7 +31,7 @@ public class ExerciseService {
     public List<Exercise> searchExercises(String name, Category category, Level level,
                                           List<MuscleGroup> primaryMuscles, List<MuscleGroup> secondaryMuscles,
                                           Equipment equipment) {
-        Specification<Exercise> spec = Specification.where(null);
+        Specification<Exercise> spec = (root, query, cb) -> null;
 
         if (name != null && !name.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->

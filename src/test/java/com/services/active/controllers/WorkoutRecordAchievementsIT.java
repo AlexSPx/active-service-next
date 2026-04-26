@@ -1,6 +1,5 @@
 package com.services.active.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
@@ -20,14 +19,14 @@ import com.services.active.repository.ExerciseRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -46,20 +45,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkoutRecordAchievementsIT extends IntegrationTestBase {
 
     private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     private final WorkoutService workoutService;
     private final WorkoutRecordRepository workoutRecordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final ExercisePersonalBestRepository personalBestRepository;
     private final ExerciseRepository exerciseRepository;
-
-    @BeforeEach
-    void setupMapper() {
-        objectMapper.findAndRegisterModules();
-        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    }
 
     private Workout createSimpleWorkout(User user, UUID testExerciseId) {
         exerciseRepository.save(Exercise.builder()
@@ -102,7 +94,7 @@ class WorkoutRecordAchievementsIT extends IntegrationTestBase {
                 .getResponse()
                 .getContentAsString();
         // parse id from nested JSON response
-        var node = objectMapper.readTree(responseContent);
+        var node = jsonMapper.readTree(responseContent);
         return node.at("/workoutRecord/id").asText();
     }
 

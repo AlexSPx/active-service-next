@@ -1,7 +1,5 @@
 package com.services.active.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
@@ -18,11 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -50,14 +50,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
     private final UserRepository userRepository;
     private final ExerciseRepository exerciseRepository;
 
-    private final ObjectMapper objectMapper;
-
-    @org.junit.jupiter.api.BeforeEach
-    void setupMapper() {
-        objectMapper.findAndRegisterModules();
-        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    }
+    private final JsonMapper jsonMapper;
 
     @Test
     @DisplayName("POST /api/workouts/record -> 201 CREATED successfully creates workout record with exercise records and streakUpdate")
@@ -136,7 +129,7 @@ class WorkoutRecordControllerTest extends IntegrationTestBase {
                 .getContentAsString();
 
         // Extract the workout record ID from nested response JSON
-        JsonNode node = objectMapper.readTree(responseContent);
+        JsonNode node = jsonMapper.readTree(responseContent);
         assertThat(node.get("workoutRecord")).isNotNull();
         assertThat(node.get("streakUpdate")).isNotNull();
         String workoutRecordId = node.at("/workoutRecord/id").asText();
