@@ -11,17 +11,22 @@ RUN mvn clean install -DskipTests
 
 # Use a minimal JRE image for Java 24
 FROM eclipse-temurin:24-jre-alpine
+# Create an unprivileged runtime user
+RUN addgroup -S active && adduser -S -G active active
 # Set working directory
 WORKDIR /app
 
 # Copy JAR from builder stage
-COPY --from=builder /app/target/active-*.jar app.jar
+COPY --from=builder --chown=active:active /app/target/active-*.jar app.jar
 
 # Default to the docker profile at runtime; override via env if needed
 ENV SPRING_PROFILES_ACTIVE=docker
 
 # Expose Spring Boot's default port
 EXPOSE 8080
+
+# Run as non-root in the final image
+USER active
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
