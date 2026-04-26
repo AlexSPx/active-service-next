@@ -27,6 +27,7 @@ jobs:
 
   docker:
     needs: security
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
