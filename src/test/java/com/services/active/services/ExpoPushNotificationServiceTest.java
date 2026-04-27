@@ -1,6 +1,8 @@
 package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
+import com.niamedtech.expo.exposerversdk.response.Status;
+import com.niamedtech.expo.exposerversdk.response.TicketResponse;
 import com.services.active.models.user.User;
 import com.services.active.models.user.UserPushToken;
 import com.services.active.repository.UserPushTokenRepository;
@@ -43,7 +45,7 @@ class ExpoPushNotificationServiceTest {
 
     @Test
     void bulkSend_sendsOnlyForUsersWithTokens() throws Exception {
-        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository);
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository, "");
         service.setExpoClient(expoClient);
         User u1 = userWithTokens();
         User u2 = userWithoutTokens();
@@ -60,7 +62,7 @@ class ExpoPushNotificationServiceTest {
 
     @Test
     void bulkSend_noUsersWithTokens_returnsZeroAndDoesNotCallClient() throws Exception {
-        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository);
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository, "");
         service.setExpoClient(expoClient);
         User u2 = userWithoutTokens();
 
@@ -69,5 +71,30 @@ class ExpoPushNotificationServiceTest {
         int sent = service.sendStreakReminder(List.of(u2));
         assertThat(sent).isZero();
         verify(expoClient, never()).sendPushNotifications(anyList());
+    }
+
+    @Test
+    void mockSend_sendsToAllDistinctStoredTokens() throws Exception {
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository, "");
+        service.setExpoClient(expoClient);
+
+        when(pushTokenRepository.findAll()).thenReturn(List.of(
+                UserPushToken.builder().token("ExponentPushToken[token1]").build(),
+                UserPushToken.builder().token("ExponentPushToken[token1]").build(),
+                UserPushToken.builder().token("ExponentPushToken[token2]").build(),
+                UserPushToken.builder().token(" ").build()
+        ));
+        TicketResponse.Ticket t1 = new TicketResponse.Ticket();
+        t1.setStatus(Status.OK);
+        TicketResponse.Ticket t2 = new TicketResponse.Ticket();
+        t2.setStatus(Status.OK);
+        when(expoClient.sendPushNotifications(anyList())).thenReturn(List.of(t1, t2));
+
+        ExpoPushNotificationService.MockNotificationResult result = service.sendMockNotificationToAllTokens();
+
+        assertThat(result.tokensTargeted()).isEqualTo(2);
+        assertThat(result.accepted()).isEqualTo(2);
+        assertThat(result.failed()).isZero();
+        verify(expoClient).sendPushNotifications(anyList());
     }
 }

@@ -9,6 +9,7 @@ import com.services.active.repository.UserPushTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,11 @@ public class ExpoPushNotificationService {
     private ExpoPushNotificationClient expoClient;
     private final UserPushTokenRepository pushTokenRepository;
 
+    public ExpoPushNotificationService(UserPushTokenRepository pushTokenRepository) {
+        this(pushTokenRepository, "");
+    }
+
+    @Autowired
     public ExpoPushNotificationService(
             UserPushTokenRepository pushTokenRepository,
             @Value("${expo.push.access-token:}") String expoAccessToken
