@@ -2,12 +2,14 @@ package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
 import com.niamedtech.expo.exposerversdk.request.PushNotification;
+import com.niamedtech.expo.exposerversdk.response.TicketResponse;
 import com.services.active.models.user.User;
 import com.services.active.models.user.UserPushToken;
 import com.services.active.repository.UserPushTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,12 +24,19 @@ public class ExpoPushNotificationService {
     private ExpoPushNotificationClient expoClient;
     private final UserPushTokenRepository pushTokenRepository;
 
-    public ExpoPushNotificationService(UserPushTokenRepository pushTokenRepository) {
+    public ExpoPushNotificationService(
+            UserPushTokenRepository pushTokenRepository,
+            @Value("${expo.push.access-token:}") String expoAccessToken
+    ) {
         this.pushTokenRepository = pushTokenRepository;
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        this.expoClient = ExpoPushNotificationClient.builder()
-                .setHttpClient(httpClient)
-                .build();
+        ExpoPushNotificationClient.Builder builder = ExpoPushNotificationClient.builder()
+                .setHttpClient(httpClient);
+        if (expoAccessToken != null && !expoAccessToken.trim().isEmpty()) {
+            builder.setAccessToken(expoAccessToken);
+            log.debug("Push Notifications token added");
+        }
+        this.expoClient = builder.build();
     }
 
     // Package-private for tests
@@ -60,7 +69,8 @@ public class ExpoPushNotificationService {
         }
         if (notifications.isEmpty()) return 0;
         try {
-            expoClient.sendPushNotifications(notifications);
+            List<TicketResponse.Ticket> tickets = expoClient.sendPushNotifications(notifications);
+            logTicketFailures("streak reminder", tickets);
             return notifications.size();
         } catch (IOException e) {
             log.error("Failed to bulk send streak reminders", e);
@@ -68,27 +78,105 @@ public class ExpoPushNotificationService {
         }
     }
 
-    public int sendMockNotificationToAllTokens() {
+    public MockNotificationResult sendMockNotificationToAllTokens() {
         List<String> tokens = pushTokenRepository.findAll().stream()
                 .map(UserPushToken::getToken)
                 .filter(token -> token != null && !token.trim().isEmpty())
                 .distinct()
                 .toList();
 
-        if (tokens.isEmpty()) return 0;
+        if (tokens.isEmpty()) {
+            return new MockNotificationResult(0, 0, 0, List.of());
+        }
 
+        List<PushNotification> notifications = tokens.stream()
+                .map(this::mockNotificationForToken)
+                .toList();
+
+        try {
+            List<TicketResponse.Ticket> tickets = expoClient.sendPushNotifications(notifications);
+            List<MockNotificationTicket> results = new ArrayList<>();
+            int accepted = 0;
+            int failed = 0;
+
+            for (int i = 0; i < tokens.size(); i++) {
+                TicketResponse.Ticket ticket = tickets != null && i < tickets.size() ? tickets.get(i) : null;
+                String status = ticket != null && ticket.getStatus() != null ? ticket.getStatus().name() : "MISSING";
+                String message = ticket != null ? ticket.getMessage() : null;
+                String error = null;
+                if (ticket != null && ticket.getDetails() != null && ticket.getDetails().getError() != null) {
+                    error = ticket.getDetails().getError().name();
+                }
+                if ("OK".equals(status)) {
+                    accepted++;
+                } else {
+                    failed++;
+                }
+                results.add(new MockNotificationTicket(maskToken(tokens.get(i)), status, message, error));
+            }
+
+            if (failed > 0) {
+                log.warn("Mock notification returned {} failed Expo tickets out of {}", failed, tokens.size());
+            }
+
+            return new MockNotificationResult(tokens.size(), accepted, failed, results);
+        } catch (IOException e) {
+            log.error("Failed to send mock notification to all tokens", e);
+            return new MockNotificationResult(tokens.size(), 0, tokens.size(), List.of(
+                    new MockNotificationTicket(null, "REQUEST_FAILED", e.getMessage(), e.getClass().getSimpleName())
+            ));
+        }
+    }
+
+    private PushNotification mockNotificationForToken(String token) {
         PushNotification notification = new PushNotification();
-        notification.setTo(new ArrayList<>(tokens));
+        notification.setTo(List.of(token));
         notification.setTitle("Active test notification");
         notification.setChannelId("streak-reminders");
         notification.setBody("This is a test push notification from Active.");
+        return notification;
+    }
 
-        try {
-            expoClient.sendPushNotifications(List.of(notification));
-            return tokens.size();
-        } catch (IOException e) {
-            log.error("Failed to send mock notification to all tokens", e);
-            return 0;
-        }
+    private String maskToken(String token) {
+        int suffixStart = Math.max(0, token.length() - 6);
+        return "***" + token.substring(suffixStart);
+    }
+
+    private void logTicketFailures(String context, List<TicketResponse.Ticket> tickets) {
+        if (tickets == null || tickets.isEmpty()) return;
+
+        long failed = tickets.stream()
+                .filter(ticket -> ticket == null || ticket.getStatus() == null || !"OK".equals(ticket.getStatus().name()))
+                .count();
+        if (failed == 0) return;
+
+        log.warn("Expo {} returned {} failed ticket(s) out of {}", context, failed, tickets.size());
+        tickets.stream()
+                .filter(ticket -> ticket == null || ticket.getStatus() == null || !"OK".equals(ticket.getStatus().name()))
+                .limit(5)
+                .forEach(ticket -> {
+                    String message = ticket != null ? ticket.getMessage() : null;
+                    String error = null;
+                    if (ticket != null && ticket.getDetails() != null && ticket.getDetails().getError() != null) {
+                        error = ticket.getDetails().getError().name();
+                    }
+                    log.warn("Expo {} ticket failure: error={}, message={}", context, error, message);
+                });
+    }
+
+    public record MockNotificationResult(
+            int tokensTargeted,
+            int accepted,
+            int failed,
+            List<MockNotificationTicket> tickets
+    ) {
+    }
+
+    public record MockNotificationTicket(
+            String token,
+            String status,
+            String message,
+            String error
+    ) {
     }
 }
