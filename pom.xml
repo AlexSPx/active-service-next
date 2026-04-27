@@ -28,10 +28,10 @@
 	</scm>
 	<properties>
 		<java.version>24</java.version>
-		<lombok.version>1.18.38</lombok.version>
+		<lombok.version>1.18.46</lombok.version>
 		<logstash.logback.encoder.version>9.0</logstash.logback.encoder.version>
 		<workos.version>4.18.1</workos.version>
-		<springdoc.openapi.version>2.2.0</springdoc.openapi.version>
+		<springdoc.openapi.version>3.0.3</springdoc.openapi.version>
 		<expo.server.sdk.version>3.1.6</expo.server.sdk.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
 	</properties>
@@ -151,7 +151,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
+				<version>3.15.0</version>
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
@@ -164,7 +164,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>3.5.4</version>
+				<version>4.0.6</version>
 				<configuration>
 					<excludes>
 						<exclude>
@@ -178,7 +178,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.5.5</version>
 				<configuration>
 					<includes>
 						<include>**/*IT.java</include>
