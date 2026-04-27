@@ -63,7 +63,8 @@ public class SecurityConfig {
     public SecurityFilterChain publicEndpointsFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/auth/**", "/api/legal/**", "/actuator/health", "/actuator/info", "/actuator/prometheus",
-                        "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**")
+                        "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**",
+                        "/api/testing/**")
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session

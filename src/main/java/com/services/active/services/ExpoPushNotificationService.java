@@ -67,4 +67,28 @@ public class ExpoPushNotificationService {
             return 0;
         }
     }
+
+    public int sendMockNotificationToAllTokens() {
+        List<String> tokens = pushTokenRepository.findAll().stream()
+                .map(UserPushToken::getToken)
+                .filter(token -> token != null && !token.trim().isEmpty())
+                .distinct()
+                .toList();
+
+        if (tokens.isEmpty()) return 0;
+
+        PushNotification notification = new PushNotification();
+        notification.setTo(new ArrayList<>(tokens));
+        notification.setTitle("Active test notification");
+        notification.setChannelId("streak-reminders");
+        notification.setBody("This is a test push notification from Active.");
+
+        try {
+            expoClient.sendPushNotifications(List.of(notification));
+            return tokens.size();
+        } catch (IOException e) {
+            log.error("Failed to send mock notification to all tokens", e);
+            return 0;
+        }
+    }
 }
