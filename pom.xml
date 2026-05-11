@@ -30,7 +30,7 @@
 		<java.version>24</java.version>
 		<lombok.version>1.18.46</lombok.version>
 		<logstash.logback.encoder.version>9.0</logstash.logback.encoder.version>
-		<workos.version>4.18.1</workos.version>
+		<workos.version>5.1.0</workos.version>
 		<springdoc.openapi.version>3.0.3</springdoc.openapi.version>
 		<expo.server.sdk.version>3.1.6</expo.server.sdk.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
