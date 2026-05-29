@@ -34,6 +34,7 @@
 		<springdoc.openapi.version>3.0.3</springdoc.openapi.version>
 		<expo.server.sdk.version>3.1.6</expo.server.sdk.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
+		<postgresql.version>42.7.11</postgresql.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -51,6 +52,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
