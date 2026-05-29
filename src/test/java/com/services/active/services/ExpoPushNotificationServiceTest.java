@@ -1,6 +1,7 @@
 package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
+import com.niamedtech.expo.exposerversdk.response.ReceiptResponse;
 import com.niamedtech.expo.exposerversdk.response.Status;
 import com.niamedtech.expo.exposerversdk.response.TicketResponse;
 import com.services.active.models.user.User;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,8 +88,10 @@ class ExpoPushNotificationServiceTest {
         ));
         TicketResponse.Ticket t1 = new TicketResponse.Ticket();
         t1.setStatus(Status.OK);
+        t1.setId("ticket-1");
         TicketResponse.Ticket t2 = new TicketResponse.Ticket();
         t2.setStatus(Status.OK);
+        t2.setId("ticket-2");
         when(expoClient.sendPushNotifications(anyList())).thenReturn(List.of(t1, t2));
 
         ExpoPushNotificationService.MockNotificationResult result = service.sendMockNotificationToAllTokens();
@@ -95,6 +99,26 @@ class ExpoPushNotificationServiceTest {
         assertThat(result.tokensTargeted()).isEqualTo(2);
         assertThat(result.accepted()).isEqualTo(2);
         assertThat(result.failed()).isZero();
+        assertThat(result.tickets()).extracting("ticketId").containsExactly("ticket-1", "ticket-2");
         verify(expoClient).sendPushNotifications(anyList());
+    }
+
+    @Test
+    void mockReceipts_returnsReceiptStatuses() throws Exception {
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository, "");
+        service.setExpoClient(expoClient);
+
+        ReceiptResponse.Receipt receipt = new ReceiptResponse.Receipt();
+        receipt.setStatus(Status.OK);
+        when(expoClient.getPushNotificationReceipts(List.of("ticket-1")))
+                .thenReturn(Map.of("ticket-1", receipt));
+
+        ExpoPushNotificationService.MockReceiptResult result =
+                service.getMockNotificationReceipts(List.of("ticket-1"));
+
+        assertThat(result.requested()).isEqualTo(1);
+        assertThat(result.found()).isEqualTo(1);
+        assertThat(result.failed()).isZero();
+        assertThat(result.receipts()).extracting("status").containsExactly("OK");
     }
 }

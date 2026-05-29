@@ -2,6 +2,7 @@ package com.services.active.services;
 
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
 import com.niamedtech.expo.exposerversdk.request.PushNotification;
+import com.niamedtech.expo.exposerversdk.response.ReceiptResponse;
 import com.niamedtech.expo.exposerversdk.response.TicketResponse;
 import com.services.active.models.user.User;
 import com.services.active.models.user.UserPushToken;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -118,7 +120,8 @@ public class ExpoPushNotificationService {
                 } else {
                     failed++;
                 }
-                results.add(new MockNotificationTicket(maskToken(tokens.get(i)), status, message, error));
+                String ticketId = ticket != null ? ticket.getId() : null;
+                results.add(new MockNotificationTicket(maskToken(tokens.get(i)), ticketId, status, message, error));
             }
 
             if (failed > 0) {
@@ -129,7 +132,52 @@ public class ExpoPushNotificationService {
         } catch (IOException e) {
             log.error("Failed to send mock notification to all tokens", e);
             return new MockNotificationResult(tokens.size(), 0, tokens.size(), List.of(
-                    new MockNotificationTicket(null, "REQUEST_FAILED", e.getMessage(), e.getClass().getSimpleName())
+                    new MockNotificationTicket(null, null, "REQUEST_FAILED", e.getMessage(), e.getClass().getSimpleName())
+            ));
+        }
+    }
+
+    public MockReceiptResult getMockNotificationReceipts(List<String> ticketIds) {
+        List<String> ids = ticketIds == null ? List.of() : ticketIds.stream()
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .distinct()
+                .toList();
+
+        if (ids.isEmpty()) {
+            return new MockReceiptResult(0, 0, 0, 0, List.of());
+        }
+
+        try {
+            Map<String, ReceiptResponse.Receipt> receipts = expoClient.getPushNotificationReceipts(ids);
+            List<MockNotificationReceipt> results = new ArrayList<>();
+            int failed = 0;
+            int missing = 0;
+
+            for (String id : ids) {
+                ReceiptResponse.Receipt receipt = receipts != null ? receipts.get(id) : null;
+                if (receipt == null) {
+                    missing++;
+                    results.add(new MockNotificationReceipt(id, "MISSING", null, null));
+                    continue;
+                }
+
+                String status = receipt.getStatus() != null ? receipt.getStatus().name() : "MISSING";
+                String message = receipt.getMessage();
+                String error = null;
+                if (receipt.getDetails() != null && receipt.getDetails().getError() != null) {
+                    error = receipt.getDetails().getError().name();
+                }
+                if (!"OK".equals(status)) {
+                    failed++;
+                }
+                results.add(new MockNotificationReceipt(id, status, message, error));
+            }
+
+            return new MockReceiptResult(ids.size(), ids.size() - missing, missing, failed, results);
+        } catch (IOException e) {
+            log.error("Failed to get Expo push receipts", e);
+            return new MockReceiptResult(ids.size(), 0, ids.size(), ids.size(), List.of(
+                    new MockNotificationReceipt(null, "REQUEST_FAILED", e.getMessage(), e.getClass().getSimpleName())
             ));
         }
     }
@@ -180,6 +228,24 @@ public class ExpoPushNotificationService {
 
     public record MockNotificationTicket(
             String token,
+            String ticketId,
+            String status,
+            String message,
+            String error
+    ) {
+    }
+
+    public record MockReceiptResult(
+            int requested,
+            int found,
+            int missing,
+            int failed,
+            List<MockNotificationReceipt> receipts
+    ) {
+    }
+
+    public record MockNotificationReceipt(
+            String ticketId,
             String status,
             String message,
             String error
