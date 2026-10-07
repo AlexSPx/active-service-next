@@ -6,15 +6,22 @@ import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.user.WorkOSUser;
 import com.workos.WorkOS;
+import com.workos.common.exceptions.BadRequestException;
+import com.workos.common.exceptions.GenericServerException;
 import com.workos.usermanagement.models.RefreshAuthentication;
 import com.workos.usermanagement.models.User;
 import com.workos.usermanagement.types.UpdateUserOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.net.SocketTimeoutException;
 
 @Service
 @Slf4j
@@ -78,9 +85,30 @@ public class WorkosService {
 
             return new TokenResponse(response.getAccessToken(), response.getRefreshToken());
         } catch (Exception e) {
-            log.error("Failed to refresh WorkOS tokens: {}", e.getMessage(), e);
-            throw new UnauthorizedException("Invalid or expired refresh token");
+            log.warn("WorkOS token refresh failed");
+            throw classifyRefreshFailure(e);
         }
+    }
+
+    static RuntimeException classifyRefreshFailure(Exception e) {
+        if (e instanceof BadRequestException badRequest && "invalid_grant".equals(badRequest.getCode())) {
+            return new UnauthorizedException("Invalid or expired refresh token");
+        }
+
+        if (e instanceof GenericServerException serverError) {
+            int status = serverError.getStatus();
+            if (status == 408 || status == 429 || status >= 500 && status < 600) {
+                return new ResponseStatusException(HttpStatusCode.valueOf(status), "Token refresh temporarily unavailable");
+            }
+        }
+
+        for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SocketTimeoutException) {
+                return new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "Token refresh timed out");
+            }
+        }
+
+        return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Token refresh temporarily unavailable");
     }
 
     /**
