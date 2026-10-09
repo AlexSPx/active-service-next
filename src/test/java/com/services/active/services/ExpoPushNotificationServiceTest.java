@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -73,6 +74,22 @@ class ExpoPushNotificationServiceTest {
         int sent = service.sendStreakReminder(List.of(u2));
         assertThat(sent).isZero();
         verify(expoClient, never()).sendPushNotifications(anyList());
+    }
+
+    @Test
+    void bulkSend_withFailedAndMissingTickets_doesNotThrow() throws Exception {
+        ExpoPushNotificationService service = new ExpoPushNotificationService(pushTokenRepository, "");
+        service.setExpoClient(expoClient);
+        User user = userWithTokens();
+        when(pushTokenRepository.findAllByUserId(user.getId()))
+                .thenReturn(List.of(UserPushToken.builder().userId(user.getId()).token("ExponentPushToken[token1]").build()));
+        TicketResponse.Ticket failed = new TicketResponse.Ticket();
+        failed.setStatus(Status.ERROR);
+        TicketResponse.Ticket missingStatus = new TicketResponse.Ticket();
+        when(expoClient.sendPushNotifications(anyList()))
+                .thenReturn(Arrays.asList(failed, missingStatus, null));
+
+        assertThat(service.sendStreakReminder(List.of(user))).isEqualTo(1);
     }
 
     @Test

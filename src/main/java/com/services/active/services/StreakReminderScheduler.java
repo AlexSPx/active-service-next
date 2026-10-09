@@ -1,13 +1,10 @@
 package com.services.active.services;
 
 import com.services.active.models.user.User;
-import com.services.active.models.user.UserPushToken;
-import com.services.active.repository.UserPushTokenRepository;
 import com.services.active.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -24,7 +21,6 @@ public class StreakReminderScheduler {
     private final ExpoPushNotificationService pushService;
     private Clock clock = Clock.systemUTC();
 
-    @Autowired
     StreakReminderScheduler(UserRepository userRepository, ExpoPushNotificationService pushService) {
         this.userRepository = userRepository;
         this.pushService = pushService;

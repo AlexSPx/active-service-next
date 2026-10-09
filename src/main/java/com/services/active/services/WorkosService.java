@@ -91,11 +91,7 @@ public class WorkosService {
     public WorkOSUser getUser(String userId) {
         try {
             User user = workos.userManagement.getUser(userId);
-            return WorkOSUser.builder()
-                    .email(user.getEmail())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
-                    .build();
+            return toWorkOSUser(user);
         } catch (Exception e) {
             log.error("Failed to get user from WorkOS userId {}: {}", userId, e.getMessage(), e);
             throw new UnauthorizedException("Failed to retrieve user information");
@@ -112,11 +108,7 @@ public class WorkosService {
         try {
             User user = workos.userManagement.updateUser(userId, updateUserOptions);
 
-            return WorkOSUser.builder()
-                    .email(user.getEmail())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
-                    .build();
+            return toWorkOSUser(user);
         } catch (Exception e) {
             log.error("Failed to update user in WorkOS: {}", e.getMessage(), e);
             throw new UnauthorizedException("Failed to update user information");
@@ -131,6 +123,14 @@ public class WorkosService {
             log.error("Failed to delete user in WorkOS: {}", e.getMessage(), e);
             throw new UnauthorizedException("Failed to delete user");
         }
+    }
+
+    private WorkOSUser toWorkOSUser(User user) {
+        return WorkOSUser.builder()
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build();
     }
 
     /**
