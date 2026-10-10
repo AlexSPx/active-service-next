@@ -23,7 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +34,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WithTestUser
@@ -46,6 +50,8 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutRecordRepository workoutRecordRepository;
     private final ExerciseRepository exerciseRepository;
+    private final JsonMapper jsonMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     private Workout createWorkout(User user, UUID exerciseId) {
         exerciseRepository.save(Exercise.builder()
@@ -75,6 +81,9 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
     @Test
     @DisplayName("DELETE /api/workouts/{id} -> 204 NO CONTENT deletes workout and template but keeps records")
     void deleteWorkout_deletesWorkoutAndTemplate_keepsRecords(@TestUserContext String token, @TestUserContext User user) throws Exception {
+        // Test Hibernate's create-drop schema omits this scalar FK; production V1 defines ON DELETE SET NULL.
+        jdbcTemplate.execute("ALTER TABLE workout_records ADD CONSTRAINT fk_test_workout_record_workout "
+                + "FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL");
         UUID exerciseId = UUID.randomUUID();
         // Create workout
         Workout workout = createWorkout(user, exerciseId);
@@ -119,5 +128,29 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
         assertThat(afterDelete).isNotNull();
         assertThat(afterDelete.getWorkoutTitle()).isEqualTo("Delete Me Workout");
         assertThat(afterDelete.getStartTime()).isNotNull();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT workout_id FROM workout_records WHERE id = ?", UUID.class, recordId)).isNull();
+
+        String historyJson = mockMvc.perform(get("/api/workouts/record")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode historyRecord = null;
+        for (JsonNode item : jsonMapper.readTree(historyJson)) {
+            if (recordId.toString().equals(item.get("id").asText())) {
+                historyRecord = item;
+                break;
+            }
+        }
+        assertThat(historyRecord).isNotNull();
+        assertThat(historyRecord.get("workoutId").isNull()).isTrue();
+        assertThat(historyRecord.get("workoutTitle").asText()).isEqualTo("Delete Me Workout");
+        assertThat(historyRecord.get("notes").asText()).isEqualTo("Record to survive delete");
+        assertThat(LocalDateTime.parse(historyRecord.get("startTime").asText()))
+                .isEqualTo(afterDelete.getStartTime());
+        JsonNode exerciseRecord = historyRecord.get("exerciseRecords").get(0);
+        assertThat(exerciseRecord.get("exerciseName").asText()).isEqualTo("Test Exercise");
+        assertThat(exerciseRecord.get("reps").get(0).asInt()).isEqualTo(10);
+        assertThat(exerciseRecord.get("weight").get(0).asDouble()).isEqualTo(50.0);
     }
 }

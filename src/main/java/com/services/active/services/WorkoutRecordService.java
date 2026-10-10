@@ -192,7 +192,7 @@ public class WorkoutRecordService {
                     return UserWorkoutRecordsResponse.builder()
                             .id(workoutRecord.getId().toString())
                             .workoutTitle(workoutRecord.getWorkoutTitle())
-                            .workoutId(workoutRecord.getWorkoutId().toString())
+                            .workoutId(workoutRecord.getWorkoutId() == null ? null : workoutRecord.getWorkoutId().toString())
                             .notes(workoutRecord.getNotes())
                             .startTime(workoutRecord.getStartTime())
                             .createdAt(workoutRecord.getCreatedAt())
