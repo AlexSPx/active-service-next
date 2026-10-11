@@ -2,12 +2,15 @@ package com.services.active.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.services.active.dto.TokenResponse;
 import com.services.active.exceptions.UnauthorizedException;
+import com.services.active.exceptions.UpstreamServiceException;
 import com.services.active.models.user.WorkOSUser;
 import com.workos.WorkOS;
 import com.workos.common.exceptions.BadRequestException;
 import com.workos.common.exceptions.GenericServerException;
+import com.workos.common.exceptions.UnprocessableEntityException;
 import com.workos.usermanagement.models.RefreshAuthentication;
 import com.workos.usermanagement.models.User;
 import com.workos.usermanagement.types.UpdateUserOptions;
@@ -19,8 +22,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 
 @Service
@@ -90,25 +93,45 @@ public class WorkosService {
         }
     }
 
+    /** Maps provider and transport failures without exposing provider details to clients. */
     static RuntimeException classifyRefreshFailure(Exception e) {
-        if (e instanceof BadRequestException badRequest && "invalid_grant".equals(badRequest.getCode())) {
-            return new UnauthorizedException("Invalid or expired refresh token");
+        if (e instanceof BadRequestException badRequest) {
+            if ("invalid_grant".equals(badRequest.getCode())) {
+                return new UnauthorizedException("Invalid or expired refresh token");
+            }
+            return new com.services.active.exceptions.BadRequestException("Invalid token refresh request");
+        }
+
+        if (e instanceof UnprocessableEntityException) {
+            return new UpstreamServiceException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid token refresh request");
         }
 
         if (e instanceof GenericServerException serverError) {
             int status = serverError.getStatus();
             if (status == 408 || status == 429 || status >= 500 && status < 600) {
-                return new ResponseStatusException(HttpStatusCode.valueOf(status), "Token refresh temporarily unavailable");
+                return new UpstreamServiceException(HttpStatusCode.valueOf(status), "Token refresh temporarily unavailable");
+            }
+            if (status >= 400 && status < 500 && status != 401) {
+                return new UpstreamServiceException(HttpStatusCode.valueOf(status), "Token refresh request rejected");
             }
         }
 
+        boolean transportFailure = false;
         for (Throwable cause = e; cause != null; cause = cause.getCause()) {
-            if (cause instanceof SocketTimeoutException) {
-                return new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "Token refresh timed out");
+            if (cause instanceof JsonProcessingException) {
+                return new RuntimeException(e);
             }
+            if (cause instanceof SocketTimeoutException) {
+                return new UpstreamServiceException(HttpStatus.GATEWAY_TIMEOUT, "Token refresh timed out");
+            }
+            transportFailure |= cause instanceof IOException;
         }
 
-        return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Token refresh temporarily unavailable");
+        if (transportFailure) {
+            return new UpstreamServiceException(HttpStatus.SERVICE_UNAVAILABLE, "Token refresh temporarily unavailable");
+        }
+
+        return e instanceof RuntimeException runtime ? runtime : new RuntimeException(e);
     }
 
     /**

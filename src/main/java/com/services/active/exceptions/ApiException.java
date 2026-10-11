@@ -1,17 +1,16 @@
 package com.services.active.exceptions;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 public abstract class ApiException extends RuntimeException {
-    private final HttpStatus status;
+    private final HttpStatusCode status;
 
-    protected ApiException(HttpStatus status, String message) {
+    protected ApiException(HttpStatusCode status, String message) {
         super(message);
         this.status = status;
     }
 
-    public HttpStatus getStatus() {
+    public HttpStatusCode getStatus() {
         return status;
     }
 }
-
