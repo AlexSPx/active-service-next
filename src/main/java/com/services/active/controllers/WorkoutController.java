@@ -4,6 +4,7 @@ import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.UserWorkoutResponse;
 import com.services.active.models.Workout;
 import com.services.active.services.WorkoutService;
+import com.services.active.services.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,6 +33,7 @@ import java.util.List;
 @Validated
 public class WorkoutController {
     private final WorkoutService workoutService;
+    private final IdempotencyService idempotencyService;
 
     @PostMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -48,13 +50,15 @@ public class WorkoutController {
     })
     public Workout createWorkout(
             Principal principal,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestBody @Valid CreateWorkoutRequest request) {
         if (principal == null) {
             log.warn("Rejecting workout creation request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received workout creation request (title={})", request.getTitle());
-        return workoutService.createWorkout(principal.getName(), request);
+        return idempotencyService.execute(principal.getName(), idempotencyKey, "POST", "/api/workouts",
+                request, Workout.class, () -> workoutService.createWorkout(principal.getName(), request));
     }
 
     @GetMapping
@@ -91,13 +95,15 @@ public class WorkoutController {
     public Workout updateWorkout(
             Principal principal,
             @PathVariable("workoutId") String workoutId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestBody com.services.active.dto.UpdateWorkoutRequest request) {
         if (principal == null) {
             log.warn("Rejecting workout update request because principal is missing (workoutId={})", workoutId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received workout update request (workoutId={})", workoutId);
-        return workoutService.updateWorkout(principal.getName(), workoutId, request);
+        return idempotencyService.execute(principal.getName(), idempotencyKey, "PUT", "/api/workouts/" + workoutId,
+                request, Workout.class, () -> workoutService.updateWorkout(principal.getName(), workoutId, request));
     }
 
     @DeleteMapping(value = "/{workoutId}")
@@ -112,13 +118,18 @@ public class WorkoutController {
     })
     public ResponseEntity<Void> deleteWorkout(
             Principal principal,
-            @PathVariable("workoutId") String workoutId) {
+            @PathVariable("workoutId") String workoutId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         if (principal == null) {
             log.warn("Rejecting workout deletion request because principal is missing (workoutId={})", workoutId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received workout deletion request (workoutId={})", workoutId);
-        workoutService.deleteWorkout(principal.getName(), workoutId);
+        idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/workouts/" + workoutId,
+                null, Void.class, () -> {
+                    workoutService.deleteWorkout(principal.getName(), workoutId);
+                    return null;
+                });
         return ResponseEntity.noContent().build();
     }
 }
