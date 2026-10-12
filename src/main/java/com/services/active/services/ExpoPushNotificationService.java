@@ -3,6 +3,7 @@ package com.services.active.services;
 import com.niamedtech.expo.exposerversdk.ExpoPushNotificationClient;
 import com.niamedtech.expo.exposerversdk.request.PushNotification;
 import com.niamedtech.expo.exposerversdk.response.ReceiptResponse;
+import com.niamedtech.expo.exposerversdk.response.Status;
 import com.niamedtech.expo.exposerversdk.response.TicketResponse;
 import com.services.active.models.user.User;
 import com.services.active.models.user.UserPushToken;
@@ -10,7 +11,6 @@ import com.services.active.repository.UserPushTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +27,6 @@ public class ExpoPushNotificationService {
     private ExpoPushNotificationClient expoClient;
     private final UserPushTokenRepository pushTokenRepository;
 
-    public ExpoPushNotificationService(UserPushTokenRepository pushTokenRepository) {
-        this(pushTokenRepository, "");
-    }
-
-    @Autowired
     public ExpoPushNotificationService(
             UserPushTokenRepository pushTokenRepository,
             @Value("${expo.push.access-token:}") String expoAccessToken
@@ -111,11 +106,8 @@ public class ExpoPushNotificationService {
                 TicketResponse.Ticket ticket = tickets != null && i < tickets.size() ? tickets.get(i) : null;
                 String status = ticket != null && ticket.getStatus() != null ? ticket.getStatus().name() : "MISSING";
                 String message = ticket != null ? ticket.getMessage() : null;
-                String error = null;
-                if (ticket != null && ticket.getDetails() != null && ticket.getDetails().getError() != null) {
-                    error = ticket.getDetails().getError().name();
-                }
-                if ("OK".equals(status)) {
+                String error = ticketError(ticket);
+                if (ticket != null && ticket.getStatus() == Status.OK) {
                     accepted++;
                 } else {
                     failed++;
@@ -167,7 +159,7 @@ public class ExpoPushNotificationService {
                 if (receipt.getDetails() != null && receipt.getDetails().getError() != null) {
                     error = receipt.getDetails().getError().name();
                 }
-                if (!"OK".equals(status)) {
+                if (receipt.getStatus() != Status.OK) {
                     failed++;
                 }
                 results.add(new MockNotificationReceipt(id, status, message, error));
@@ -199,23 +191,23 @@ public class ExpoPushNotificationService {
     private void logTicketFailures(String context, List<TicketResponse.Ticket> tickets) {
         if (tickets == null || tickets.isEmpty()) return;
 
-        long failed = tickets.stream()
-                .filter(ticket -> ticket == null || ticket.getStatus() == null || !"OK".equals(ticket.getStatus().name()))
-                .count();
-        if (failed == 0) return;
+        List<TicketResponse.Ticket> failures = tickets.stream()
+                .filter(ticket -> ticket == null || ticket.getStatus() != Status.OK)
+                .toList();
+        if (failures.isEmpty()) return;
 
-        log.warn("Expo {} returned {} failed ticket(s) out of {}", context, failed, tickets.size());
-        tickets.stream()
-                .filter(ticket -> ticket == null || ticket.getStatus() == null || !"OK".equals(ticket.getStatus().name()))
+        log.warn("Expo {} returned {} failed ticket(s) out of {}", context, failures.size(), tickets.size());
+        failures.stream()
                 .limit(5)
                 .forEach(ticket -> {
                     String message = ticket != null ? ticket.getMessage() : null;
-                    String error = null;
-                    if (ticket != null && ticket.getDetails() != null && ticket.getDetails().getError() != null) {
-                        error = ticket.getDetails().getError().name();
-                    }
-                    log.warn("Expo {} ticket failure: error={}, message={}", context, error, message);
+                    log.warn("Expo {} ticket failure: error={}, message={}", context, ticketError(ticket), message);
                 });
+    }
+
+    private String ticketError(TicketResponse.Ticket ticket) {
+        if (ticket == null || ticket.getDetails() == null || ticket.getDetails().getError() == null) return null;
+        return ticket.getDetails().getError().name();
     }
 
     public record MockNotificationResult(
