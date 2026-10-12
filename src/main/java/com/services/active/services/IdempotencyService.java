@@ -2,8 +2,9 @@ package com.services.active.services;
 
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.BadRequestException;
+import com.services.active.models.IdempotencyReceiptId;
+import com.services.active.repository.IdempotencyReceiptRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -14,6 +15,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -21,7 +23,7 @@ import java.util.function.Supplier;
 @Service
 @RequiredArgsConstructor
 public class IdempotencyService {
-    private final JdbcTemplate jdbcTemplate;
+    private final IdempotencyReceiptRepository receiptRepository;
     private final JsonMapper jsonMapper;
 
     @Transactional
@@ -41,35 +43,19 @@ public class IdempotencyService {
         }
 
         String fingerprint = fingerprint(method, path, request);
-        int inserted = jdbcTemplate.update("""
-                INSERT INTO idempotency_keys (owner_id, operation_id, fingerprint)
-                VALUES (?, ?, ?)
-                ON CONFLICT (owner_id, operation_id) DO NOTHING
-                """, ownerId, operationId, fingerprint);
+        int inserted = receiptRepository.claim(ownerId, operationId, fingerprint, Instant.now());
+        var receipt = receiptRepository.findById(new IdempotencyReceiptId(ownerId, operationId))
+                .orElseThrow(() -> new IllegalStateException("Idempotency result disappeared"));
 
         if (inserted == 0) {
-            StoredResult stored = jdbcTemplate.query("""
-                    SELECT fingerprint, response_body
-                    FROM idempotency_keys
-                    WHERE owner_id = ? AND operation_id = ?
-                    """, rs -> {
-                        if (!rs.next()) {
-                            throw new IllegalStateException("Idempotency result disappeared");
-                        }
-                        return new StoredResult(rs.getString("fingerprint"), rs.getString("response_body"));
-                    }, ownerId, operationId);
-            if (!fingerprint.equals(stored.fingerprint())) {
+            if (!fingerprint.equals(receipt.getFingerprint())) {
                 throw new ConflictException("Idempotency key was already used for a different request");
             }
-            return deserialize(stored.responseBody(), responseType);
+            return deserialize(receipt.getResponseBody(), responseType);
         }
 
         T response = operation.get();
-        jdbcTemplate.update("""
-                UPDATE idempotency_keys
-                SET response_body = ?
-                WHERE owner_id = ? AND operation_id = ?
-                """, serialize(response), ownerId, operationId);
+        receipt.complete(serialize(response));
         return response;
     }
 
@@ -109,8 +95,5 @@ public class IdempotencyService {
 
     private <T> T deserialize(String value, Class<T> responseType) {
         return value == null ? null : jsonMapper.readValue(value, responseType);
-    }
-
-    private record StoredResult(String fingerprint, String responseBody) {
     }
 }

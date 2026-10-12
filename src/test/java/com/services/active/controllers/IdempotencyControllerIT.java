@@ -30,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,6 +59,23 @@ class IdempotencyControllerIT extends IntegrationTestBase {
         assertThat(replay).isEqualTo(first);
         assertThat(count("workouts")).isEqualTo(1);
         assertThat(count("workout_templates")).isEqualTo(1);
+        assertThat(count("idempotency_keys")).isEqualTo(1);
+    }
+
+    @Test
+    void deleteReplayReturnsNoContentAndMutatesOnce(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        Workout workout = workoutService.createWorkout(user.getWorkosId(), CreateWorkoutRequest.builder()
+                .title("Delete once")
+                .template(CreateWorkoutTemplateRequest.builder().exercises(List.of()).build())
+                .build());
+        String key = UUID.randomUUID().toString();
+
+        performDelete("/api/workouts/" + workout.getId(), token, key);
+        performDelete("/api/workouts/" + workout.getId(), token, key);
+
+        assertThat(count("workouts")).isZero();
         assertThat(count("idempotency_keys")).isEqualTo(1);
     }
 
@@ -202,6 +220,13 @@ class IdempotencyControllerIT extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().is(status));
+    }
+
+    private void performDelete(String path, String token, String key) throws Exception {
+        mockMvc.perform(delete(path)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key))
+                .andExpect(status().isNoContent());
     }
 
     private long count(String table) {

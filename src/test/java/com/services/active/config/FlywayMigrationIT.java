@@ -1,6 +1,8 @@
 package com.services.active.config;
 
+import com.services.active.models.IdempotencyReceipt;
 import org.flywaydb.core.Flyway;
+import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -45,6 +47,16 @@ class FlywayMigrationIT {
                 assertThat(result.next()).isTrue();
                 assertThat(result.getLong(1)).isZero();
             }
+        }
+
+        try (var ignored = new Configuration()
+                .addAnnotatedClass(IdempotencyReceipt.class)
+                .setProperty("jakarta.persistence.jdbc.url", POSTGRES.getJdbcUrl())
+                .setProperty("jakarta.persistence.jdbc.user", POSTGRES.getUsername())
+                .setProperty("jakarta.persistence.jdbc.password", POSTGRES.getPassword())
+                .setProperty("hibernate.hbm2ddl.auto", "validate")
+                .buildSessionFactory()) {
+            // Building the session factory validates the Hibernate mapping against V2.
         }
     }
 

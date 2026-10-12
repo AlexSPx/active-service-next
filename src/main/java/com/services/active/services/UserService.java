@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -39,7 +38,7 @@ public class UserService {
     private final ExercisePersonalBestRepository exercisePersonalBestRepository;
     private final RoutineRepository routineRepository;
     private final RoutinePatternRepository routinePatternRepository;
-    private final JdbcTemplate jdbcTemplate;
+    private final IdempotencyReceiptRepository idempotencyReceiptRepository;
 
     private final WorkosService workosService;
 
@@ -165,7 +164,7 @@ public class UserService {
         }
 
         // Finally, delete the user
-        jdbcTemplate.update("DELETE FROM idempotency_keys WHERE owner_id = ?", workosId);
+        idempotencyReceiptRepository.deleteByOwnerId(workosId);
         userRepository.deleteById(userId);
         workosService.deleteUser(workosId);
         log.info("Deleted user and related data successfully (userId={}, deletedWorkoutTemplates={})", userId, templateIds.size());
