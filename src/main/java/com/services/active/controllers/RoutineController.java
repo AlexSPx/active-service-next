@@ -4,6 +4,7 @@ import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.RoutineResponse;
 import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.services.RoutineService;
+import com.services.active.services.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,6 +34,7 @@ import java.util.List;
 public class RoutineController {
 
     private final RoutineService routineService;
+    private final IdempotencyService idempotencyService;
 
     @PostMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -44,13 +46,17 @@ public class RoutineController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "409", description = "Duplicate routine name")
     })
-    public RoutineResponse createRoutine(Principal principal, @RequestBody @Valid CreateRoutineRequest request) {
+    public RoutineResponse createRoutine(
+            Principal principal,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestBody @Valid CreateRoutineRequest request) {
         if (principal == null) {
             log.warn("Rejecting routine creation request because principal is missing");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received routine creation request (name={})", request.getName());
-        return routineService.createRoutine(principal.getName(), request);
+        return idempotencyService.execute(principal.getName(), idempotencyKey, "POST", "/api/routines",
+                request, RoutineResponse.class, () -> routineService.createRoutine(principal.getName(), request));
     }
 
     @GetMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
@@ -96,13 +102,19 @@ public class RoutineController {
             @ApiResponse(responseCode = "404", description = "Routine not found"),
             @ApiResponse(responseCode = "409", description = "Duplicate routine name")
     })
-    public RoutineResponse updateRoutine(Principal principal, @PathVariable("routineId") String routineId, @RequestBody UpdateRoutineRequest request) {
+    public RoutineResponse updateRoutine(
+            Principal principal,
+            @PathVariable("routineId") String routineId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestBody UpdateRoutineRequest request) {
         if (principal == null) {
             log.warn("Rejecting routine update request because principal is missing (routineId={})", routineId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received routine update request (routineId={})", routineId);
-        return routineService.updateRoutine(principal.getName(), routineId, request);
+        return idempotencyService.execute(principal.getName(), idempotencyKey, "PUT", "/api/routines/" + routineId,
+                request, RoutineResponse.class,
+                () -> routineService.updateRoutine(principal.getName(), routineId, request));
     }
 
     @DeleteMapping(value = "/{routineId}")
@@ -112,13 +124,20 @@ public class RoutineController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "404", description = "Routine not found")
     })
-    public ResponseEntity<Void> deleteRoutine(Principal principal, @PathVariable("routineId") String routineId) {
+    public ResponseEntity<Void> deleteRoutine(
+            Principal principal,
+            @PathVariable("routineId") String routineId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         if (principal == null) {
             log.warn("Rejecting routine deletion request because principal is missing (routineId={})", routineId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received routine deletion request (routineId={})", routineId);
-        routineService.deleteRoutine(principal.getName(), routineId);
+        idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/routines/" + routineId,
+                null, Void.class, () -> {
+                    routineService.deleteRoutine(principal.getName(), routineId);
+                    return null;
+                });
         return ResponseEntity.noContent().build();
     }
 

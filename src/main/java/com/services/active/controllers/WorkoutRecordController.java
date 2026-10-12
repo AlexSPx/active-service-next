@@ -4,6 +4,7 @@ import com.services.active.dto.UserWorkoutRecordsResponse;
 import com.services.active.dto.WorkoutRecordCreateResponse;
 import com.services.active.dto.WorkoutRecordRequest;
 import com.services.active.services.WorkoutRecordService;
+import com.services.active.services.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,6 +33,7 @@ import java.util.List;
 @Validated
 public class WorkoutRecordController {
     private final WorkoutRecordService workoutRecordService;
+    private final IdempotencyService idempotencyService;
 
     @GetMapping
     @Operation(
@@ -66,6 +68,7 @@ public class WorkoutRecordController {
     })
     public ResponseEntity<WorkoutRecordCreateResponse> createWorkoutRecord(
             Principal principal,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestBody @Valid WorkoutRecordRequest request) {
         if (principal == null) {
             log.warn("Rejecting workout record creation request because principal is missing");
@@ -73,7 +76,9 @@ public class WorkoutRecordController {
         }
         log.info("Received workout record creation request (workoutId={}, exerciseRecords={})",
                 request.getWorkoutId(), request.getExerciseRecords() != null ? request.getExerciseRecords().size() : 0);
-        var response = workoutRecordService.createWorkoutRecord(principal.getName(), request);
+        var response = idempotencyService.execute(principal.getName(), idempotencyKey, "POST", "/api/workouts/record",
+                request, WorkoutRecordCreateResponse.class,
+                () -> workoutRecordService.createWorkoutRecord(principal.getName(), request));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -88,13 +93,20 @@ public class WorkoutRecordController {
         @ApiResponse(responseCode = "404", description = "Unauthorized - workout record does not belong to user"),
         @ApiResponse(responseCode = "404", description = "Workout record not found")
     })
-    public ResponseEntity<Void> deleteWorkoutRecord(Principal principal, @PathVariable String recordId) {
+    public ResponseEntity<Void> deleteWorkoutRecord(
+            Principal principal,
+            @PathVariable String recordId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         if (principal == null) {
             log.warn("Rejecting workout record deletion request because principal is missing (recordId={})", recordId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received workout record deletion request (recordId={})", recordId);
-        workoutRecordService.deleteWorkoutRecord(principal.getName(), recordId);
+        idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/workouts/record/" + recordId,
+                null, Void.class, () -> {
+                    workoutRecordService.deleteWorkoutRecord(principal.getName(), recordId);
+                    return null;
+                });
         return ResponseEntity.noContent().build();
     }
 }

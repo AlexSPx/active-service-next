@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -41,6 +42,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private JsonMapper jsonMapper;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     @Autowired private UserRepository userRepository;
     @Autowired private WorkoutRepository workoutRepository;
@@ -100,6 +102,7 @@ class UserDeleteControllerIT extends IntegrationTestBase {
                 """).formatted(workout.getId(), startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), ex1, ex2);
         String response = mockMvc.perform(post("/api/workouts/record")
                         .header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isCreated())
@@ -129,6 +132,8 @@ class UserDeleteControllerIT extends IntegrationTestBase {
         assertThat(exercisePersonalBestRepository.findAllByUserId(user.getId())).isNotEmpty();
         assertThat(routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId())).isNotEmpty();
         assertThat(workoutTemplateRepository.findAll()).isNotEmpty();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM idempotency_keys WHERE owner_id = ?", Long.class, user.getWorkosId())).isEqualTo(1);
 
         // 4) Delete the current user and all data
         mockMvc.perform(delete("/api/user/me")
@@ -142,6 +147,8 @@ class UserDeleteControllerIT extends IntegrationTestBase {
         assertThat(exerciseRecordRepository.findByUserIdOrderByCreatedAtAsc(user.getId())).isEmpty();
         assertThat(exercisePersonalBestRepository.findAllByUserId(user.getId())).isEmpty();
         assertThat(routineRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId())).isEmpty();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM idempotency_keys WHERE owner_id = ?", Long.class, user.getWorkosId())).isZero();
         // All templates created for this user's workouts should also be gone
         assertThat(workoutTemplateRepository.findAll()).isEmpty();
     }

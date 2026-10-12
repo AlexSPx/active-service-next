@@ -38,6 +38,7 @@ public class UserService {
     private final ExercisePersonalBestRepository exercisePersonalBestRepository;
     private final RoutineRepository routineRepository;
     private final RoutinePatternRepository routinePatternRepository;
+    private final IdempotencyReceiptRepository idempotencyReceiptRepository;
 
     private final WorkosService workosService;
 
@@ -163,6 +164,7 @@ public class UserService {
         }
 
         // Finally, delete the user
+        idempotencyReceiptRepository.deleteByOwnerId(workosId);
         userRepository.deleteById(userId);
         workosService.deleteUser(workosId);
         log.info("Deleted user and related data successfully (userId={}, deletedWorkoutTemplates={})", userId, templateIds.size());
