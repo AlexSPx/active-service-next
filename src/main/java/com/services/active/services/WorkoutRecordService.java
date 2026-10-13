@@ -47,7 +47,7 @@ public class WorkoutRecordService {
 
         // Fetch the workout to get the title for snapshot
         UUID workoutId = UUID.fromString(request.getWorkoutId());
-        Workout workout = workoutRepository.findById(workoutId)
+        Workout workout = workoutRepository.findByIdAndUserId(workoutId, userId)
                 .orElseThrow(() -> new NotFoundException("Workout not found: " + request.getWorkoutId()));
 
         // Save the workout record first so we have an ID for exercise records

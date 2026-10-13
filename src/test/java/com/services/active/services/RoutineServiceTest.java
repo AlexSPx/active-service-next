@@ -12,6 +12,7 @@ import com.services.active.models.user.User;
 import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.RoutineRepository;
 import com.services.active.repository.UserRepository;
+import com.services.active.repository.WorkoutRepository;
 import java.util.UUID;
 
 import com.services.active.dto.RoutineResponse;
@@ -38,13 +39,15 @@ class RoutineServiceTest {
     private RoutinePatternRepository routinePatternRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private WorkoutRepository workoutRepository;
     @InjectMocks
     private RoutineService routineService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        routineService = new RoutineService(routineRepository, routinePatternRepository, userRepository);
+        routineService = new RoutineService(routineRepository, routinePatternRepository, userRepository, workoutRepository);
     }
 
     @Test
