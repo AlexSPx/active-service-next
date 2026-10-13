@@ -2,6 +2,7 @@ package com.services.active.services;
 
 import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.RoutineResponse;
+import com.services.active.dto.RoutinePatternRequest;
 import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
@@ -15,6 +16,7 @@ import com.services.active.models.user.User;
 import com.services.active.repository.RoutineRepository;
 import com.services.active.repository.RoutinePatternRepository;
 import com.services.active.repository.UserRepository;
+import com.services.active.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,6 +40,7 @@ public class RoutineService {
     private final RoutineRepository routineRepository;
     private final RoutinePatternRepository routinePatternRepository;
     private final UserRepository userRepository;
+    private final WorkoutRepository workoutRepository;
 
     @Transactional
     public RoutineResponse createRoutine(String workosId, CreateRoutineRequest request) {
@@ -47,6 +52,7 @@ public class RoutineService {
         if (routineRepository.existsByUserIdAndNameIgnoreCase(userId, request.getName())) {
             throw new ConflictException("Routine name already exists");
         }
+        validateWorkoutReferences(userId, request.getPattern());
         LocalDateTime now = LocalDateTime.now();
         boolean requestedActive = Boolean.TRUE.equals(request.getActive());
         RoutineType routineType = request.getRoutineType() != null
@@ -143,6 +149,10 @@ public class RoutineService {
             log.warn("Routine update denied: routine does not belong to user (userId={}, routineId={})", userId, routineId);
             throw new UnauthorizedException("Not authorized to update this routine");
         }
+        if (request.getPattern() != null && request.getPattern().isEmpty()) {
+            throw new BadRequestException("Pattern is required");
+        }
+        validateWorkoutReferences(userId, request.getPattern());
         boolean changed = false;
         if (request.getName() != null) {
             String newName = request.getName();
@@ -158,9 +168,6 @@ public class RoutineService {
             changed = true;
         }
         if (request.getPattern() != null) {
-            if (request.getPattern().isEmpty()) {
-                throw new BadRequestException("Pattern is required");
-            }
             // Replace patterns
             routinePatternRepository.deleteByRoutineId(routineId);
             for (var p : request.getPattern()) {
@@ -212,6 +219,20 @@ public class RoutineService {
         log.info("Completed routine update (userId={}, routineId={}, changed={}, patternDays={})",
                 userId, routineId, changed, patterns.size());
         return RoutineResponse.from(existing, patterns);
+    }
+
+    private void validateWorkoutReferences(UUID userId, List<RoutinePatternRequest> pattern) {
+        if (pattern == null) {
+            return;
+        }
+        Set<UUID> workoutIds = pattern.stream()
+                .map(RoutinePatternRequest::getWorkoutId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (!workoutIds.isEmpty()
+                && workoutRepository.findAllByIdInAndUserId(workoutIds, userId).size() != workoutIds.size()) {
+            throw new NotFoundException("Workout not found");
+        }
     }
 
     @Transactional
