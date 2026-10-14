@@ -1,11 +1,13 @@
 package com.services.active.controllers;
 
+import com.services.active.dto.ExerciseCatalogSnapshot;
 import com.services.active.dto.ExerciseLogResponse;
 import com.services.active.models.Exercise;
 import com.services.active.models.types.Category;
 import com.services.active.models.types.Equipment;
 import com.services.active.models.types.Level;
 import com.services.active.models.types.MuscleGroup;
+import com.services.active.services.ExerciseCatalogSnapshotService;
 import com.services.active.services.ExerciseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +34,22 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class ExerciseController {
     private final ExerciseService exerciseService;
+    private final ExerciseCatalogSnapshotService catalogSnapshotService;
+
+    @GetMapping("/catalog")
+    @Operation(summary = "Get complete versioned exercise catalog",
+            description = "Returns every persisted exercise, including retired mappings and unresolved legacy UUIDs, " +
+                    "with mapping readiness and a deterministic snapshot version. sourceDatasetVersion identifies the " +
+                    "embedded pinned source independently of persisted data. All fields include explicit nulls. " +
+                    "No pagination or search filters; this read never imports or modifies exercises.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Complete persisted snapshot",
+                    content = @Content(schema = @Schema(implementation = ExerciseCatalogSnapshot.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ExerciseCatalogSnapshot getCatalog() {
+        return catalogSnapshotService.snapshot();
+    }
 
     @GetMapping("/search")
     @Operation(
