@@ -1,6 +1,7 @@
 package com.services.active;
 
 import com.services.active.exceptions.ApiException;
+import com.services.active.exceptions.StaleVersionException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,10 +13,30 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @Slf4j
 @ControllerAdvice
 public class GlobalErrorHandler {
+
+    @ExceptionHandler(StaleVersionException.class)
+    public ResponseEntity<Map<String, Object>> handleStaleVersion(@NonNull StaleVersionException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage() != null ? ex.getMessage() : "Stale version");
+        body.put("code", "STALE_VERSION");
+        if (ex.getCurrentVersion() != null) {
+            body.put("currentVersion", ex.getCurrentVersion());
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "message", "Entity changed while the request was being applied",
+                "code", "STALE_VERSION"));
+    }
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, String>> handleApiException(@NonNull ApiException ex) {

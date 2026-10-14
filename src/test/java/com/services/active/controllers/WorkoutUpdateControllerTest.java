@@ -182,4 +182,63 @@ class WorkoutUpdateControllerTest extends IntegrationTestBase {
         WorkoutTemplate afterTemplate = workoutTemplateRepository.findById(afterWorkout.getTemplateId()).orElseThrow();
         assertThat(afterTemplate.getUpdatedAt()).isEqualTo(beforeTemplate.getUpdatedAt());
     }
+
+    @Test
+    void updateWorkout_staleVersionPreservesAcceptedEdit(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        Workout workout = createWorkout(user);
+        long baseVersion = workout.getVersion();
+
+        UpdateWorkoutRequest accepted = UpdateWorkoutRequest.builder()
+                .baseVersion(baseVersion)
+                .title("Accepted title")
+                .build();
+        mockMvc.perform(put("/api/workouts/" + workout.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accepted)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(baseVersion + 1));
+
+        UpdateWorkoutRequest stale = UpdateWorkoutRequest.builder()
+                .baseVersion(baseVersion)
+                .title("Stale title")
+                .build();
+        mockMvc.perform(put("/api/workouts/" + workout.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(stale)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STALE_VERSION"))
+                .andExpect(jsonPath("$.currentVersion").value(baseVersion + 1));
+
+        Workout persisted = workoutRepository.findById(workout.getId()).orElseThrow();
+        assertThat(persisted.getTitle()).isEqualTo("Accepted title");
+        assertThat(persisted.getVersion()).isEqualTo(baseVersion + 1);
+    }
+
+    @Test
+    void updateWorkout_templateOnlyIncrementsVersion(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        Workout workout = createWorkout(user);
+        UUID newExerciseId = UUID.randomUUID();
+        exerciseRepository.save(Exercise.builder().id(newExerciseId).name("Version exercise").build());
+        var exercise = CreateWorkoutTemplateRequest.TemplateExerciseRequest.builder()
+                .exerciseId(newExerciseId)
+                .reps(List.of(7))
+                .build();
+        UpdateWorkoutRequest request = UpdateWorkoutRequest.builder()
+                .baseVersion(workout.getVersion())
+                .template(CreateWorkoutTemplateRequest.builder().exercises(List.of(exercise)).build())
+                .build();
+
+        mockMvc.perform(put("/api/workouts/" + workout.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(workout.getVersion() + 1));
+    }
 }

@@ -8,6 +8,9 @@ import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.dto.RoutinePatternRequest;
 import com.services.active.models.types.DayType;
+import com.services.active.models.user.User;
+import com.services.active.repository.UserRepository;
+import com.services.active.repository.RoutineRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,6 +34,10 @@ class RoutineControllerTest extends IntegrationTestBase {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private RoutineRepository routineRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -203,5 +211,88 @@ class RoutineControllerTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/routines/" + id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateRoutine_staleVersionPreservesAcceptedEdit(@TestUserContext String token) throws Exception {
+        String created = mockMvc.perform(post("/api/routines")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buildRequest("Versioned", false))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        var createdJson = objectMapper.readTree(created);
+        String id = createdJson.get("id").asText();
+        long baseVersion = createdJson.get("version").asLong();
+
+        UpdateRoutineRequest accepted = UpdateRoutineRequest.builder()
+                .baseVersion(baseVersion)
+                .name("Accepted routine")
+                .build();
+        mockMvc.perform(put("/api/routines/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accepted)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(baseVersion + 1));
+
+        UpdateRoutineRequest stale = UpdateRoutineRequest.builder()
+                .baseVersion(baseVersion)
+                .name("Stale routine")
+                .build();
+        mockMvc.perform(put("/api/routines/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(stale)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STALE_VERSION"));
+
+        assertThat(routineRepository.findById(UUID.fromString(id)).orElseThrow().getName())
+                .isEqualTo("Accepted routine");
+    }
+
+    @Test
+    void updateRoutine_activePointerRejectsStaleProfileWithCurrentRoutineVersion(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        String created = mockMvc.perform(post("/api/routines")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buildRequest("Activation", false))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        var createdJson = objectMapper.readTree(created);
+        String id = createdJson.get("id").asText();
+        long routineVersion = createdJson.get("version").asLong();
+        long profileVersion = userRepository.findById(user.getId()).orElseThrow().getProfileVersion();
+
+        UpdateRoutineRequest activate = UpdateRoutineRequest.builder()
+                .profileBaseVersion(profileVersion)
+                .active(true)
+                .build();
+        mockMvc.perform(put("/api/routines/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(activate)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(routineVersion))
+                .andExpect(jsonPath("$.profileVersion").value(profileVersion + 1));
+
+        UpdateRoutineRequest staleDeactivate = UpdateRoutineRequest.builder()
+                .profileBaseVersion(profileVersion)
+                .active(false)
+                .build();
+        mockMvc.perform(put("/api/routines/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(staleDeactivate)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STALE_VERSION"))
+                .andExpect(jsonPath("$.currentVersion").value(profileVersion + 1));
+
+        User persisted = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(persisted.getActiveRoutineId()).isEqualTo(UUID.fromString(id));
+        assertThat(routineRepository.findById(UUID.fromString(id)).orElseThrow().getVersion())
+                .isEqualTo(routineVersion);
     }
 }

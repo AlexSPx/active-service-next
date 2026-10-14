@@ -4,8 +4,11 @@ import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.WorkoutTemplateResponse;
 import com.services.active.dto.TemplateExerciseResponse;
 import com.services.active.dto.UserWorkoutResponse;
+import com.services.active.dto.WorkoutDeleteAck;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.exceptions.StaleVersionException;
+import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.models.Workout;
 import com.services.active.models.WorkoutTemplate;
 import com.services.active.models.TemplateExercise;
@@ -34,10 +37,12 @@ public class WorkoutService {
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final TemplateExerciseRepository templateExerciseRepository;
     private final ExerciseRepository exerciseRepository;
+    private final RoutineRepository routineRepository;
+    private final RoutinePatternRepository routinePatternRepository;
 
     @Transactional
     public Workout createWorkout(String workosId, CreateWorkoutRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Creating workout for user (userId={}, title={})", userId, request.getTitle());
@@ -79,7 +84,7 @@ public class WorkoutService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Workout savedWorkout = workoutRepository.save(workout);
+        Workout savedWorkout = workoutRepository.saveAndFlush(workout);
         int templateExerciseCount = request.getTemplate().getExercises() != null ? request.getTemplate().getExercises().size() : 0;
         log.info("Created workout successfully (userId={}, workoutId={}, templateId={}, templateExercises={})",
                 userId, savedWorkout.getId(), savedTemplate.getId(), templateExerciseCount);
@@ -108,19 +113,22 @@ public class WorkoutService {
 
     @Transactional
     public Workout updateWorkout(String workosId, String workoutId, com.services.active.dto.UpdateWorkoutRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Updating workout for user (userId={}, workoutId={})", userId, workoutId);
 
         UUID wId = UUID.fromString(workoutId);
-        Workout workout = workoutRepository.findById(wId)
+        Workout probe = workoutRepository.findById(wId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
 
-        if (!userId.equals(workout.getUserId())) {
+        if (!userId.equals(probe.getUserId())) {
             log.warn("Workout update denied: workout does not belong to user (userId={}, workoutId={})", userId, wId);
-            throw new com.services.active.exceptions.UnauthorizedException("Not authorized to update this workout");
+            throw new UnauthorizedException("Not authorized to update this workout");
         }
+        Workout workout = workoutRepository.findByIdForUpdate(wId)
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
+        requireVersion(request.getBaseVersion(), workout.getVersion(), "Workout");
 
         boolean workoutChanged = false;
         if (request.getTitle() != null) {
@@ -135,7 +143,9 @@ public class WorkoutService {
             workout.setUpdatedAt(LocalDateTime.now());
         }
 
-        if (request.getTemplate() != null && request.getTemplate().getExercises() != null
+        boolean templateChanged = request.getTemplate() != null && request.getTemplate().getExercises() != null
+                && !request.getTemplate().getExercises().isEmpty();
+        if (templateChanged
                 && !request.getTemplate().getExercises().isEmpty()) {
             WorkoutTemplate template = workoutTemplateRepository.findById(workout.getTemplateId())
                     .orElseThrow(() -> new NotFoundException("Template not found for workout: " + workoutId));
@@ -161,33 +171,61 @@ public class WorkoutService {
                     workout.getId(), template.getId(), request.getTemplate().getExercises().size());
         }
 
-        Workout updatedWorkout = workoutChanged ? workoutRepository.save(workout) : workout;
+        if (templateChanged) {
+            workout.setUpdatedAt(LocalDateTime.now());
+        }
+        Workout updatedWorkout = workoutChanged || templateChanged ? workoutRepository.saveAndFlush(workout) : workout;
         log.info("Completed workout update (userId={}, workoutId={}, workoutMetadataChanged={})",
                 userId, updatedWorkout.getId(), workoutChanged);
         return updatedWorkout;
     }
 
     @Transactional
-    public void deleteWorkout(String workosId, String workoutId) {
-        User user = userRepository.findByWorkosId(workosId)
+    public WorkoutDeleteAck deleteWorkout(String workosId, String workoutId, Long baseVersion) {
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Deleting workout for user (userId={}, workoutId={})", userId, workoutId);
 
         UUID wId = UUID.fromString(workoutId);
-        Workout workout = workoutRepository.findById(wId)
+        Workout probe = workoutRepository.findById(wId)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
-        if (!userId.equals(workout.getUserId())) {
+        if (!userId.equals(probe.getUserId())) {
             log.warn("Workout deletion denied: workout does not belong to user (userId={}, workoutId={})", userId, wId);
-            throw new com.services.active.exceptions.UnauthorizedException("Not authorized to delete this workout");
+            throw new UnauthorizedException("Not authorized to delete this workout");
         }
+        Workout workout = workoutRepository.findByIdForUpdate(wId)
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
+        requireVersion(baseVersion, workout.getVersion(), "Workout");
+
+        List<UUID> affectedRoutineIds = routinePatternRepository.findRoutineIdsByWorkoutId(wId);
+        List<com.services.active.models.Routine> affectedRoutines = affectedRoutineIds.isEmpty()
+                ? List.of()
+                : routineRepository.findAllByIdInAndUserIdForUpdate(affectedRoutineIds, userId);
+        LocalDateTime now = LocalDateTime.now();
+        affectedRoutines.forEach(routine -> routine.setUpdatedAt(now));
+        routineRepository.saveAllAndFlush(affectedRoutines);
+
         UUID templateId = workout.getTemplateId();
         workoutRepository.deleteById(wId);
         if (templateId != null) {
             templateExerciseRepository.deleteByTemplateId(templateId);
             workoutTemplateRepository.deleteById(templateId);
         }
+        workoutRepository.flush();
         log.info("Deleted workout successfully (userId={}, workoutId={}, deletedTemplate={})", userId, wId, templateId != null);
+        return WorkoutDeleteAck.builder()
+                .deletedWorkoutId(wId)
+                .routineVersions(affectedRoutines.stream()
+                        .map(routine -> new WorkoutDeleteAck.EntityVersion(routine.getId(), routine.getVersion()))
+                        .toList())
+                .build();
+    }
+
+    private void requireVersion(Long supplied, Long current, String entityName) {
+        if (supplied != null && !supplied.equals(current)) {
+            throw new StaleVersionException(entityName + " changed since it was downloaded", current);
+        }
     }
 
     private WorkoutTemplateResponse buildTemplateResponse(WorkoutTemplate template, List<TemplateExercise> templateExercises) {

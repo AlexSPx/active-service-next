@@ -6,6 +6,9 @@ import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.CreateWorkoutTemplateRequest;
 import com.services.active.dto.WorkoutRecordRequest;
+import com.services.active.dto.CreateRoutineRequest;
+import com.services.active.dto.RoutinePatternRequest;
+import com.services.active.models.types.DayType;
 import com.services.active.models.Exercise;
 import com.services.active.models.TemplateExercise;
 import com.services.active.models.user.User;
@@ -15,8 +18,10 @@ import com.services.active.repository.ExerciseRepository;
 import com.services.active.repository.WorkoutRecordRepository;
 import com.services.active.repository.WorkoutRepository;
 import com.services.active.repository.WorkoutTemplateRepository;
+import com.services.active.repository.RoutineRepository;
 import com.services.active.services.WorkoutRecordService;
 import com.services.active.services.WorkoutService;
+import com.services.active.services.RoutineService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WithTestUser
 @SpringBootTest
@@ -52,6 +58,8 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
     private final ExerciseRepository exerciseRepository;
     private final JsonMapper jsonMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final RoutineService routineService;
+    private final RoutineRepository routineRepository;
 
     private Workout createWorkout(User user, UUID exerciseId) {
         exerciseRepository.save(Exercise.builder()
@@ -152,5 +160,38 @@ class WorkoutDeleteControllerTest extends IntegrationTestBase {
         assertThat(exerciseRecord.get("exerciseName").asText()).isEqualTo("Test Exercise");
         assertThat(exerciseRecord.get("reps").get(0).asInt()).isEqualTo(10);
         assertThat(exerciseRecord.get("weight").get(0).asDouble()).isEqualTo(50.0);
+    }
+
+    @Test
+    void deleteWorkout_versionedResponseCarriesAffectedRoutineVersion(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        jdbcTemplate.execute("ALTER TABLE routine_patterns ADD CONSTRAINT fk_test_routine_pattern_workout "
+                + "FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL");
+        Workout workout = createWorkout(user, UUID.randomUUID());
+        var routine = routineService.createRoutine(user.getWorkosId(), CreateRoutineRequest.builder()
+                .name("Uses deleted workout")
+                .pattern(List.of(RoutinePatternRequest.builder()
+                        .dayIndex(0)
+                        .dayType(DayType.WORKOUT)
+                        .workoutId(workout.getId())
+                        .build()))
+                .active(false)
+                .build());
+
+        mockMvc.perform(delete("/api/workouts/" + workout.getId())
+                        .queryParam("baseVersion", workout.getVersion().toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deletedWorkoutId").value(workout.getId().toString()))
+                .andExpect(jsonPath("$.routineVersions[0].id").value(routine.getId().toString()))
+                .andExpect(jsonPath("$.routineVersions[0].version").value(routine.getVersion() + 1));
+
+        assertThat(routineRepository.findById(routine.getId()).orElseThrow().getVersion())
+                .isEqualTo(routine.getVersion() + 1);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT workout_id FROM routine_patterns WHERE routine_id = ?",
+                UUID.class,
+                routine.getId())).isNull();
     }
 }

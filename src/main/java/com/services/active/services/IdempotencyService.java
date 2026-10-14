@@ -70,7 +70,27 @@ public class IdempotencyService {
     }
 
     private String canonicalRequest(Object request) {
-        return request == null ? "null" : jsonMapper.writeValueAsString(canonicalize(jsonMapper.valueToTree(request)));
+        if (request == null) {
+            return "null";
+        }
+        JsonNode tree = jsonMapper.valueToTree(request);
+        removeNewNullPreconditions(tree);
+        return jsonMapper.writeValueAsString(canonicalize(tree));
+    }
+
+    private void removeNewNullPreconditions(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode object = (ObjectNode) node;
+            if (object.has("baseVersion") && object.get("baseVersion").isNull()) {
+                object.remove("baseVersion");
+            }
+            if (object.has("profileBaseVersion") && object.get("profileBaseVersion").isNull()) {
+                object.remove("profileBaseVersion");
+            }
+            object.forEachEntry((name, value) -> removeNewNullPreconditions(value));
+        } else if (node.isArray()) {
+            node.forEach(this::removeNewNullPreconditions);
+        }
     }
 
     private JsonNode canonicalize(JsonNode node) {

@@ -3,6 +3,7 @@ package com.services.active.services;
 import com.services.active.dto.UpdateUserRequest;
 import com.services.active.exceptions.BadRequestException;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.exceptions.StaleVersionException;
 import com.services.active.models.Workout;
 import com.services.active.models.user.FullUser;
 import com.services.active.models.user.User;
@@ -20,6 +21,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -42,8 +44,9 @@ public class UserService {
 
     private final WorkosService workosService;
 
+    @Transactional
     public FullUser getUserById(String workosId) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         log.info("Fetching current user profile (userId={})", user.getId());
         streakService.checkStreak(user);
@@ -57,9 +60,20 @@ public class UserService {
 
     @Transactional
     public FullUser updateUser(String workosId, UpdateUserRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         log.info("Updating current user profile (userId={})", user.getId());
+
+        if (request.getBaseVersion() != null
+                && request.getBaseVersion().longValue() != user.getProfileVersion()) {
+            throw new StaleVersionException(
+                    "Profile changed since it was downloaded",
+                    user.getProfileVersion());
+        }
+
+        boolean notificationPreferencesChanged = notificationPreferencesChanged(
+                user, request.getNotificationFrequency());
+        boolean profileMutation = profileFieldsChanged(user, request, notificationPreferencesChanged);
 
         UpdateUserOptionsBuilder workosUpdateBuilder = UpdateUserOptionsBuilder.create(workosId);
 
@@ -75,7 +89,7 @@ public class UserService {
         if (request.getRegistrationCompleted() != null) {
             user.setRegistrationCompleted(request.getRegistrationCompleted());
         }
-        if (request.getNotificationFrequency() != null) {
+        if (notificationPreferencesChanged) {
             updateNotificationPreferences(user, request.getNotificationFrequency());
         }
         if (request.getTimezone() != null) {
@@ -101,8 +115,12 @@ public class UserService {
             if (newHeight != null) user.setHeightCm(newHeight);
         }
 
+        if (profileMutation) {
+            user.setProfileVersion(user.getProfileVersion() + 1);
+        }
+
         WorkOSUser workOSUser = workosService.updateUser(workosId, workosUpdateBuilder.build());
-        User dbUser = userRepository.save(user);
+        User dbUser = userRepository.saveAndFlush(user);
         log.info("Updated current user profile successfully (userId={}, registrationCompleted={}, notificationsEnabled={})",
                 dbUser.getId(), dbUser.isRegistrationCompleted(), dbUser.isEmailNotificationsEnabled());
 
@@ -114,7 +132,7 @@ public class UserService {
         if (token == null || token.trim().isEmpty()) {
             throw new BadRequestException("Token is required");
         }
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         log.info("Registering push token for user (userId={})", user.getId());
 
@@ -132,7 +150,7 @@ public class UserService {
 
     @Transactional
     public void deleteUserAndData(String workosId) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         UUID userId = user.getId();
@@ -200,5 +218,52 @@ public class UserService {
                         .build());
             }
         }
+    }
+
+    private boolean profileFieldsChanged(
+            User user,
+            UpdateUserRequest request,
+            boolean notificationPreferencesChanged) {
+        boolean measurementsChanged = request.getMeasurements() != null
+                && ((request.getMeasurements().getWeightKg() != null
+                        && !Objects.equals(request.getMeasurements().getWeightKg(), user.getWeightKg()))
+                    || (request.getMeasurements().getHeightCm() != null
+                        && !Objects.equals(request.getMeasurements().getHeightCm(), user.getHeightCm())));
+        return (request.getUsername() != null && !Objects.equals(request.getUsername(), user.getUsername()))
+                || (request.getRegistrationCompleted() != null
+                    && request.getRegistrationCompleted() != user.isRegistrationCompleted())
+                || (request.getTimezone() != null && !Objects.equals(request.getTimezone(), user.getTimezone()))
+                || measurementsChanged
+                || notificationPreferencesChanged;
+    }
+
+    private boolean notificationPreferencesChanged(User user, Integer notificationFrequency) {
+        if (notificationFrequency == null) {
+            return false;
+        }
+        List<LocalTime> currentSchedule = notificationScheduleRepository.findAllByUserId(user.getId()).stream()
+                .map(UserNotificationSchedule::getScheduleTime)
+                .sorted()
+                .toList();
+        return user.isEmailNotificationsEnabled() != (notificationFrequency > 0)
+                || !currentSchedule.equals(notificationSchedule(notificationFrequency));
+    }
+
+    private List<LocalTime> notificationSchedule(int notificationFrequency) {
+        if (notificationFrequency <= 0) {
+            return List.of();
+        }
+        LocalTime startTime = LocalTime.of(9, 0);
+        if (notificationFrequency == 1) {
+            return List.of(startTime);
+        }
+        LocalTime endTime = LocalTime.of(21, 0);
+        long totalMinutes = java.time.temporal.ChronoUnit.MINUTES.between(startTime, endTime);
+        long intervalMinutes = totalMinutes / (notificationFrequency - 1);
+        List<LocalTime> schedule = new ArrayList<>();
+        for (int i = 0; i < notificationFrequency; i++) {
+            schedule.add(startTime.plusMinutes(intervalMinutes * i));
+        }
+        return schedule;
     }
 }

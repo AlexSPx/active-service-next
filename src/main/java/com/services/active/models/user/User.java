@@ -1,5 +1,6 @@
 package com.services.active.models.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,4 +55,13 @@ public class User {
     // Notification Preferences (flag flattened; schedule in separate table)
     @Builder.Default
     private boolean emailNotificationsEnabled = false;
+
+    @Column(name = "profile_version", nullable = false)
+    @Builder.Default
+    private long profileVersion = 0;
+
+    @Version
+    @JsonIgnore
+    @Column(name = "row_version", nullable = false)
+    private Long rowVersion;
 }

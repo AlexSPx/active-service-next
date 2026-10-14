@@ -112,7 +112,7 @@ class StreakServiceTest {
                 .nextWorkoutId(workoutW0)
                 .nextWorkoutDeadline(LocalDate.now())
                 .build();
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
 
         var result = streakService.onWorkoutCompleted(workosId, workoutW2);
 
@@ -130,7 +130,7 @@ class StreakServiceTest {
                 .nextWorkoutId(workoutW0)
                 .nextWorkoutDeadline(LocalDate.now())
                 .build();
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         Routine routine = Routine.builder()
                 .id(routineId).userId(userId)
                 .createdAt(LocalDateTime.now().minusDays(7))
@@ -156,7 +156,7 @@ class StreakServiceTest {
         User user = User.builder()
                 .id(userId).workosId(workosId)
                 .build();
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         when(weeklyCompletedRepo.findAllByUserId(userId)).thenReturn(List.of());
 
         var first = streakService.onWorkoutCompleted(workosId, workoutA);
@@ -185,7 +185,7 @@ class StreakServiceTest {
                 RoutinePattern.builder().routineId(routineId).dayIndex(1).dayType(DayType.WORKOUT).workoutId(workoutB).build(),
                 RoutinePattern.builder().routineId(routineId).dayIndex(2).dayType(DayType.WORKOUT).workoutId(workoutC).build());
 
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         when(routineRepository.findByIdAndUserId(routineId, userId)).thenReturn(Optional.of(routine));
         when(routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId)).thenReturn(patterns);
         when(weeklyCompletedRepo.existsByUserIdAndWorkoutId(userId, workoutA)).thenReturn(false);
@@ -223,7 +223,7 @@ class StreakServiceTest {
                 RoutinePattern.builder().routineId(routineId).dayIndex(1).dayType(DayType.WORKOUT).workoutId(workoutB).build(),
                 RoutinePattern.builder().routineId(routineId).dayIndex(2).dayType(DayType.WORKOUT).workoutId(workoutC).build());
 
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         when(routineRepository.findByIdAndUserId(routineId, userId)).thenReturn(Optional.of(routine));
         when(routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId)).thenReturn(patterns);
         when(weeklyCompletedRepo.existsByUserIdAndWorkoutId(userId, workoutC)).thenReturn(false);
@@ -261,7 +261,7 @@ class StreakServiceTest {
                 RoutinePattern.builder().routineId(routineId).dayIndex(1).dayType(DayType.WORKOUT).workoutId(workoutB).build(),
                 RoutinePattern.builder().routineId(routineId).dayIndex(2).dayType(DayType.WORKOUT).workoutId(workoutC).build());
 
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         when(routineRepository.findByIdAndUserId(routineId, userId)).thenReturn(Optional.of(routine));
         when(routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId)).thenReturn(patterns);
         when(weeklyCompletedRepo.existsByUserIdAndWorkoutId(userId, workoutA)).thenReturn(true); // Already done
@@ -288,7 +288,7 @@ class StreakServiceTest {
                 RoutinePattern.builder().routineId(routineId).dayIndex(0).dayType(DayType.WORKOUT).workoutId(workoutA).build(),
                 RoutinePattern.builder().routineId(routineId).dayIndex(1).dayType(DayType.WORKOUT).workoutId(workoutB).build());
 
-        when(userRepository.findByWorkosId(workosId)).thenReturn(Optional.of(user));
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
         when(routineRepository.findByIdAndUserId(routineId, userId)).thenReturn(Optional.of(routine));
         when(routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId)).thenReturn(patterns);
         when(weeklyCompletedRepo.findAllByUserId(userId)).thenReturn(List.of());

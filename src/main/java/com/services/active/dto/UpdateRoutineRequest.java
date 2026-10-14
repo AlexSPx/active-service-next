@@ -16,6 +16,12 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "Request payload for updating an existing routine")
 public class UpdateRoutineRequest {
+    @Schema(description = "Last routine version acknowledged by the client")
+    private Long baseVersion;
+
+    @Schema(description = "Last profile version acknowledged by the client when changing the active routine")
+    private Long profileBaseVersion;
+
     @Schema(description = "Routine name", example = "Push/Pull/Legs")
     private String name;
 

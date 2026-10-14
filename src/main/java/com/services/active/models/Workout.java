@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -33,4 +34,8 @@ public class Workout {
 
     @Column(name = "template_id", nullable = false)
     private UUID templateId;
+
+    @Version
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long version;
 }

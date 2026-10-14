@@ -89,7 +89,7 @@ public class StreakService {
 
     @Transactional
     public StreakUpdateResponse onWorkoutCompleted(String workosId, UUID completedWorkoutId) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         log.info("Processing completed workout for streak update (userId={}, workoutId={})", user.getId(), completedWorkoutId);
 

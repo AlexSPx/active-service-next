@@ -12,6 +12,9 @@ import lombok.Builder;
 @AllArgsConstructor
 @Schema(description = "Partial update request for current user. Missing fields are not modified.")
 public class UpdateUserRequest {
+    @Schema(description = "Last profile version acknowledged by the client")
+    private Long baseVersion;
+
     @Schema(description = "New username; if omitted, username unchanged", example = "new_handle")
     private String username;
     @Schema(description = "New first name; if omitted, first name unchanged", example = "Alice")

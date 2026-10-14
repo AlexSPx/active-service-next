@@ -4,10 +4,12 @@ import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.RoutineResponse;
 import com.services.active.dto.RoutinePatternRequest;
 import com.services.active.dto.UpdateRoutineRequest;
+import com.services.active.dto.RoutineDeleteAck;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
 import com.services.active.exceptions.UnauthorizedException;
 import com.services.active.exceptions.BadRequestException;
+import com.services.active.exceptions.StaleVersionException;
 import com.services.active.models.Routine;
 import com.services.active.models.RoutinePattern;
 import com.services.active.models.types.DayType;
@@ -44,7 +46,7 @@ public class RoutineService {
 
     @Transactional
     public RoutineResponse createRoutine(String workosId, CreateRoutineRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Creating routine for user (userId={}, name={})", userId, request.getName());
@@ -52,9 +54,12 @@ public class RoutineService {
         if (routineRepository.existsByUserIdAndNameIgnoreCase(userId, request.getName())) {
             throw new ConflictException("Routine name already exists");
         }
-        validateWorkoutReferences(userId, request.getPattern());
+        lockWorkoutReferences(userId, request.getPattern());
         LocalDateTime now = LocalDateTime.now();
         boolean requestedActive = Boolean.TRUE.equals(request.getActive());
+        if (requestedActive) {
+            requireVersion(request.getProfileBaseVersion(), user.getProfileVersion(), "Profile");
+        }
         RoutineType routineType = request.getRoutineType() != null
                 ? request.getRoutineType()
                 : RoutineType.SEQUENTIAL;
@@ -87,14 +92,17 @@ public class RoutineService {
 
         if (requestedActive) {
             user.setActiveRoutineId(saved.getId());
+            user.setProfileVersion(user.getProfileVersion() + 1);
             userRepository.save(user);
             log.info("Marked new routine as active for user (userId={}, routineId={})", userId, saved.getId());
         }
 
+        routineRepository.flush();
+        userRepository.flush();
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(saved.getId());
         log.info("Created routine successfully (userId={}, routineId={}, patternDays={}, active={})",
                 userId, saved.getId(), patterns.size(), requestedActive);
-        return RoutineResponse.from(saved, patterns);
+        return RoutineResponse.from(saved, patterns, requestedActive ? user.getProfileVersion() : null);
     }
 
     public List<RoutineResponse> listRoutines(String workosId) {
@@ -137,22 +145,39 @@ public class RoutineService {
 
     @Transactional
     public RoutineResponse updateRoutine(String workosId, String id, UpdateRoutineRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Updating routine for user (userId={}, routineId={})", userId, id);
 
         UUID routineId = UUID.fromString(id);
-        Routine existing = routineRepository.findById(routineId)
+        Routine probe = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
-        if (!userId.equals(existing.getUserId())) {
+        if (!userId.equals(probe.getUserId())) {
             log.warn("Routine update denied: routine does not belong to user (userId={}, routineId={})", userId, routineId);
             throw new UnauthorizedException("Not authorized to update this routine");
         }
         if (request.getPattern() != null && request.getPattern().isEmpty()) {
             throw new BadRequestException("Pattern is required");
         }
-        validateWorkoutReferences(userId, request.getPattern());
+        lockWorkoutReferences(userId, request.getPattern());
+        Routine existing = routineRepository.findByIdForUpdate(routineId)
+                .orElseThrow(() -> new NotFoundException("Routine not found"));
+
+        requireVersion(request.getBaseVersion(), existing.getVersion(), "Routine");
+        requireVersion(request.getProfileBaseVersion(), user.getProfileVersion(), "Profile");
+
+        boolean routineMutation = request.getName() != null
+                || request.getDescription() != null
+                || request.getPattern() != null
+                || request.getStartDate() != null
+                || request.getRoutineType() != null;
+        boolean profileMutation = changesActivePointer(user, existing, request.getActive());
+        requireCompletePreconditions(
+                routineMutation,
+                profileMutation,
+                request.getBaseVersion(),
+                request.getProfileBaseVersion());
         boolean changed = false;
         if (request.getName() != null) {
             String newName = request.getName();
@@ -201,12 +226,14 @@ public class RoutineService {
             boolean makeActive = request.getActive();
             if (makeActive) {
                 user.setActiveRoutineId(existing.getId());
-                userRepository.save(user);
             } else {
                 if (existing.getId().equals(user.getActiveRoutineId())) {
                     user.setActiveRoutineId(null);
-                    userRepository.save(user);
                 }
+            }
+            if (profileMutation) {
+                user.setProfileVersion(user.getProfileVersion() + 1);
+                userRepository.save(user);
             }
             log.info("Updated active routine assignment for user (userId={}, routineId={}, active={})",
                     userId, existing.getId(), request.getActive());
@@ -215,13 +242,15 @@ public class RoutineService {
             existing.setUpdatedAt(LocalDateTime.now());
             routineRepository.save(existing);
         }
+        routineRepository.flush();
+        userRepository.flush();
         List<RoutinePattern> patterns = routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(routineId);
         log.info("Completed routine update (userId={}, routineId={}, changed={}, patternDays={})",
                 userId, routineId, changed, patterns.size());
-        return RoutineResponse.from(existing, patterns);
+        return RoutineResponse.from(existing, patterns, request.getActive() != null ? user.getProfileVersion() : null);
     }
 
-    private void validateWorkoutReferences(UUID userId, List<RoutinePatternRequest> pattern) {
+    private void lockWorkoutReferences(UUID userId, List<RoutinePatternRequest> pattern) {
         if (pattern == null) {
             return;
         }
@@ -230,31 +259,78 @@ public class RoutineService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         if (!workoutIds.isEmpty()
-                && workoutRepository.findAllByIdInAndUserId(workoutIds, userId).size() != workoutIds.size()) {
+                && workoutRepository.findAllByIdInAndUserIdForUpdate(workoutIds, userId).size() != workoutIds.size()) {
             throw new NotFoundException("Workout not found");
         }
     }
 
     @Transactional
-    public void deleteRoutine(String workosId, String id) {
-        User user = userRepository.findByWorkosId(workosId)
+    public RoutineDeleteAck deleteRoutine(String workosId, String id, Long baseVersion, Long profileBaseVersion) {
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
         log.info("Deleting routine for user (userId={}, routineId={})", userId, id);
 
         UUID routineId = UUID.fromString(id);
-        Routine existing = routineRepository.findById(routineId)
+        Routine probe = routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("Routine not found"));
-        if (!userId.equals(existing.getUserId())) {
+        if (!userId.equals(probe.getUserId())) {
             log.warn("Routine deletion denied: routine does not belong to user (userId={}, routineId={})", userId, routineId);
             throw new UnauthorizedException("Not authorized to delete this routine");
         }
-        if (routineId.equals(user.getActiveRoutineId())) {
+        Routine existing = routineRepository.findByIdForUpdate(routineId)
+                .orElseThrow(() -> new NotFoundException("Routine not found"));
+        boolean clearsActive = routineId.equals(user.getActiveRoutineId());
+        requireCompletePreconditions(true, clearsActive, baseVersion, profileBaseVersion);
+        requireVersion(baseVersion, existing.getVersion(), "Routine");
+        if (clearsActive) {
+            requireVersion(profileBaseVersion, user.getProfileVersion(), "Profile");
             user.setActiveRoutineId(null);
+            user.setProfileVersion(user.getProfileVersion() + 1);
             userRepository.save(user);
         }
         routinePatternRepository.deleteByRoutineId(routineId);
         routineRepository.deleteById(routineId);
+        routineRepository.flush();
+        userRepository.flush();
         log.info("Deleted routine successfully (userId={}, routineId={})", userId, routineId);
+        return RoutineDeleteAck.builder()
+                .deletedRoutineId(routineId)
+                .profileVersion(clearsActive ? user.getProfileVersion() : null)
+                .build();
+    }
+
+    private boolean changesActivePointer(User user, Routine routine, Boolean active) {
+        if (active == null) {
+            return false;
+        }
+        return active ? !routine.getId().equals(user.getActiveRoutineId())
+                : routine.getId().equals(user.getActiveRoutineId());
+    }
+
+    private void requireCompletePreconditions(
+            boolean routineMutation,
+            boolean profileMutation,
+            Long baseVersion,
+            Long profileBaseVersion) {
+        boolean versioned = baseVersion != null || profileBaseVersion != null;
+        if (!versioned) {
+            return;
+        }
+        if ((routineMutation && baseVersion == null) || (profileMutation && profileBaseVersion == null)) {
+            throw new BadRequestException("Versioned request must include every affected root version");
+        }
+    }
+
+    private void requireVersion(Long supplied, long current, String entityName) {
+        if (supplied != null && supplied.longValue() != current) {
+            throw new StaleVersionException(entityName + " changed since it was downloaded", current);
+        }
+    }
+
+    private void requireVersion(Long supplied, Long current, String entityName) {
+        if (supplied != null && !supplied.equals(current)) {
+            throw new StaleVersionException(entityName + " changed since it was downloaded", current);
+        }
     }
 }

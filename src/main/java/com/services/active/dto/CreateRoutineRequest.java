@@ -18,6 +18,9 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "Request payload for creating a new routine")
 public class CreateRoutineRequest {
+    @Schema(description = "Profile version used when the new routine becomes active")
+    private Long profileBaseVersion;
+
     @NotBlank(message = "Name is required")
     @Schema(description = "Routine name", example = "Push/Pull/Legs")
     private String name;

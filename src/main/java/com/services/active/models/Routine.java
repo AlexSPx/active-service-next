@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -41,4 +42,8 @@ public class Routine {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private RoutineType routineType = RoutineType.SEQUENTIAL;
+
+    @Version
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long version;
 }
