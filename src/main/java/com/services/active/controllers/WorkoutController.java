@@ -2,6 +2,8 @@ package com.services.active.controllers;
 
 import com.services.active.dto.CreateWorkoutRequest;
 import com.services.active.dto.UserWorkoutResponse;
+import com.services.active.dto.WorkoutDeleteAck;
+import com.services.active.dto.WorkoutDeleteRequest;
 import com.services.active.models.Workout;
 import com.services.active.services.WorkoutService;
 import com.services.active.services.IdempotencyService;
@@ -116,20 +118,33 @@ public class WorkoutController {
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
         @ApiResponse(responseCode = "404", description = "Workout not found")
     })
-    public ResponseEntity<Void> deleteWorkout(
+    public ResponseEntity<?> deleteWorkout(
             Principal principal,
             @PathVariable("workoutId") String workoutId,
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestParam(value = "baseVersion", required = false) Long baseVersion) {
         if (principal == null) {
             log.warn("Rejecting workout deletion request because principal is missing (workoutId={})", workoutId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received workout deletion request (workoutId={})", workoutId);
-        idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/workouts/" + workoutId,
-                null, Void.class, () -> {
-                    workoutService.deleteWorkout(principal.getName(), workoutId);
-                    return null;
-                });
-        return ResponseEntity.noContent().build();
+        if (baseVersion == null) {
+            idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/workouts/" + workoutId,
+                    null, Void.class, () -> {
+                        workoutService.deleteWorkout(principal.getName(), workoutId, null);
+                        return null;
+                    });
+            return ResponseEntity.noContent().build();
+        }
+        WorkoutDeleteRequest fingerprintRequest = new WorkoutDeleteRequest(baseVersion);
+        WorkoutDeleteAck response = idempotencyService.execute(
+                principal.getName(),
+                idempotencyKey,
+                "DELETE",
+                "/api/workouts/" + workoutId,
+                fingerprintRequest,
+                WorkoutDeleteAck.class,
+                () -> workoutService.deleteWorkout(principal.getName(), workoutId, baseVersion));
+        return ResponseEntity.ok(response);
     }
 }

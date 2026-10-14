@@ -4,6 +4,7 @@ import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.UpdateRoutineRequest;
 import com.services.active.exceptions.ConflictException;
 import com.services.active.exceptions.NotFoundException;
+import com.services.active.exceptions.StaleVersionException;
 import com.services.active.models.Routine;
 import com.services.active.dto.RoutinePatternRequest;
 import com.services.active.models.types.DayType;
@@ -55,7 +56,7 @@ class RoutineServiceTest {
         String workosId = "workos-user-1";
         UUID dbUserId = UUID.randomUUID();
 
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.existsByUserIdAndNameIgnoreCase(dbUserId, "PPL")).thenReturn(true);
 
@@ -80,7 +81,7 @@ class RoutineServiceTest {
                 .build();
         Routine saved = Routine.builder().id(r1).name("PPL").userId(dbUserId).build();
 
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.existsByUserIdAndNameIgnoreCase(dbUserId, "PPL")).thenReturn(false);
         when(routineRepository.save(any(Routine.class))).thenReturn(saved);
@@ -111,9 +112,10 @@ class RoutineServiceTest {
         UUID r1 = UUID.randomUUID();
 
         Routine existing = Routine.builder().id(r1).name("Old").userId(dbUserId).build();
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.findById(r1)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(r1)).thenReturn(Optional.of(existing));
         when(routineRepository.existsByUserIdAndNameIgnoreCase(dbUserId, "New")).thenReturn(true);
 
         UpdateRoutineRequest req = UpdateRoutineRequest.builder().name("New").build();
@@ -128,9 +130,10 @@ class RoutineServiceTest {
         UUID r1 = UUID.randomUUID();
 
         Routine existing = Routine.builder().id(r1).name("PPL").userId(dbUserId).build();
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.findById(r1)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(r1)).thenReturn(Optional.of(existing));
 
         UpdateRoutineRequest req = UpdateRoutineRequest.builder().active(true).build();
 
@@ -146,9 +149,10 @@ class RoutineServiceTest {
         UUID r1 = UUID.randomUUID();
 
         Routine existing = Routine.builder().id(r1).name("PPL").userId(dbUserId).build();
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).activeRoutineId(r1).build()));
         when(routineRepository.findById(r1)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(r1)).thenReturn(Optional.of(existing));
 
         UpdateRoutineRequest req = UpdateRoutineRequest.builder().active(false).build();
 
@@ -158,17 +162,75 @@ class RoutineServiceTest {
     }
 
     @Test
+    void updateRoutine_emptyRequestWithStaleBase_rejectsBeforeNoOp() {
+        String workosId = "workos-user-1";
+        UUID dbUserId = UUID.randomUUID();
+        UUID routineId = UUID.randomUUID();
+        Routine existing = Routine.builder()
+                .id(routineId)
+                .name("PPL")
+                .userId(dbUserId)
+                .version(2L)
+                .build();
+        when(userRepository.findByWorkosIdForUpdate(workosId))
+                .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
+        when(routineRepository.findById(routineId)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(routineId)).thenReturn(Optional.of(existing));
+
+        UpdateRoutineRequest request = UpdateRoutineRequest.builder().baseVersion(1L).build();
+
+        assertThrows(StaleVersionException.class,
+                () -> routineService.updateRoutine(workosId, routineId.toString(), request));
+        verify(routineRepository, never()).save(any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRoutine_alreadyActiveWithStaleProfileBase_rejectsBeforeNoOp() {
+        String workosId = "workos-user-1";
+        UUID dbUserId = UUID.randomUUID();
+        UUID routineId = UUID.randomUUID();
+        User user = User.builder()
+                .id(dbUserId)
+                .workosId(workosId)
+                .activeRoutineId(routineId)
+                .profileVersion(3)
+                .build();
+        Routine existing = Routine.builder()
+                .id(routineId)
+                .name("PPL")
+                .userId(dbUserId)
+                .version(0L)
+                .build();
+        when(userRepository.findByWorkosIdForUpdate(workosId)).thenReturn(Optional.of(user));
+        when(routineRepository.findById(routineId)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(routineId)).thenReturn(Optional.of(existing));
+
+        UpdateRoutineRequest request = UpdateRoutineRequest.builder()
+                .active(true)
+                .profileBaseVersion(2L)
+                .build();
+
+        assertThrows(StaleVersionException.class,
+                () -> routineService.updateRoutine(workosId, routineId.toString(), request));
+        assertEquals(routineId, user.getActiveRoutineId());
+        assertEquals(3, user.getProfileVersion());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void deleteRoutine_clearsPointerIfDeletingActive() {
         String workosId = "workos-user-1";
         UUID dbUserId = UUID.randomUUID();
         UUID r1 = UUID.randomUUID();
 
         Routine existing = Routine.builder().id(r1).name("PPL").userId(dbUserId).build();
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).activeRoutineId(r1).build()));
         when(routineRepository.findById(r1)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(r1)).thenReturn(Optional.of(existing));
 
-        routineService.deleteRoutine(workosId, r1.toString());
+        routineService.deleteRoutine(workosId, r1.toString(), null, null);
 
         verify(userRepository, times(1)).save(argThat(u -> u.getActiveRoutineId() == null));
         verify(routineRepository, times(1)).deleteById(r1);
@@ -193,7 +255,7 @@ class RoutineServiceTest {
                 .routineType(RoutineType.WEEKLY_COMPLETION)
                 .build();
 
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.existsByUserIdAndNameIgnoreCase(dbUserId, "ABC Weekly")).thenReturn(false);
         when(routineRepository.save(argThat(r -> r.getRoutineType() == RoutineType.WEEKLY_COMPLETION))).thenReturn(saved);
@@ -220,7 +282,7 @@ class RoutineServiceTest {
                 .routineType(RoutineType.SEQUENTIAL)
                 .build();
 
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.existsByUserIdAndNameIgnoreCase(dbUserId, "PPL")).thenReturn(false);
         when(routineRepository.save(argThat(r -> r.getRoutineType() == RoutineType.SEQUENTIAL))).thenReturn(saved);
@@ -255,9 +317,10 @@ class RoutineServiceTest {
                 .routineType(RoutineType.SEQUENTIAL)
                 //.pattern(new java.util.ArrayList<>(patternWithRest))
                 .build();
-        when(userRepository.findByWorkosId(workosId))
+        when(userRepository.findByWorkosIdForUpdate(workosId))
                 .thenReturn(Optional.of(User.builder().id(dbUserId).workosId(workosId).build()));
         when(routineRepository.findById(r1)).thenReturn(Optional.of(existing));
+        when(routineRepository.findByIdForUpdate(r1)).thenReturn(Optional.of(existing));
         when(routineRepository.save(any(Routine.class))).thenAnswer(inv -> inv.getArgument(0));
         when(routinePatternRepository.findAllByRoutineIdOrderByDayIndexAsc(r1))
                 .thenReturn(patternsWithRest)

@@ -1,5 +1,6 @@
 package com.services.active.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.services.active.models.Workout;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,8 @@ public class UserWorkoutResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private WorkoutTemplateResponse workoutTemplate;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long version;
 
     public static UserWorkoutResponse from(Workout workout, WorkoutTemplateResponse template) {
         return UserWorkoutResponse.builder()
@@ -24,6 +27,7 @@ public class UserWorkoutResponse {
                 .createdAt(workout.getCreatedAt())
                 .updatedAt(workout.getUpdatedAt())
                 .workoutTemplate(template)
+                .version(workout.getVersion())
                 .build();
     }
 }

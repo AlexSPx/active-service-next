@@ -1,5 +1,6 @@
 package com.services.active.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.services.active.models.Routine;
 import com.services.active.models.RoutinePattern;
 import com.services.active.models.types.RoutineType;
@@ -27,6 +28,10 @@ public class RoutineResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<RoutinePattern> pattern;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long version;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long profileVersion;
 
     public static RoutineResponse from(Routine routine, List<RoutinePattern> patterns) {
         return RoutineResponse.builder()
@@ -39,6 +44,13 @@ public class RoutineResponse {
                 .createdAt(routine.getCreatedAt())
                 .updatedAt(routine.getUpdatedAt())
                 .pattern(patterns)
+                .version(routine.getVersion())
                 .build();
+    }
+
+    public static RoutineResponse from(Routine routine, List<RoutinePattern> patterns, Long profileVersion) {
+        RoutineResponse response = from(routine, patterns);
+        response.setProfileVersion(profileVersion);
+        return response;
     }
 }

@@ -39,7 +39,7 @@ public class WorkoutRecordService {
 
     @Transactional
     public com.services.active.dto.WorkoutRecordCreateResponse createWorkoutRecord(String workosId, WorkoutRecordRequest request) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         UUID userId = user.getId();
 
@@ -204,7 +204,7 @@ public class WorkoutRecordService {
 
     @Transactional
     public void deleteWorkoutRecord(String workosId, String workoutRecordId) {
-        User user = userRepository.findByWorkosId(workosId)
+        User user = userRepository.findByWorkosIdForUpdate(workosId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         UUID recordId = UUID.fromString(workoutRecordId);

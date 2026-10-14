@@ -3,6 +3,8 @@ package com.services.active.controllers;
 import com.services.active.dto.CreateRoutineRequest;
 import com.services.active.dto.RoutineResponse;
 import com.services.active.dto.UpdateRoutineRequest;
+import com.services.active.dto.RoutineDeleteAck;
+import com.services.active.dto.RoutineDeleteRequest;
 import com.services.active.services.RoutineService;
 import com.services.active.services.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,21 +126,36 @@ public class RoutineController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "404", description = "Routine not found")
     })
-    public ResponseEntity<Void> deleteRoutine(
+    public ResponseEntity<?> deleteRoutine(
             Principal principal,
             @PathVariable("routineId") String routineId,
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestParam(value = "baseVersion", required = false) Long baseVersion,
+            @RequestParam(value = "profileBaseVersion", required = false) Long profileBaseVersion) {
         if (principal == null) {
             log.warn("Rejecting routine deletion request because principal is missing (routineId={})", routineId);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         log.info("Received routine deletion request (routineId={})", routineId);
-        idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/routines/" + routineId,
-                null, Void.class, () -> {
-                    routineService.deleteRoutine(principal.getName(), routineId);
-                    return null;
-                });
-        return ResponseEntity.noContent().build();
+        if (baseVersion == null && profileBaseVersion == null) {
+            idempotencyService.execute(principal.getName(), idempotencyKey, "DELETE", "/api/routines/" + routineId,
+                    null, Void.class, () -> {
+                        routineService.deleteRoutine(principal.getName(), routineId, null, null);
+                        return null;
+                    });
+            return ResponseEntity.noContent().build();
+        }
+        RoutineDeleteRequest fingerprintRequest = new RoutineDeleteRequest(baseVersion, profileBaseVersion);
+        RoutineDeleteAck response = idempotencyService.execute(
+                principal.getName(),
+                idempotencyKey,
+                "DELETE",
+                "/api/routines/" + routineId,
+                fingerprintRequest,
+                RoutineDeleteAck.class,
+                () -> routineService.deleteRoutine(
+                        principal.getName(), routineId, baseVersion, profileBaseVersion));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/active", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)

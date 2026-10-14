@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Request payload for updating an existing workout")
 public class UpdateWorkoutRequest {
+    @Schema(description = "Last server version acknowledged by the client")
+    private Long baseVersion;
+
     @Schema(description = "Name of the workout", example = "Push Day Workout")
     private String title;
 

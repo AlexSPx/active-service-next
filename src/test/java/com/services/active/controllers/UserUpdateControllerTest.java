@@ -5,6 +5,7 @@ import com.services.active.config.IntegrationTestBase;
 import com.services.active.config.user.TestUserContext;
 import com.services.active.config.user.WithTestUser;
 import com.services.active.dto.UpdateUserRequest;
+import com.services.active.dto.BodyMeasurementsRequest;
 import com.services.active.models.user.User;
 import com.services.active.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -79,5 +80,63 @@ class UserUpdateControllerTest extends IntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("NewFirst"))
                 .andExpect(jsonPath("$.lastName").value("NewLast"));
+    }
+
+    @Test
+    void updateUser_staleProfileVersionPreservesAcceptedEdit(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        long baseVersion = user.getProfileVersion();
+        UpdateUserRequest accepted = UpdateUserRequest.builder()
+                .baseVersion(baseVersion)
+                .timezone("Europe/Paris")
+                .build();
+        mockMvc.perform(patch("/api/user/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accepted)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileVersion").value(baseVersion + 1));
+
+        UpdateUserRequest stale = UpdateUserRequest.builder()
+                .baseVersion(baseVersion)
+                .timezone("Europe/Berlin")
+                .build();
+        mockMvc.perform(patch("/api/user/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(stale)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STALE_VERSION"))
+                .andExpect(jsonPath("$.currentVersion").value(baseVersion + 1));
+
+        User persisted = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(persisted.getTimezone()).isEqualTo("Europe/Paris");
+        assertThat(persisted.getProfileVersion()).isEqualTo(baseVersion + 1);
+    }
+
+    @Test
+    void updateUser_unchangedEditableFieldsAndEmptyMeasurementsKeepProfileVersion(
+            @TestUserContext String token,
+            @TestUserContext User user) throws Exception {
+        User current = userRepository.findById(user.getId()).orElseThrow();
+        long baseVersion = current.getProfileVersion();
+        UpdateUserRequest request = UpdateUserRequest.builder()
+                .baseVersion(baseVersion)
+                .username(current.getUsername())
+                .timezone(current.getTimezone())
+                .registrationCompleted(current.isRegistrationCompleted())
+                .measurements(new BodyMeasurementsRequest())
+                .build();
+
+        mockMvc.perform(patch("/api/user/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileVersion").value(baseVersion));
+
+        User persisted = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(persisted.getProfileVersion()).isEqualTo(baseVersion);
     }
 }
