@@ -52,7 +52,7 @@ The script uses only the Python standard library. Regeneration resets status to 
 
 ## Importer handoff
 
-`ExerciseCatalogImporter.importPinnedCatalog()` imports the embedded snapshot. `importCatalog(String json)` accepts a complete authoritative snapshot, validates it before DB interaction, and uses the same reviewed baseline manifest for legacy matching. Call the Spring bean so `@Transactional` applies. No endpoint is added in this slice.
+`ExerciseCatalogImporter.importPinnedCatalog()` imports the embedded snapshot. `importCatalog(String json)` accepts a complete authoritative snapshot, validates it before DB interaction, and uses the same reviewed baseline manifest for legacy matching. Call the Spring bean so `@Transactional` applies. The read-only [catalog endpoint](exercise-catalog-endpoint.md) exposes persisted items and mapping readiness without invoking the importer.
 
 The importer serializes calls across service instances with PostgreSQL transaction advisory lock `714876001`, then reads and synchronizes the catalog in that transaction. UUID primary keys and references remain intact. Known source keys update metadata in place; missing mapped keys retire; restored keys reactivate. Unmapped legacy rows never retire. Source keys and retirement flags are hidden from existing Exercise JSON; current search semantics are preserved, including access to retired history.
 
