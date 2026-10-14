@@ -1,0 +1,3535 @@
+{
+  "status": "reviewed",
+  "approval": {
+    "reviewer": "Codex parent orchestrator",
+    "scope": "Exact stored-field fingerprint matching only when exactly one unmapped legacy UUID candidate exists. No name-only binding or human sign-off.",
+    "evidence": "Parent reviewed audit script, all nine legacy fields, old loader, enum converters and V1 schema; audit passed: 876 keys, 876 unique fingerprints, exact 1:1 reproducibility; pinned dataset SHA256 5bb747e3fc658f095a60dcbf6d53c96627acdcc6ffb6fffde86f7e26995d40bf, revision f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5; Unlicense included."
+  },
+  "source": {
+    "repository": "https://github.com/yuhonas/free-exercise-db",
+    "revision": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "path": "dist/exercises.json",
+    "sha256": "5bb747e3fc658f095a60dcbf6d53c96627acdcc6ffb6fffde86f7e26995d40bf"
+  },
+  "fingerprint": {
+    "algorithm": "SHA-256",
+    "canonicalization": "UTF-8 compact JSON object with lexicographically sorted keys; fields are the nine persisted Exercise fields only; enum values use their Java enum constant names; nulls remain null; arrays preserve source order.",
+    "storedFields": [
+      "name",
+      "level",
+      "force",
+      "mechanic",
+      "equipment",
+      "primaryMuscles",
+      "secondaryMuscles",
+      "instructions",
+      "category"
+    ]
+  },
+  "entries": [
+    {
+      "sourceKey": "3_4_Sit-Up",
+      "legacyFingerprint": "40c648f2d72184bc5ef366fd18541f7912e0be6c6e1df724fd9bcb9aa542ba05"
+    },
+    {
+      "sourceKey": "90_90_Hamstring",
+      "legacyFingerprint": "4f10856b378a47163e704e51aca4d795624563ccdca154a8bdba88ba20420fa9"
+    },
+    {
+      "sourceKey": "Ab_Crunch_Machine",
+      "legacyFingerprint": "2764b6b6e88efe06ff847b9d35e83b687cf2250bc209c6c2a5a9fd9ee852f471"
+    },
+    {
+      "sourceKey": "Ab_Roller",
+      "legacyFingerprint": "5d4ceccdb1c35f8aef6f432cb7e5f032ece118eb4379c776eca1fd0a82626287"
+    },
+    {
+      "sourceKey": "Adductor",
+      "legacyFingerprint": "70bb46ccd37b178d7ec82d014cc0466cded8531a534eb8bfecbe585bdd9d0e2b"
+    },
+    {
+      "sourceKey": "Adductor_Groin",
+      "legacyFingerprint": "ce13221d51010eb38c960d0cea2ff5c3809cc06cdb4d654ded9d4b7182b58ffb"
+    },
+    {
+      "sourceKey": "Advanced_Kettlebell_Windmill",
+      "legacyFingerprint": "1d8be7c7d8f706c2cef47475260061782d42cc5c4616ce6986a5547c9217be9d"
+    },
+    {
+      "sourceKey": "Air_Bike",
+      "legacyFingerprint": "603667157f6c2879cffc5a84be55767338f765d6ec904ab2153df14962cb3bee"
+    },
+    {
+      "sourceKey": "All_Fours_Quad_Stretch",
+      "legacyFingerprint": "8115fa7d9c123633f5ca70c5640a99db404aa31b26d0cfcca23b9985d9b64a17"
+    },
+    {
+      "sourceKey": "Alternate_Hammer_Curl",
+      "legacyFingerprint": "0513ff45ab723eea46c101b75a9a61744f9ee05b39fc4006b659f1cccb2de85f"
+    },
+    {
+      "sourceKey": "Alternate_Heel_Touchers",
+      "legacyFingerprint": "785f75a74e394c81d670562ad8c0ceb7f239cf0c8c2085f7283c92410e6bee0f"
+    },
+    {
+      "sourceKey": "Alternate_Incline_Dumbbell_Curl",
+      "legacyFingerprint": "14e786640cf035c7f92472894540fefd7f3d91fd7eec2b7af575a7b0a7f5ca50"
+    },
+    {
+      "sourceKey": "Alternate_Leg_Diagonal_Bound",
+      "legacyFingerprint": "cd482fd4064cc73888f5cddf40915a5d5e10b921c696a0edd8a924096764ffcd"
+    },
+    {
+      "sourceKey": "Alternating_Cable_Shoulder_Press",
+      "legacyFingerprint": "87fb5e865a131ff7823d0a2329decbb154e463a480e56dd42b233bf10f5d7438"
+    },
+    {
+      "sourceKey": "Alternating_Deltoid_Raise",
+      "legacyFingerprint": "60cd19b8eaf6eb729b52d028274e645e516219a31f57513d1fc4174421ca008c"
+    },
+    {
+      "sourceKey": "Alternating_Floor_Press",
+      "legacyFingerprint": "ca7e954554d72cac8eb122445e51da36e26657bdb3bee09eb80e34599fa64a56"
+    },
+    {
+      "sourceKey": "Alternating_Hang_Clean",
+      "legacyFingerprint": "6fdf0233f1b48cab8ff4ab6fd1e596f2562649e6d5632f5b9edeae28aa29b0c7"
+    },
+    {
+      "sourceKey": "Alternating_Kettlebell_Press",
+      "legacyFingerprint": "0c836ae842dad719a5982442cc6b6891931a739a844cbef947ee514645da735a"
+    },
+    {
+      "sourceKey": "Alternating_Kettlebell_Row",
+      "legacyFingerprint": "f967c54c507ced5d0506cecf2fb0366b45b574a3f1573e6d6b308307402e17b9"
+    },
+    {
+      "sourceKey": "Alternating_Renegade_Row",
+      "legacyFingerprint": "266e31914a1660d32be4b46ac405fdbdc19cdaad9f7614d5ddeb3e9318102c3a"
+    },
+    {
+      "sourceKey": "Ankle_Circles",
+      "legacyFingerprint": "8b92c0c43022bc6c8be1388176516b17979fa105992d47bb57b134ebe15fad5c"
+    },
+    {
+      "sourceKey": "Ankle_On_The_Knee",
+      "legacyFingerprint": "d71d8f3f654a655a88e63a3b644495b8466a18deaabd8e899996dc65806db78c"
+    },
+    {
+      "sourceKey": "Anterior_Tibialis-SMR",
+      "legacyFingerprint": "e86550de114df6ca69a43a0a123d0ddc6939c15bb28eadcbc820df84a4292be8"
+    },
+    {
+      "sourceKey": "Anti-Gravity_Press",
+      "legacyFingerprint": "670fff4d0c6ccac7656e6f6130d62cdb1dccadaee1f2fe4724354586a0073292"
+    },
+    {
+      "sourceKey": "Arm_Circles",
+      "legacyFingerprint": "47a5ce9fe5046ae96657e786c5243cd995303518623caf00e50abd6ced7aa1e2"
+    },
+    {
+      "sourceKey": "Arnold_Dumbbell_Press",
+      "legacyFingerprint": "c6f85c680905035d03923794cce87033b3fe7f371c66bc40c4b98de6e601d906"
+    },
+    {
+      "sourceKey": "Around_The_Worlds",
+      "legacyFingerprint": "1ec3ce1e843e1f3954b71c532a7497bb24325c0680f84e261d8fdc457ac907db"
+    },
+    {
+      "sourceKey": "Atlas_Stone_Trainer",
+      "legacyFingerprint": "14b2aab1e5aca34150a1286b5f0894306d3e9419a9caefe4d75a2ed2779a0982"
+    },
+    {
+      "sourceKey": "Atlas_Stones",
+      "legacyFingerprint": "b56b00580721418486bba65281cd3f59f50d5aab2e0895900f2a752df7903342"
+    },
+    {
+      "sourceKey": "Axle_Deadlift",
+      "legacyFingerprint": "6e7fcc8b52a3711b8bcc9dde07f6430cb85649746b72b04fa3313c0df15941fc"
+    },
+    {
+      "sourceKey": "Back_Flyes_-_With_Bands",
+      "legacyFingerprint": "6a744506666a3f62bca186bd74cd0a2f1baf5e273e1ee909eb519289e2446574"
+    },
+    {
+      "sourceKey": "Backward_Drag",
+      "legacyFingerprint": "724cb29d5a26b6f37e28d5d6d2d20d2bc3fecfd0f7480f53ad552c539b04f239"
+    },
+    {
+      "sourceKey": "Backward_Medicine_Ball_Throw",
+      "legacyFingerprint": "6db276f4878bd08e0fadc92c6c30437976922ed1bdce42a53d3b90be198eeb98"
+    },
+    {
+      "sourceKey": "Balance_Board",
+      "legacyFingerprint": "2c6bda01f384606c0ba3a9bba5a7c032f9a9d068db2cd44bc1695bd77e82aa21"
+    },
+    {
+      "sourceKey": "Ball_Leg_Curl",
+      "legacyFingerprint": "822c580907cf76d90b7ec7170c6920dd95fd5aa6324e023f4567e5a50064d277"
+    },
+    {
+      "sourceKey": "Band_Assisted_Pull-Up",
+      "legacyFingerprint": "d915b309926f8c6e4b1fba716eccd52101cb098c3cf5bbc9c7f4dc9da8131e05"
+    },
+    {
+      "sourceKey": "Band_Good_Morning",
+      "legacyFingerprint": "78913ecfbd044ee86830e09841d1eeb981516ce598cc9b9addc8ff61009b7cf7"
+    },
+    {
+      "sourceKey": "Band_Good_Morning_Pull_Through",
+      "legacyFingerprint": "a5bd5c511a0b01850504ab36a53aa017a98cb2ffed9135030615a3ff3dc82036"
+    },
+    {
+      "sourceKey": "Band_Hip_Adductions",
+      "legacyFingerprint": "76a70847bf98459fe7317f91a9b90fa3932b9d269e58a0dfa6d888eb343913d9"
+    },
+    {
+      "sourceKey": "Band_Pull_Apart",
+      "legacyFingerprint": "c0343278d43cb9074794b398a3099720d6ab7f7383ca5b63b6ac43431d6d35be"
+    },
+    {
+      "sourceKey": "Band_Skull_Crusher",
+      "legacyFingerprint": "fcdb9bf7049c0096c284ee7f151a3631f25aa286a3f7903dfc69591048768f5a"
+    },
+    {
+      "sourceKey": "Barbell_Ab_Rollout",
+      "legacyFingerprint": "8a91a54d2259fbbd1dc463abd0d2cc435de40c797475466d3fded436dd4f4517"
+    },
+    {
+      "sourceKey": "Barbell_Ab_Rollout_-_On_Knees",
+      "legacyFingerprint": "780a1e43a906f1bfb549a61cd60390d40e3df984c7fa0e40bb8dfac39fb70142"
+    },
+    {
+      "sourceKey": "Barbell_Bench_Press_-_Medium_Grip",
+      "legacyFingerprint": "f021dffe81ec3cc989b8d432bb0adb2078a74f841a58d0a2f759c1a3e5b99d0f"
+    },
+    {
+      "sourceKey": "Barbell_Curl",
+      "legacyFingerprint": "643dedf5711272662f376294c52a569cfda46dee0a3fc3ba1fe0b2d0a75c08cc"
+    },
+    {
+      "sourceKey": "Barbell_Curls_Lying_Against_An_Incline",
+      "legacyFingerprint": "fefb10e470c21aadb7cc9504e89b4110ea5ed4d9a305cfaddb82e0c3d198ba08"
+    },
+    {
+      "sourceKey": "Barbell_Deadlift",
+      "legacyFingerprint": "a73156de61a61aff1903c7006111a1ccc0ab269d52901c4121a254c52eabb1ae"
+    },
+    {
+      "sourceKey": "Barbell_Full_Squat",
+      "legacyFingerprint": "75e1f74cfc450b1babcc826e8801f297b97e9793bc03655b853bc905d41ec5b9"
+    },
+    {
+      "sourceKey": "Barbell_Glute_Bridge",
+      "legacyFingerprint": "a409103b76955a488eb6055e4e6bd0a6ddde7201b5fadc8222425184bd39d956"
+    },
+    {
+      "sourceKey": "Barbell_Guillotine_Bench_Press",
+      "legacyFingerprint": "6ce3f85e9f947362d129e93ac65579a5086bf6ae228f03b573d4bb848f17be4f"
+    },
+    {
+      "sourceKey": "Barbell_Hack_Squat",
+      "legacyFingerprint": "2b763d1e15e87b2a35f6be8cfa8b2eb8372b43163760c53a29989af9f6dcc6bd"
+    },
+    {
+      "sourceKey": "Barbell_Hip_Thrust",
+      "legacyFingerprint": "d85d8d337969cdfad27f615596174491fa787e40caae6d4d9ef9582d555c8b13"
+    },
+    {
+      "sourceKey": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+      "legacyFingerprint": "6aed8e9df333f89d0c7360ea191d77ed5ed4bbc314c6aa01d006ca20889631e2"
+    },
+    {
+      "sourceKey": "Barbell_Incline_Shoulder_Raise",
+      "legacyFingerprint": "dd85022a9b1b27357ef8de37f4f6a0590c91165c43e99adf6d0475381299a94e"
+    },
+    {
+      "sourceKey": "Barbell_Lunge",
+      "legacyFingerprint": "ec6fab90f69ca910653e1292f0e73f6fb22d4ade49ea8438e345bd8ff1666568"
+    },
+    {
+      "sourceKey": "Barbell_Rear_Delt_Row",
+      "legacyFingerprint": "ecf85ad7337fc72e82d8f8dc0960777f746e2589e74f3eed1ad577c3bb510967"
+    },
+    {
+      "sourceKey": "Barbell_Rollout_from_Bench",
+      "legacyFingerprint": "c9300ed5ad8161dacbf37266ccdac65877e333fed36b7e62b4328b4de2b5bd6b"
+    },
+    {
+      "sourceKey": "Barbell_Seated_Calf_Raise",
+      "legacyFingerprint": "0222690d9f05c49102471db47a1d04d89bcaf5653b1884b5c8ce6d7cd56618da"
+    },
+    {
+      "sourceKey": "Barbell_Shoulder_Press",
+      "legacyFingerprint": "899ab80ff04367fc3fed3a888ba0a363fcbbbda436a9d5361f7db8364ffb544a"
+    },
+    {
+      "sourceKey": "Barbell_Shrug",
+      "legacyFingerprint": "a40f4b1df7e20283c52fd77ebe95d8cc475eeff6e8bc042251128ff54e801530"
+    },
+    {
+      "sourceKey": "Barbell_Shrug_Behind_The_Back",
+      "legacyFingerprint": "a2e91ea8690f8301c2f9d029726813715f7577f173980f07b4138d6502eee8a4"
+    },
+    {
+      "sourceKey": "Barbell_Side_Bend",
+      "legacyFingerprint": "ba4ab9a7195d1e79d2ac092f19de4f2d698aa810c00681b1375b232c0c7602aa"
+    },
+    {
+      "sourceKey": "Barbell_Side_Split_Squat",
+      "legacyFingerprint": "76297ef2fb94adb56b0178aca5748441c4284dccf08034e295b35abe95b2326b"
+    },
+    {
+      "sourceKey": "Barbell_Squat",
+      "legacyFingerprint": "df74bc99d6f3089fd6afd67e513f49f16e7240dfd2619f744960234ff375a20b"
+    },
+    {
+      "sourceKey": "Barbell_Squat_To_A_Bench",
+      "legacyFingerprint": "f0f7bf17f4824003f04d8e3942b6d4b2172cb8b69d4dabfdc0314310cdbf0c7b"
+    },
+    {
+      "sourceKey": "Barbell_Step_Ups",
+      "legacyFingerprint": "490c4a22c4eabe41a633036d3e94367d978ea500fb20ea75feb4427df57e5bea"
+    },
+    {
+      "sourceKey": "Barbell_Walking_Lunge",
+      "legacyFingerprint": "9b2a9ac302497578f941476fde2b2f0588d8f8c95db12e1cc3426584f451a64e"
+    },
+    {
+      "sourceKey": "Battling_Ropes",
+      "legacyFingerprint": "e6af89678256f7efda49c5d83da4f13b5cac09008b5b8aecafa060f8f9b59f0d"
+    },
+    {
+      "sourceKey": "Bear_Crawl_Sled_Drags",
+      "legacyFingerprint": "af3f46e9d38a3ac0ef3598eb860c5ee0b0e06d342b73389b9a5fab692b34c4b3"
+    },
+    {
+      "sourceKey": "Behind_Head_Chest_Stretch",
+      "legacyFingerprint": "d4e59a7f48c4d2585ef1b0a3071c84147246df3479fa42d90d39151aa4f6965e"
+    },
+    {
+      "sourceKey": "Bench_Dips",
+      "legacyFingerprint": "5965c09728dcfffc6cee283878f2a8b725ef558ef2da920027c0421b50e87b66"
+    },
+    {
+      "sourceKey": "Bench_Jump",
+      "legacyFingerprint": "9f11f5e7660b638ef2ba73ed8b6e862f6955ea547e684200512f81cf215c153a"
+    },
+    {
+      "sourceKey": "Bench_Press_-_Powerlifting",
+      "legacyFingerprint": "85174d20a39c055e9ee3acd81d90295d2926bf494b794148700420d8367c05ab"
+    },
+    {
+      "sourceKey": "Bench_Press_-_With_Bands",
+      "legacyFingerprint": "5eeab523d91e378e573174a6b8deedbea3539597222243454516dae13d66b852"
+    },
+    {
+      "sourceKey": "Bench_Press_with_Chains",
+      "legacyFingerprint": "15560ca7f1187daa62a15e8b8af97756ecb3ee9d8bf6b5d6dea9814ddb552e6a"
+    },
+    {
+      "sourceKey": "Bench_Sprint",
+      "legacyFingerprint": "fc611f44d6e167e1c3f5040d458a1921569e6752070ae1b4a29690878d06abc5"
+    },
+    {
+      "sourceKey": "Bent-Arm_Barbell_Pullover",
+      "legacyFingerprint": "877bcd4859d29a119ba9d8dbdf7d6c655cf4b86ddc1a8b42cf122ac34e9dee8d"
+    },
+    {
+      "sourceKey": "Bent-Arm_Dumbbell_Pullover",
+      "legacyFingerprint": "b8192698f203d149e5a2cdf89922f44dd32374e30556b20081c6a74d36fa5057"
+    },
+    {
+      "sourceKey": "Bent-Knee_Hip_Raise",
+      "legacyFingerprint": "39399d761e2ae6c936d261f593ec173c279132f6e5a873db4db3e567b68c89fe"
+    },
+    {
+      "sourceKey": "Bent_Over_Barbell_Row",
+      "legacyFingerprint": "974b0fe62b7caf5f30477a7e3f0ac762a53c0eb611d48e7c54470fe908512946"
+    },
+    {
+      "sourceKey": "Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench",
+      "legacyFingerprint": "3e712ce2606abbe4d5758d13b75c9377068c16cfa79268a305e484ac32067143"
+    },
+    {
+      "sourceKey": "Bent_Over_Low-Pulley_Side_Lateral",
+      "legacyFingerprint": "a7b63046fad0ea9eabb106c890a5e19259964b0e66ca1f24bf8433279ac29fa0"
+    },
+    {
+      "sourceKey": "Bent_Over_One-Arm_Long_Bar_Row",
+      "legacyFingerprint": "027cc9524f7e6eb8d71d73701fe7936f33ba4db6367783bebcf16e7962ec0c99"
+    },
+    {
+      "sourceKey": "Bent_Over_Two-Arm_Long_Bar_Row",
+      "legacyFingerprint": "30539e1cfb6e61d7b512013d6931a0bf56df352d251af3edc86f9b49ca106917"
+    },
+    {
+      "sourceKey": "Bent_Over_Two-Dumbbell_Row",
+      "legacyFingerprint": "4e4932e4f8094457091a9154d01c9ab838bbf31835d9761a66bfbe35aa67278d"
+    },
+    {
+      "sourceKey": "Bent_Over_Two-Dumbbell_Row_With_Palms_In",
+      "legacyFingerprint": "756616dc0c2ddea630ef4e31b18e1e78a0adf021d2b3be697229c56b76692e4c"
+    },
+    {
+      "sourceKey": "Bent_Press",
+      "legacyFingerprint": "1875066f175ad176a4428d28ab1ad38ae5185e313e3bfdce49b65ffbe69d99c8"
+    },
+    {
+      "sourceKey": "Bicycling",
+      "legacyFingerprint": "0940840d38fae9483de4b60fd242db044e123ae9e7f88684b4a8e94e5d8e02d7"
+    },
+    {
+      "sourceKey": "Bicycling_Stationary",
+      "legacyFingerprint": "6d9cfdc795b9dec8f6fe664fd0551ca9906c6de06daf49c67637b7283fa76413"
+    },
+    {
+      "sourceKey": "Board_Press",
+      "legacyFingerprint": "a951df54675f89f623aa612f1453b64bf72a49b87ca161fbaf58b5de061dcf70"
+    },
+    {
+      "sourceKey": "Body-Up",
+      "legacyFingerprint": "68af9f253498187787b91c8ead14ba84955fc7233e79296169281764c8ac5244"
+    },
+    {
+      "sourceKey": "Body_Tricep_Press",
+      "legacyFingerprint": "e8fb0ed658a52efb3cd9a4cae196a954bd486357b55ebc15796c5815b60b7908"
+    },
+    {
+      "sourceKey": "Bodyweight_Flyes",
+      "legacyFingerprint": "1dd503da3747e416d63984817983b0d8d4df43fa169ec7a64507dff287e243fd"
+    },
+    {
+      "sourceKey": "Bodyweight_Mid_Row",
+      "legacyFingerprint": "e09a312587f6168b4fb734e15481adcf29f66a690a4e04cf1886b33e832b0fa3"
+    },
+    {
+      "sourceKey": "Bodyweight_Squat",
+      "legacyFingerprint": "7e5923850769b4351127caf133e5538c3db08fed1c2322ea96cbc8ea08ad220a"
+    },
+    {
+      "sourceKey": "Bodyweight_Walking_Lunge",
+      "legacyFingerprint": "fc0832f2f7fed582d92e02c1a7e1155b9b29102b54baad1cdb0271aec32ebad8"
+    },
+    {
+      "sourceKey": "Bosu_Ball_Cable_Crunch_With_Side_Bends",
+      "legacyFingerprint": "31df8af27e1b81de73cd1cfdd888d5b171ae84c8c76586b9ca023459ee302d78"
+    },
+    {
+      "sourceKey": "Bottoms-Up_Clean_From_The_Hang_Position",
+      "legacyFingerprint": "8592f1378018e3c6eafcbbfb3525cbe29da64579c2083a9bf50d889e56eb1f89"
+    },
+    {
+      "sourceKey": "Bottoms_Up",
+      "legacyFingerprint": "2620dd03cedce1b7653a70fdb95d13108e96ecd83a0249930f75b7497e0f67ab"
+    },
+    {
+      "sourceKey": "Box_Jump_Multiple_Response",
+      "legacyFingerprint": "7f6a2fef4b514e3a5e1e433149f39fe8091a47177bb92d97cc338f844a8290ea"
+    },
+    {
+      "sourceKey": "Box_Skip",
+      "legacyFingerprint": "9bcf46c340774af2db064313d616bcc50d3f5210f8d2a449ef44de0b755440a8"
+    },
+    {
+      "sourceKey": "Box_Squat",
+      "legacyFingerprint": "7d554aae775294cc9372515b255b9be7249e943ac0ca5118735c9ea70eee5549"
+    },
+    {
+      "sourceKey": "Box_Squat_with_Bands",
+      "legacyFingerprint": "8f014a14dec4738c06fd5f24b2dbe3c5270835488491d8aa5f1bb16d3f68eae9"
+    },
+    {
+      "sourceKey": "Box_Squat_with_Chains",
+      "legacyFingerprint": "2abec609fec2d736e05d72006f3ef69cd6a8da4155b4e7503e38d8c32f3e9f0e"
+    },
+    {
+      "sourceKey": "Brachialis-SMR",
+      "legacyFingerprint": "fd68af497e711fa97db1ceeb29cc44f707778273771868ddb989dcb83f41126a"
+    },
+    {
+      "sourceKey": "Bradford_Rocky_Presses",
+      "legacyFingerprint": "6db0e18bf3f2304aeedd5d2456ecbc215414b1ec8ace5d2015980fe64865d3b3"
+    },
+    {
+      "sourceKey": "Butt-Ups",
+      "legacyFingerprint": "bb88c3097cf66cb6d6903118039801158224e1b21d3a1440ec76b4e5a6fb8aea"
+    },
+    {
+      "sourceKey": "Butt_Lift_Bridge",
+      "legacyFingerprint": "872d8df2f04e2cade4b3cd3630e913dd35d6742f1c1089d77e49ef1026c5f193"
+    },
+    {
+      "sourceKey": "Butterfly",
+      "legacyFingerprint": "60f24034d6c1b5f9cd180040cd3ad099b6e0ca5cdc4d1b5a0694a15386b93d9f"
+    },
+    {
+      "sourceKey": "Cable_Chest_Press",
+      "legacyFingerprint": "865951df8eb4c126989b66a963bf518d21349caff9cfc3455ea37273dcaf7da9"
+    },
+    {
+      "sourceKey": "Cable_Crossover",
+      "legacyFingerprint": "2341e8c088a895add1bbc748aacd8ae086373df49307eb97ece2a6900c9ddd06"
+    },
+    {
+      "sourceKey": "Cable_Crunch",
+      "legacyFingerprint": "cb55802dfcf509677ee6660581342b95f100feb82e204035e935d86828f945cd"
+    },
+    {
+      "sourceKey": "Cable_Deadlifts",
+      "legacyFingerprint": "7fb383cd240936704e6ba044ae310d4516a3b66d60d20fe4ef40f54d3f51914b"
+    },
+    {
+      "sourceKey": "Cable_Hammer_Curls_-_Rope_Attachment",
+      "legacyFingerprint": "64413e17fc535515c27da1ade136c4518de7c0514cea0011afa450e264941f91"
+    },
+    {
+      "sourceKey": "Cable_Hip_Adduction",
+      "legacyFingerprint": "e1978333f3353da300f2ccd79b94d988f540a7503edfd3b73bdcfa1e04cac2fc"
+    },
+    {
+      "sourceKey": "Cable_Incline_Pushdown",
+      "legacyFingerprint": "70eadf60779b57cd1261df395bb1e50ac7cbe25c6b3512052d440de5b4a554cd"
+    },
+    {
+      "sourceKey": "Cable_Incline_Triceps_Extension",
+      "legacyFingerprint": "2b8146eb2c0afab6c38d4067ba682d77759afb4fe7d950c87d916773507b7cc9"
+    },
+    {
+      "sourceKey": "Cable_Internal_Rotation",
+      "legacyFingerprint": "81473ab242cfd58af83c39c332b2ede273883e3c54be516b8380bbaa95e8c9d7"
+    },
+    {
+      "sourceKey": "Cable_Iron_Cross",
+      "legacyFingerprint": "63ef5081022af6b3f5a4af9e2fe52c27e2e82a1c47a4f85dbcdf907365680f21"
+    },
+    {
+      "sourceKey": "Cable_Judo_Flip",
+      "legacyFingerprint": "182fd9374d502fafda807e7be247344cd168e1b44828010a8f9d1ab7da341f5a"
+    },
+    {
+      "sourceKey": "Cable_Lying_Triceps_Extension",
+      "legacyFingerprint": "add86eef766cbdd9432acd09e3005033801b050c26683965dd9b3199dd28b316"
+    },
+    {
+      "sourceKey": "Cable_One_Arm_Tricep_Extension",
+      "legacyFingerprint": "9a237398fee7da36aa773eab8fea713654549a5fd58247248134c22256978954"
+    },
+    {
+      "sourceKey": "Cable_Preacher_Curl",
+      "legacyFingerprint": "8bce49889a442ce495093b436fd972b1d4a550bc37741d6edc9680520f1c231e"
+    },
+    {
+      "sourceKey": "Cable_Rear_Delt_Fly",
+      "legacyFingerprint": "bebfa5dcedf373462087b501d520c4f91632eed7b6269b6941fb3be15f2461e2"
+    },
+    {
+      "sourceKey": "Cable_Reverse_Crunch",
+      "legacyFingerprint": "3ca3960f60bda03679c84093b8ba3526e536f6f636fe6ede07996480de82f16d"
+    },
+    {
+      "sourceKey": "Cable_Rope_Overhead_Triceps_Extension",
+      "legacyFingerprint": "768fdbca020a4e4b9e6911b9d2aee1d9be3070bfe640711dc61cf25c0b364c6c"
+    },
+    {
+      "sourceKey": "Cable_Rope_Rear-Delt_Rows",
+      "legacyFingerprint": "3b93625561d6721faa48a466ac5ed33090549e0b7033c8317080c1ca4c1406ed"
+    },
+    {
+      "sourceKey": "Cable_Russian_Twists",
+      "legacyFingerprint": "27e17fd1e49927d541703f98b65523eb15b9e5612d41c026d4e504c4cf3cd78d"
+    },
+    {
+      "sourceKey": "Cable_Seated_Crunch",
+      "legacyFingerprint": "761fc1b8b8657a40360888b61407261d3202fcc57874f8343e1b1a1d3c85701e"
+    },
+    {
+      "sourceKey": "Cable_Seated_Lateral_Raise",
+      "legacyFingerprint": "41c5609c156810705f8dfd46b28d143514c96d9231e1c8f418f1961bf9e5848a"
+    },
+    {
+      "sourceKey": "Cable_Shoulder_Press",
+      "legacyFingerprint": "1eda71cda1567a4f6ebfd86964d7e5d8ed9b714dc4f1af74292d73ff49c522b2"
+    },
+    {
+      "sourceKey": "Cable_Shrugs",
+      "legacyFingerprint": "a5a85ea57f0e3183b1da59bfa113a997f616917f4a2b6a7e7d7ef71c427386e9"
+    },
+    {
+      "sourceKey": "Cable_Wrist_Curl",
+      "legacyFingerprint": "36945f1f1da28e9d9138dc06543aed2a0c5950c005c5f90438021d650ecbe38d"
+    },
+    {
+      "sourceKey": "Calf-Machine_Shoulder_Shrug",
+      "legacyFingerprint": "c10c946976f2060fea002049a179df1643d21a65fc249a365bcf28f606effdfe"
+    },
+    {
+      "sourceKey": "Calf_Press",
+      "legacyFingerprint": "2bc2b9c821b6fd3944bebcfa4eb0bbaf25aeb55d84387b1641cf5941e59fc4c7"
+    },
+    {
+      "sourceKey": "Calf_Press_On_The_Leg_Press_Machine",
+      "legacyFingerprint": "f9e04e54eca158bbf028c52fcf1c4fe13bf1e2829dc1345ceb2e907e4564e5a1"
+    },
+    {
+      "sourceKey": "Calf_Raise_On_A_Dumbbell",
+      "legacyFingerprint": "6b613b7548cc84e33a3f90832c97739629bd9e62539e5df7bb8155881d449b28"
+    },
+    {
+      "sourceKey": "Calf_Raises_-_With_Bands",
+      "legacyFingerprint": "677d4f1ce40c037060e39894e87fc844449d382a89c3feed485965c1bc1ef59a"
+    },
+    {
+      "sourceKey": "Calf_Stretch_Elbows_Against_Wall",
+      "legacyFingerprint": "208da8a777d9fc4a49c40910bd9cfbbd60474753f4a61b411ad0c85d6473c65a"
+    },
+    {
+      "sourceKey": "Calf_Stretch_Hands_Against_Wall",
+      "legacyFingerprint": "6d7fd63207a9d62ccec2c8e57536137d3e3f663d66f246f82d00ec15a92c5203"
+    },
+    {
+      "sourceKey": "Calves-SMR",
+      "legacyFingerprint": "959f5ad2144badb55307412e98965d7bdfbaa75802880270df507b7850084576"
+    },
+    {
+      "sourceKey": "Car_Deadlift",
+      "legacyFingerprint": "cffed86f9fc9f15f9fecd9be0b9e464e7e3b12512b083e75d050374da955e3d3"
+    },
+    {
+      "sourceKey": "Car_Drivers",
+      "legacyFingerprint": "7769473ba38105ee78cb90964b6431bf42cb47603d658e9fdfe2ea70a01e6110"
+    },
+    {
+      "sourceKey": "Carioca_Quick_Step",
+      "legacyFingerprint": "2c44e84577aba80278dc70784a32e4315d7c0cf9b31a2cac55e9cc0c90742eaa"
+    },
+    {
+      "sourceKey": "Cat_Stretch",
+      "legacyFingerprint": "774a040d875b465a08b6fec0ed1fb552b659fc3bab22833c922a20e1e6370a22"
+    },
+    {
+      "sourceKey": "Catch_and_Overhead_Throw",
+      "legacyFingerprint": "6e9bd59701672ad06ec075df451f9daedaae76741838a20ee684538b5ae062bb"
+    },
+    {
+      "sourceKey": "Chain_Handle_Extension",
+      "legacyFingerprint": "f42906f8e64bf35d4b87de78e06687f90ce12fce8999e7387724ee6c9dad279f"
+    },
+    {
+      "sourceKey": "Chain_Press",
+      "legacyFingerprint": "4ae016be675d87dd06a1db4b990c94bc73663a45b2e6d17b25ff9912bb919e62"
+    },
+    {
+      "sourceKey": "Chair_Leg_Extended_Stretch",
+      "legacyFingerprint": "ad51e9844570180e8bbc38259567365fa82e3ce7b51062f47e68fd8ef1868439"
+    },
+    {
+      "sourceKey": "Chair_Lower_Back_Stretch",
+      "legacyFingerprint": "45ff38458e290ca156584d1eb17e35fc73385a42cac32783956a39b4a355eef0"
+    },
+    {
+      "sourceKey": "Chair_Squat",
+      "legacyFingerprint": "902912f5968d25a7c3c72f14da871dfae5f93fa956da12beff4f521dc6b35625"
+    },
+    {
+      "sourceKey": "Chair_Upper_Body_Stretch",
+      "legacyFingerprint": "83d9c24dae974d9bc0f5deac6986a23586b91c31dfa29f50e23cc7a423cf4d80"
+    },
+    {
+      "sourceKey": "Chest_And_Front_Of_Shoulder_Stretch",
+      "legacyFingerprint": "85b52ead75b3e5a4011ed1a506b4e54c23484feca280e8401b073bfdd1edd14a"
+    },
+    {
+      "sourceKey": "Chest_Push_from_3_point_stance",
+      "legacyFingerprint": "2d5a6fa511a9828e6383f93b043dc5c663a478db15e46d34436a9744277a38cb"
+    },
+    {
+      "sourceKey": "Chest_Push_multiple_response",
+      "legacyFingerprint": "e9c41267febe18b5d66d0c040212ce68d2ddeb6d9afd579b9466ab368b76fa3d"
+    },
+    {
+      "sourceKey": "Chest_Push_single_response",
+      "legacyFingerprint": "badbee77a83ff01df51b2d5169ee089718b3cc87b5701fa1af477e18d43e616c"
+    },
+    {
+      "sourceKey": "Chest_Push_with_Run_Release",
+      "legacyFingerprint": "d6bfe2ab9d13d5de295c9d2045450b4b028e40300ab73a3105e7a733e6c8bb53"
+    },
+    {
+      "sourceKey": "Chest_Stretch_on_Stability_Ball",
+      "legacyFingerprint": "3f408f46273a1b2a6a5867168e1c1c0d5ab0589f22244346cbd213de3ffa9439"
+    },
+    {
+      "sourceKey": "Childs_Pose",
+      "legacyFingerprint": "72274c9e752b70b2568a85d0d4f0f72278753dc6718969ca2a447a2733f7aecd"
+    },
+    {
+      "sourceKey": "Chin-Up",
+      "legacyFingerprint": "b3f028eaeace60ca81cb17850f883ab4a30286566fb200de059ad548d9b20a5d"
+    },
+    {
+      "sourceKey": "Chin_To_Chest_Stretch",
+      "legacyFingerprint": "87646f93d2373feaca53d40c8e6a5fd3f8c8a95cd54cc5d4e02ecd5ff21e101f"
+    },
+    {
+      "sourceKey": "Circus_Bell",
+      "legacyFingerprint": "5f10db5ac324d517d20bbd33a3437024b6f8f270ebbdf7014d5a16de1ecb068a"
+    },
+    {
+      "sourceKey": "Clean",
+      "legacyFingerprint": "d8cba29892c4b06fd5cc92927a2dbf97b266068948f9bf40f54149e2b7d6d975"
+    },
+    {
+      "sourceKey": "Clean_Deadlift",
+      "legacyFingerprint": "0daaad4e5ebddf08209687c82df8f2ff90d73d7186813871565206a46d1489a8"
+    },
+    {
+      "sourceKey": "Clean_Pull",
+      "legacyFingerprint": "62002627db47c720f94c97935d6a9ef0218763bb557d1b77afdfb5a06e5115c6"
+    },
+    {
+      "sourceKey": "Clean_Shrug",
+      "legacyFingerprint": "e5ef2dcbde36a47d9698c2011c4a377a2541c777d81ce373ac85f89886ec777f"
+    },
+    {
+      "sourceKey": "Clean_and_Jerk",
+      "legacyFingerprint": "30c3d70bcbc41043e46973b3115744548e3389c1150fd77210ff8d99b217107c"
+    },
+    {
+      "sourceKey": "Clean_and_Press",
+      "legacyFingerprint": "d9b2daebff5d15af111b11a64c177271a0f160f0f1e72e49a724708e363d5e0b"
+    },
+    {
+      "sourceKey": "Clean_from_Blocks",
+      "legacyFingerprint": "e563ec7baa0cb00d592dbd4335ab6bad4b040a757b8cc0cb2ad80d092ed391ae"
+    },
+    {
+      "sourceKey": "Clock_Push-Up",
+      "legacyFingerprint": "344674c64417ca7922c91c221140ce2e3ee266a0edb9d0b2ed98fbdcd3dd4665"
+    },
+    {
+      "sourceKey": "Close-Grip_Barbell_Bench_Press",
+      "legacyFingerprint": "ce86693d984e899f23846974e18beabfef62fba861ad0d0f7d108a6811a6c519"
+    },
+    {
+      "sourceKey": "Close-Grip_Dumbbell_Press",
+      "legacyFingerprint": "5dc79cfa431ba74808c1aa61cc66f83542249954685551fecd77b781c3ba57b5"
+    },
+    {
+      "sourceKey": "Close-Grip_EZ-Bar_Curl_with_Band",
+      "legacyFingerprint": "20dd44b3a9a10772b1445d6c2bcbf99018efb6b50f9a430d7988b91006ac6937"
+    },
+    {
+      "sourceKey": "Close-Grip_EZ-Bar_Press",
+      "legacyFingerprint": "f7d17f685a7634e3f879c9a7f4ef9c3445639e1c966325a6a1d30b9864fc6984"
+    },
+    {
+      "sourceKey": "Close-Grip_EZ_Bar_Curl",
+      "legacyFingerprint": "2f0c627ea0b8eb33d05483a59343d79014bc1f5605449ab6ccf67a068053aa7b"
+    },
+    {
+      "sourceKey": "Close-Grip_Front_Lat_Pulldown",
+      "legacyFingerprint": "60d1c0903da7f7eff16c5a22abdc52cae3f047aec070afecaa5fa270d0bb7750"
+    },
+    {
+      "sourceKey": "Close-Grip_Push-Up_off_of_a_Dumbbell",
+      "legacyFingerprint": "b1d951294769cef9eee2ac999c906638c2499fbf43978eb07e17bade766eeae6"
+    },
+    {
+      "sourceKey": "Close-Grip_Standing_Barbell_Curl",
+      "legacyFingerprint": "a2301de4e265019d0b4f6ffc40e8faa6d56eaa8f0e374035d123ff6f02115d7f"
+    },
+    {
+      "sourceKey": "Cocoons",
+      "legacyFingerprint": "f3037eb9c6faf52ee2586805f53b97b039692a20a4076c8b3f242e7b8f2dc423"
+    },
+    {
+      "sourceKey": "Conans_Wheel",
+      "legacyFingerprint": "97e6fec331f077fe5682d75d9ad41bd3504de7f67742702ddb14b3de17170a9f"
+    },
+    {
+      "sourceKey": "Concentration_Curls",
+      "legacyFingerprint": "a8491899129498fa66a44ba0f48fcd08bdb7f522b072edc5d9676192bceea198"
+    },
+    {
+      "sourceKey": "Cross-Body_Crunch",
+      "legacyFingerprint": "b84bc5e084adc06e07d9c0c0018438d233fbb651d7cd082e8a340f19fb9f909f"
+    },
+    {
+      "sourceKey": "Cross_Body_Hammer_Curl",
+      "legacyFingerprint": "63cd4a1c048fe664e5767731e61fe034f2584e0bfafa60bedff96d1b0688b69c"
+    },
+    {
+      "sourceKey": "Cross_Over_-_With_Bands",
+      "legacyFingerprint": "286e2ccb29d0dcfbbd3abcacba7ed5fe6398e7307239786c7a76981f72bfeabd"
+    },
+    {
+      "sourceKey": "Crossover_Reverse_Lunge",
+      "legacyFingerprint": "cf3d822f3ac0d814df50310df42981aa69276617bb7801ddb151597339ff902b"
+    },
+    {
+      "sourceKey": "Crucifix",
+      "legacyFingerprint": "0f3ef87932a21255d19201acdc253facc4958c3969ce752c3dfb2784fb3549d8"
+    },
+    {
+      "sourceKey": "Crunch_-_Hands_Overhead",
+      "legacyFingerprint": "b6d2252fc37d5bee0e9a5f47926998b0af3f0d7fc6d3fe5bf25a66351772c97f"
+    },
+    {
+      "sourceKey": "Crunch_-_Legs_On_Exercise_Ball",
+      "legacyFingerprint": "c8c7f34e29a61307d347b834a564388a801107a882d77379b10cbc250b796871"
+    },
+    {
+      "sourceKey": "Crunches",
+      "legacyFingerprint": "b534dc0276ec5816dbda58339d1e80e6839ffd80cf583d61a25c94fdb65a72fa"
+    },
+    {
+      "sourceKey": "Cuban_Press",
+      "legacyFingerprint": "acd7dee3605ccce07c537a6412199a4386fdcb68f6db3e4088efd24db9383552"
+    },
+    {
+      "sourceKey": "Dancers_Stretch",
+      "legacyFingerprint": "b0355f72ab254b737c06c0c0cecdbe2812cc62bb5f1ab66821c16c3a4f83b29e"
+    },
+    {
+      "sourceKey": "Dead_Bug",
+      "legacyFingerprint": "6da4de4a2188ceb603d725395c7a199b5c9086d2ce821aa7387343f71e052eb5"
+    },
+    {
+      "sourceKey": "Deadlift_with_Bands",
+      "legacyFingerprint": "8e309bb31f39bf8ab71566a60f953f527e3de051a36ee07202d22cec2fa43f3d"
+    },
+    {
+      "sourceKey": "Deadlift_with_Chains",
+      "legacyFingerprint": "5213c61cc3e29885ae60a5100f8cb55f0d944b3f82def18be90f05e021bb0b94"
+    },
+    {
+      "sourceKey": "Decline_Barbell_Bench_Press",
+      "legacyFingerprint": "3f9518750e9576da455be91a39bbbc831312dd3653180dd135ca53ba62b0f187"
+    },
+    {
+      "sourceKey": "Decline_Close-Grip_Bench_To_Skull_Crusher",
+      "legacyFingerprint": "e69c79de500b27e62d2e2cc30baac664cfca2947359dee5042e094ddbe0b17c7"
+    },
+    {
+      "sourceKey": "Decline_Crunch",
+      "legacyFingerprint": "9fa0d888c5b2722f13a43104a23e1c41280745768d23418a6744d9e09004297d"
+    },
+    {
+      "sourceKey": "Decline_Dumbbell_Bench_Press",
+      "legacyFingerprint": "73a46423aa73aa0cd4b9cf540e69a28a3f0d2ece14ff74f1bc7af673bd140562"
+    },
+    {
+      "sourceKey": "Decline_Dumbbell_Flyes",
+      "legacyFingerprint": "6eefd61018055e3f72fb5e05595d9b0a1ec2c123464d209d6a0b67439863720c"
+    },
+    {
+      "sourceKey": "Decline_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "f09ecc19e26cf1f27d6322a1bb33f8809cf271beac111ae9d4882e020703ef69"
+    },
+    {
+      "sourceKey": "Decline_EZ_Bar_Triceps_Extension",
+      "legacyFingerprint": "97e0d593764ce5acebe53b41c4742f4438b99d2df87264eaaabf9de41702cd86"
+    },
+    {
+      "sourceKey": "Decline_Oblique_Crunch",
+      "legacyFingerprint": "f7842c4ac218b66a0c2195ef1d2d4dc7d5d21bd060adbd607e28f7f59fc7808a"
+    },
+    {
+      "sourceKey": "Decline_Push-Up",
+      "legacyFingerprint": "c5707a98e6f88c11d1b7f2616d2c0405c0ec930a8dcbfa2a6c779e8b4efba8a1"
+    },
+    {
+      "sourceKey": "Decline_Reverse_Crunch",
+      "legacyFingerprint": "d2cd2bc0946c07f8773b2020aff00e5d3619cc8b7001a55c5d10e1902d3d89e3"
+    },
+    {
+      "sourceKey": "Decline_Smith_Press",
+      "legacyFingerprint": "ab67416eff9c8370a16e4bf57156cf2b85e52cfbaa77ae57aa1e1e61b9093c76"
+    },
+    {
+      "sourceKey": "Deficit_Deadlift",
+      "legacyFingerprint": "e217b0e20f0593b5fd8fff50ccd17b7ca5d7feba55ba6a3740dd154ae7bf3414"
+    },
+    {
+      "sourceKey": "Depth_Jump_Leap",
+      "legacyFingerprint": "7d0d0bf6abb97861007861cad33be814ff8756a02a574e7856ae1d17c4f1be0d"
+    },
+    {
+      "sourceKey": "Dip_Machine",
+      "legacyFingerprint": "8d37a1cb46438ec13a52712d3a770bfe664a29cb35a7129a6d57c160c68bede4"
+    },
+    {
+      "sourceKey": "Dips_-_Chest_Version",
+      "legacyFingerprint": "537058cba7fc1b4f6619168cf87722163f58077699950891e8fe9c7467ef995e"
+    },
+    {
+      "sourceKey": "Dips_-_Triceps_Version",
+      "legacyFingerprint": "2acd5e97ff6d70c29ad4ac6fb9b9c3276fe379d94285d179c9bb05b3225106df"
+    },
+    {
+      "sourceKey": "Donkey_Calf_Raises",
+      "legacyFingerprint": "9317c0661095a8909819f5b1a68c2e66656603780c968ec4fabe4377b5b143bb"
+    },
+    {
+      "sourceKey": "Double_Kettlebell_Alternating_Hang_Clean",
+      "legacyFingerprint": "035ae48424470af8bc6bb617bb0fd31fee7626120b03526756bcb3105e35a656"
+    },
+    {
+      "sourceKey": "Double_Kettlebell_Jerk",
+      "legacyFingerprint": "63a8503ebcc1e72620d290918553fd9856ac82f262245cfbb50fe503b250b681"
+    },
+    {
+      "sourceKey": "Double_Kettlebell_Push_Press",
+      "legacyFingerprint": "cebecd122bc76a79909940db2ecf47c6359f8ad26a007330a42544eae1be6be8"
+    },
+    {
+      "sourceKey": "Double_Kettlebell_Snatch",
+      "legacyFingerprint": "23b9fc8c3dc138b3d44ccce029fac42a2bc53c8ff66f431d2a2ae9877c365145"
+    },
+    {
+      "sourceKey": "Double_Kettlebell_Windmill",
+      "legacyFingerprint": "bfaa7db4f6a52647efffa784ead8335f25f80c333e2ebf4c4aac865818f9f0c5"
+    },
+    {
+      "sourceKey": "Double_Leg_Butt_Kick",
+      "legacyFingerprint": "4a351f2b3d2f20d27ad9b13fd14e2568ea364b744f328972f99ea39caceeb33c"
+    },
+    {
+      "sourceKey": "Downward_Facing_Balance",
+      "legacyFingerprint": "e1eb3beea5a4bcd65efc9b1c50a88a4e8cf8591553dd1f5712dc434959a9e51c"
+    },
+    {
+      "sourceKey": "Drag_Curl",
+      "legacyFingerprint": "80c4ea30013618cd5064556b0bc990ec543c56409efa63139ebfb5caeefd9f11"
+    },
+    {
+      "sourceKey": "Drop_Push",
+      "legacyFingerprint": "54b7a1f3cf5d209211913be34932ccc0d9e7c504faab2d541cd847dc88e7651e"
+    },
+    {
+      "sourceKey": "Dumbbell_Alternate_Bicep_Curl",
+      "legacyFingerprint": "0753a4ec1b95283823c12bd315bf4ed49ff28208140daf0ecf91cc6411228dd2"
+    },
+    {
+      "sourceKey": "Dumbbell_Bench_Press",
+      "legacyFingerprint": "28929d2fb674d9750bb1ab721e460080b79b4d6470306e37a71b7409b2ca8ce8"
+    },
+    {
+      "sourceKey": "Dumbbell_Bench_Press_with_Neutral_Grip",
+      "legacyFingerprint": "e89cf5d81e0f534a8557ed04003a8c49e8b713510d6f99b440fb51d86d5bb50e"
+    },
+    {
+      "sourceKey": "Dumbbell_Bicep_Curl",
+      "legacyFingerprint": "159bb05e0e640dda2776d7c51ee557675283416a8bb7f1a421e5fa09f876924a"
+    },
+    {
+      "sourceKey": "Dumbbell_Clean",
+      "legacyFingerprint": "8647f8c252ff8d748a3fe63252490c2abcec3787f00eee963647ce0a797d7920"
+    },
+    {
+      "sourceKey": "Dumbbell_Floor_Press",
+      "legacyFingerprint": "e2a7d6aacd42dce3b4576d6f1aa028c51e77a55808d87c06ae7942b18c253cac"
+    },
+    {
+      "sourceKey": "Dumbbell_Flyes",
+      "legacyFingerprint": "2e87417bac0e0d0f18a3373863718d2651b599cb3840b04a147770eb07d991d5"
+    },
+    {
+      "sourceKey": "Dumbbell_Incline_Row",
+      "legacyFingerprint": "88d15c0a1374a64ad44d6a86c8aaa0e47c70e7692c007abd6b03b11c51adc29b"
+    },
+    {
+      "sourceKey": "Dumbbell_Incline_Shoulder_Raise",
+      "legacyFingerprint": "894dbd50e20469bbb5bdf7a184d17631b723747ea50fcc286d6d7a5f4688cb30"
+    },
+    {
+      "sourceKey": "Dumbbell_Lunges",
+      "legacyFingerprint": "db9612bf5442da4dae1b15c01fa0bda1e6f1396499c4028f49ff5699108dfc80"
+    },
+    {
+      "sourceKey": "Dumbbell_Lying_One-Arm_Rear_Lateral_Raise",
+      "legacyFingerprint": "6e0423738f67b926e5294d7b10402c1b05da907a1c9deb2be32e0c6300cb7362"
+    },
+    {
+      "sourceKey": "Dumbbell_Lying_Pronation",
+      "legacyFingerprint": "6eb35d2ded0b510e51a78a04f370a09179f2b24383a7869fcdf7a68b8fec47df"
+    },
+    {
+      "sourceKey": "Dumbbell_Lying_Rear_Lateral_Raise",
+      "legacyFingerprint": "652d2facfeb7e1fad784175a76cde57cd52a96ee72bd6a6db21350a97eedcb09"
+    },
+    {
+      "sourceKey": "Dumbbell_Lying_Supination",
+      "legacyFingerprint": "5076b6271a726b39e0e7c667c27914d853e2140423d177da699b1d02582b516f"
+    },
+    {
+      "sourceKey": "Dumbbell_One-Arm_Shoulder_Press",
+      "legacyFingerprint": "29640f4feab2a2a09e7e84c2b30cbf607fb259f161d0f3002578f37ea2f607b2"
+    },
+    {
+      "sourceKey": "Dumbbell_One-Arm_Triceps_Extension",
+      "legacyFingerprint": "59f98fe3abe42bfb883c3cf549e376eb111558b055e3d379899b98bdc9ea18a0"
+    },
+    {
+      "sourceKey": "Dumbbell_One-Arm_Upright_Row",
+      "legacyFingerprint": "f993ade6f70d2e0a7327266f9738cf1b24dff39449d19097952356d0a2a2e7de"
+    },
+    {
+      "sourceKey": "Dumbbell_Prone_Incline_Curl",
+      "legacyFingerprint": "84e5f44229cbed1df9b707361354b7c24babd46079733b3d27e27f0dbf9af568"
+    },
+    {
+      "sourceKey": "Dumbbell_Raise",
+      "legacyFingerprint": "696c3f5c445e44c393b98fea76845a09f0e11b78989ad7030d2298626fa9bee6"
+    },
+    {
+      "sourceKey": "Dumbbell_Rear_Lunge",
+      "legacyFingerprint": "cc1c6336b5dcd21a595c0f796025f7d0228998e56b5a7738f5027baf0b9a3984"
+    },
+    {
+      "sourceKey": "Dumbbell_Scaption",
+      "legacyFingerprint": "931d379f226b9cae71a1574fc1b614db1934c1809562edac0a7f506f2e78c64f"
+    },
+    {
+      "sourceKey": "Dumbbell_Seated_Box_Jump",
+      "legacyFingerprint": "de561dd9b7f2cd8a2e89894781104aa37c6fcc3bcc0adf67e11e436e1d01d251"
+    },
+    {
+      "sourceKey": "Dumbbell_Seated_One-Leg_Calf_Raise",
+      "legacyFingerprint": "584425ba9ffe818c6ca626509f024cc60d8cf23a1ddd827bd006d3859cc7530e"
+    },
+    {
+      "sourceKey": "Dumbbell_Shoulder_Press",
+      "legacyFingerprint": "310960bcbbbb952a30d513435616f5b326b11ae041a4cd24d420a6d90a635d7e"
+    },
+    {
+      "sourceKey": "Dumbbell_Shrug",
+      "legacyFingerprint": "f72628c03e99eaaaec8185554bf50b1e88d11572b604780e6583bb98539ea539"
+    },
+    {
+      "sourceKey": "Dumbbell_Side_Bend",
+      "legacyFingerprint": "27989fdfe06ffffee5441c74d25f2299368c6f1d70ccea18affb885fde18a582"
+    },
+    {
+      "sourceKey": "Dumbbell_Squat",
+      "legacyFingerprint": "0bcfec0ba6fc37cf804c8e710813de28892f467bebd928a5cb2bab8c0135c43b"
+    },
+    {
+      "sourceKey": "Dumbbell_Squat_To_A_Bench",
+      "legacyFingerprint": "9e9dcfb077db1a28f2328bdc3b4c77f1b0f2412f603150c72583accd3a934bfa"
+    },
+    {
+      "sourceKey": "Dumbbell_Step_Ups",
+      "legacyFingerprint": "92b7eeaa4275f86c876cf94a0d1532903734aa52237b0a567e8761cfcf57f8fd"
+    },
+    {
+      "sourceKey": "Dumbbell_Tricep_Extension_-Pronated_Grip",
+      "legacyFingerprint": "ebaae14020e5a09e832d5ded16c8f71718b9ac45031258ead3cffc6fbf11d66e"
+    },
+    {
+      "sourceKey": "Dynamic_Back_Stretch",
+      "legacyFingerprint": "0ccb5999125e162ad0fb056fb5455b3709e8f5a5e36b6c6e03f52faeee6a085f"
+    },
+    {
+      "sourceKey": "Dynamic_Chest_Stretch",
+      "legacyFingerprint": "9aa38f3a536855ad92cd20eaffe121b0823398e41c5afb52823fd3133ed3fc28"
+    },
+    {
+      "sourceKey": "EZ-Bar_Curl",
+      "legacyFingerprint": "8079f611efaedbf7cf822832fcd5a4452c755d42e52effab18dee100a7a65d35"
+    },
+    {
+      "sourceKey": "EZ-Bar_Skullcrusher",
+      "legacyFingerprint": "124f60c868a461a471797ff079da388819059a1fe4143884433c488cbd93f2ad"
+    },
+    {
+      "sourceKey": "Elbow_Circles",
+      "legacyFingerprint": "71e6ccdffe1fce251c3e41d68094ee852ea0736add5d41cbf26d7372c6db57cf"
+    },
+    {
+      "sourceKey": "Elbow_to_Knee",
+      "legacyFingerprint": "c937abcfa96c78ab765114c462cb5a9fae92694fc00a07871e5924b5157f7001"
+    },
+    {
+      "sourceKey": "Elbows_Back",
+      "legacyFingerprint": "89eedeaeba4bb70b7c136876ec07e64de8b14b62b0d36b98aacfe9de942872fe"
+    },
+    {
+      "sourceKey": "Elevated_Back_Lunge",
+      "legacyFingerprint": "b8aac6379e88cdf9f8a5bd066e11423d6d991935d3826af13d2eee8bc143554f"
+    },
+    {
+      "sourceKey": "Elevated_Cable_Rows",
+      "legacyFingerprint": "96e6d4de384a9370eb4c613ce451cdc588222fd5625feabfadb6ccd1aa83502a"
+    },
+    {
+      "sourceKey": "Elliptical_Trainer",
+      "legacyFingerprint": "fb8a9119246a8a510b31d06ba27846554d255dcf03d30e43e81f72dce6898689"
+    },
+    {
+      "sourceKey": "Exercise_Ball_Crunch",
+      "legacyFingerprint": "0628fb64585b8716d6e539896d55e03bd06425852ae0c51eae993fcb5d82b997"
+    },
+    {
+      "sourceKey": "Exercise_Ball_Pull-In",
+      "legacyFingerprint": "9b819c57afb78f767776eb6cd16a2c781d130d45ef83fc1d67248c23ec9c96fc"
+    },
+    {
+      "sourceKey": "Extended_Range_One-Arm_Kettlebell_Floor_Press",
+      "legacyFingerprint": "c4e478514aad59d671ca85036d83f52bbe5c0a0cc7445f913c3dcc499ea6b505"
+    },
+    {
+      "sourceKey": "External_Rotation",
+      "legacyFingerprint": "3599466d2cb9666d833e07d7ce32c108b92fd70697cdca7e9a4c3c295127f678"
+    },
+    {
+      "sourceKey": "External_Rotation_with_Band",
+      "legacyFingerprint": "77529761bf28062b8658726ce29e08ed3d853e4f437efb28a4d8b40e048c2938"
+    },
+    {
+      "sourceKey": "External_Rotation_with_Cable",
+      "legacyFingerprint": "882030bd1ac3746f315b6595c6c8e3ca8634bff4a62800bc5599c810254dcfb9"
+    },
+    {
+      "sourceKey": "Face_Pull",
+      "legacyFingerprint": "837af225ab817448cb18043dca8bd1138097c00a742daef1f5ccf28b5db10b9f"
+    },
+    {
+      "sourceKey": "Farmers_Walk",
+      "legacyFingerprint": "ac807ef51ac2e97476d9f2ea46dd5687854a9ddb5344831836e46281cc6475d8"
+    },
+    {
+      "sourceKey": "Fast_Skipping",
+      "legacyFingerprint": "155bf95de8ae6b0cd8b5546d5f6bff0c29e50c32427efc6f34b737cf66b95abc"
+    },
+    {
+      "sourceKey": "Finger_Curls",
+      "legacyFingerprint": "1d4c19ad60cc912df2cb3d0b282bc6194351ce96d98e203a70e6d8b679895e8d"
+    },
+    {
+      "sourceKey": "Flat_Bench_Cable_Flyes",
+      "legacyFingerprint": "bf06ebb34679f952c1b5c9f6a313068580252dfa89dde4c52c9a4777b4830cdb"
+    },
+    {
+      "sourceKey": "Flat_Bench_Leg_Pull-In",
+      "legacyFingerprint": "f55ed5069ae54214838a61c1b884ba65c5283d0cded0dd1838a4a09de248d48e"
+    },
+    {
+      "sourceKey": "Flat_Bench_Lying_Leg_Raise",
+      "legacyFingerprint": "61804d929cd2eb9bae5d53248f2e2819c65aabe095a31a2c1557e30b82ee2f2e"
+    },
+    {
+      "sourceKey": "Flexor_Incline_Dumbbell_Curls",
+      "legacyFingerprint": "0b967a265526f1134d9a880992fb59d402b05d0eb645f366ac480ee69da7aff3"
+    },
+    {
+      "sourceKey": "Floor_Glute-Ham_Raise",
+      "legacyFingerprint": "df44df1ecc66e73d2305b0b820aada1c859eb1647ae96513b090ea8936c70189"
+    },
+    {
+      "sourceKey": "Floor_Press",
+      "legacyFingerprint": "b1c1e2dc348933f132dd6baa138c23b27db70ff4d6c97b05c61980c0672a3fff"
+    },
+    {
+      "sourceKey": "Floor_Press_with_Chains",
+      "legacyFingerprint": "2eec6f35548e306e09d3304ae53e9d54ec95b67487e4f4b710d0ab716deed554"
+    },
+    {
+      "sourceKey": "Flutter_Kicks",
+      "legacyFingerprint": "7115fbb1eed87f13335243132dad707ec50e76bb6a08232cbc8be8ccf7b8bd8a"
+    },
+    {
+      "sourceKey": "Foot-SMR",
+      "legacyFingerprint": "deb7bfe44ae80b2eee5f2bd04db1648e7c2a933a158a2a333166499bf2dc2dab"
+    },
+    {
+      "sourceKey": "Forward_Drag_with_Press",
+      "legacyFingerprint": "00c2e31dc4515ea002806502b33c52823928a1bf52703b55aeae440742515cab"
+    },
+    {
+      "sourceKey": "Frankenstein_Squat",
+      "legacyFingerprint": "d22e4aecb6dfa0bda096a6958aa742aef54a67612e20a3fb72fd00e402414fbe"
+    },
+    {
+      "sourceKey": "Freehand_Jump_Squat",
+      "legacyFingerprint": "2a415ab1492e1167da49c3b0e1454360b400fc6a653294f8312d50151ee2f018"
+    },
+    {
+      "sourceKey": "Frog_Hops",
+      "legacyFingerprint": "16d85434886ef2c741ec477f9c3c278e0485a340ea33674351836fc2ed6a0d9e"
+    },
+    {
+      "sourceKey": "Frog_Sit-Ups",
+      "legacyFingerprint": "413e7c8c1075eb30241697f1d1c00a57622aabbb844fa160d530e17a52ed75b6"
+    },
+    {
+      "sourceKey": "Front_Barbell_Squat",
+      "legacyFingerprint": "f5ca3ca3582906b1e491abb356f63fbd108361f1ef8c2514bf837d6794c32792"
+    },
+    {
+      "sourceKey": "Front_Barbell_Squat_To_A_Bench",
+      "legacyFingerprint": "a465c658c321d9833f456a781e8c2df8aadf32dc934b96842531cc1dd38e344d"
+    },
+    {
+      "sourceKey": "Front_Box_Jump",
+      "legacyFingerprint": "bab531d7406a02da16d909fde5d508a40204d243b58d6df22d9ccb4d8540737c"
+    },
+    {
+      "sourceKey": "Front_Cable_Raise",
+      "legacyFingerprint": "fcf691132aaeea3417092fd91832a87bd9f9bd5a6e8d710d54f1ab15b44e07de"
+    },
+    {
+      "sourceKey": "Front_Cone_Hops_or_hurdle_hops",
+      "legacyFingerprint": "1c9efc8764a37b8b15718f6c2acc4d4a6ae40cdc487f09360bc2a52621c8c3bd"
+    },
+    {
+      "sourceKey": "Front_Dumbbell_Raise",
+      "legacyFingerprint": "987e592ba66c3c718cad15e92186c72e7d3cdeb84e9f4e18a61ed3b87b49db0d"
+    },
+    {
+      "sourceKey": "Front_Incline_Dumbbell_Raise",
+      "legacyFingerprint": "29ff8fdd20d8deffc2b04fe019e51ff0e7f7c4692f0105e413f28417877722b3"
+    },
+    {
+      "sourceKey": "Front_Leg_Raises",
+      "legacyFingerprint": "5d3fd1e336d42fe015e7edfe4362a04a8b24a116416500cc7549fb256c30ca5e"
+    },
+    {
+      "sourceKey": "Front_Plate_Raise",
+      "legacyFingerprint": "86fd7176d1039b4688bcb6b6a5d651a668afb2038767c25e1945f44bfd4a1904"
+    },
+    {
+      "sourceKey": "Front_Raise_And_Pullover",
+      "legacyFingerprint": "3df5fa9a962173e4e05d42a6ead54204b16158311142aadc455fb8e8c725398a"
+    },
+    {
+      "sourceKey": "Front_Squat_Clean_Grip",
+      "legacyFingerprint": "770679637a563edf24cd74c7042ae6323fccf227610c42b2b5aaefc62c396936"
+    },
+    {
+      "sourceKey": "Front_Squats_With_Two_Kettlebells",
+      "legacyFingerprint": "ba044ef6cf1267ef507d2813f06b243c2dda96f35088b55a5cc83cce32b76470"
+    },
+    {
+      "sourceKey": "Front_Two-Dumbbell_Raise",
+      "legacyFingerprint": "4a703b6e5dc6e1b910d367194d06995a13578e05be71bfb257f590c2b12a0de5"
+    },
+    {
+      "sourceKey": "Full_Range-Of-Motion_Lat_Pulldown",
+      "legacyFingerprint": "678192d4126ab816ed277a993bd84b303fd35e84d657b3248fbad5a602931034"
+    },
+    {
+      "sourceKey": "Gironda_Sternum_Chins",
+      "legacyFingerprint": "c4f104ad83bc61b49309348a07e5e3eb0e3a7cdf14f0497b39dd01bb1b11de61"
+    },
+    {
+      "sourceKey": "Glute_Ham_Raise",
+      "legacyFingerprint": "ce61ba772718e6f3c3f0088c3a4f90cc4f7d8cab267a4852800d4abaffec0155"
+    },
+    {
+      "sourceKey": "Glute_Kickback",
+      "legacyFingerprint": "33642c5f9a5b15204c1d33bd7dcd6bfac1495e8b711546173a6d9c9b66a635f4"
+    },
+    {
+      "sourceKey": "Goblet_Squat",
+      "legacyFingerprint": "a3707ce919c3e124804174b66deaf8ffdda2447b8dd6dca6f05fdc0bfdd3af50"
+    },
+    {
+      "sourceKey": "Good_Morning",
+      "legacyFingerprint": "9367b2f045d27514dba7e61fcb9657b64cfbf4482bbaa85ef9f156bbeaae3acb"
+    },
+    {
+      "sourceKey": "Good_Morning_off_Pins",
+      "legacyFingerprint": "4644b23cb8c70638351d06e55216a187b1f2ab457a0c7529c34211813c51d5c1"
+    },
+    {
+      "sourceKey": "Gorilla_Chin_Crunch",
+      "legacyFingerprint": "84c9ccb401e453a8525a26131a94d29e2bc39975692d41f081f8dc2483a4bbb6"
+    },
+    {
+      "sourceKey": "Groin_and_Back_Stretch",
+      "legacyFingerprint": "8e34b56ec190d3de9f941cbfee304e65f8d8b1a4cff68971b1dd96d92055e406"
+    },
+    {
+      "sourceKey": "Groiners",
+      "legacyFingerprint": "e842322e513e70851bceb79920ee455123c6da2a5bbc7fa1c1b7ac988d753e21"
+    },
+    {
+      "sourceKey": "Hack_Squat",
+      "legacyFingerprint": "03103c08d8a9494158733e7ef835397921c40d71ce1cfa8d2b43f6855075d7a7"
+    },
+    {
+      "sourceKey": "Hammer_Curls",
+      "legacyFingerprint": "98271c70da0b0e1ffc18dae583da16060279ac865f1c5641e7e0f4ac30f8a5f1"
+    },
+    {
+      "sourceKey": "Hammer_Grip_Incline_DB_Bench_Press",
+      "legacyFingerprint": "934f2fcf6933ae21f34ee2871ac183ae74f0369b24a58845172c24b73b312ee1"
+    },
+    {
+      "sourceKey": "Hamstring-SMR",
+      "legacyFingerprint": "ee70fe7e127c913600fd04d860168c5aac736cbae5f90703460c3bb115c1b2ab"
+    },
+    {
+      "sourceKey": "Hamstring_Stretch",
+      "legacyFingerprint": "dc07bef68640d47dc782f7df1f5cf59ed935bd6ec58f13785affd89682cbb4c8"
+    },
+    {
+      "sourceKey": "Handstand_Push-Ups",
+      "legacyFingerprint": "14af9dde2862831a6c9f1ee9fefe9d9aaec329e49babba2a511891e86c10881b"
+    },
+    {
+      "sourceKey": "Hang_Clean",
+      "legacyFingerprint": "c2fa930d9851da6d3e3d7dc076b04a26ca54564b53cd53d0b3c7afa2adf73259"
+    },
+    {
+      "sourceKey": "Hang_Clean_-_Below_the_Knees",
+      "legacyFingerprint": "490bd2ff85d4a9ff33805185d92dec20511af285fa5ea958a292742291412199"
+    },
+    {
+      "sourceKey": "Hang_Snatch",
+      "legacyFingerprint": "d98ca0308a34aed87db2d223a5ac141e6654d23131f325b7e8dc0a848c1a1eff"
+    },
+    {
+      "sourceKey": "Hang_Snatch_-_Below_Knees",
+      "legacyFingerprint": "c544a7fa298193180423d0f1e9b8f32e2683db281e8ddd23de4da6a79bd1db84"
+    },
+    {
+      "sourceKey": "Hanging_Bar_Good_Morning",
+      "legacyFingerprint": "10b37d02fa8bd8e37b9aac7d11ebcc06b96c0cc68b81ded9a9e054068eb8ed6d"
+    },
+    {
+      "sourceKey": "Hanging_Leg_Raise",
+      "legacyFingerprint": "6da4ac9aefc7203a4c3b1a4b66c4710933161d0e7c03a34f379e103911fa5914"
+    },
+    {
+      "sourceKey": "Hanging_Pike",
+      "legacyFingerprint": "c10255f955c8c7819232692d6c9b295a405360fc5b715dcd709880a6eeb35076"
+    },
+    {
+      "sourceKey": "Heaving_Snatch_Balance",
+      "legacyFingerprint": "1d6664b8c3349fa2f0a29a9048a1e09fc034f2a1e6a6f38f4f43104246a21cc2"
+    },
+    {
+      "sourceKey": "Heavy_Bag_Thrust",
+      "legacyFingerprint": "c6fe23e1514c34b628ad28975ac3633bb024c9bc29ff7492fb519a88fb1698c1"
+    },
+    {
+      "sourceKey": "High_Cable_Curls",
+      "legacyFingerprint": "276eba35a1321f53a5101a8b580bb7d75de6464a95901c149405a22f2c9a411f"
+    },
+    {
+      "sourceKey": "Hip_Circles_prone",
+      "legacyFingerprint": "cb004796f8cd42414b05713cd51c34c61941aafa5ec268d39ec14965422d7eeb"
+    },
+    {
+      "sourceKey": "Hip_Extension_with_Bands",
+      "legacyFingerprint": "d56a63df1aaf106a04a91490487abc8bd2a5c354bb74e0242dc4524b8c5b79df"
+    },
+    {
+      "sourceKey": "Hip_Flexion_with_Band",
+      "legacyFingerprint": "94d6131fecce71080ea9cd7932917983267bc3ebbe078c08c7bbf1eb43f64659"
+    },
+    {
+      "sourceKey": "Hip_Lift_with_Band",
+      "legacyFingerprint": "8c0dac33c1891a1b4e75da2e5a57e4f868d1de25827e46088570ec67f118b14e"
+    },
+    {
+      "sourceKey": "Hug_A_Ball",
+      "legacyFingerprint": "a2db8b87c89687bf0676d1ceb953122a84d90c40ead54df924298cdde7dfc989"
+    },
+    {
+      "sourceKey": "Hug_Knees_To_Chest",
+      "legacyFingerprint": "909065e46f5460796a6943d0c67033efdc5ad649481fb6dfd19d59299459e34a"
+    },
+    {
+      "sourceKey": "Hurdle_Hops",
+      "legacyFingerprint": "f888f75dfc91db54a6afd588336900d747b86586026735a5a2645fa86f0f8c60"
+    },
+    {
+      "sourceKey": "Hyperextensions_Back_Extensions",
+      "legacyFingerprint": "d545e0548832f8fbaee07b7694c0b00784093310421252bcb66e6f1cc3c35c88"
+    },
+    {
+      "sourceKey": "Hyperextensions_With_No_Hyperextension_Bench",
+      "legacyFingerprint": "2b48e50f91d996670857bd6bc0a5405d9c0fe365ed0e50b340b94e8a009060fa"
+    },
+    {
+      "sourceKey": "IT_Band_and_Glute_Stretch",
+      "legacyFingerprint": "02d3adf72282fa51debcaff1d8e7cf47a496bb1b5421dc99a506d0eaf4c829ae"
+    },
+    {
+      "sourceKey": "Iliotibial_Tract-SMR",
+      "legacyFingerprint": "06f33fcf93c3b826aa755f489d19ccf6a95d8813395197c584bff9366626feeb"
+    },
+    {
+      "sourceKey": "Inchworm",
+      "legacyFingerprint": "7b2ccb1930bfb938b7a9e8c147a7a3373eacc6d0feaf7aa832a4bbe69a9ee397"
+    },
+    {
+      "sourceKey": "Incline_Barbell_Triceps_Extension",
+      "legacyFingerprint": "ad4ec5b9ab27f308365656a2c7e4b185278ad225af980796619d1724308e7b8d"
+    },
+    {
+      "sourceKey": "Incline_Bench_Pull",
+      "legacyFingerprint": "56d803c560af2cca8889475fd04376d4ad9cc13ca85cd870650a732736c5d2e6"
+    },
+    {
+      "sourceKey": "Incline_Cable_Chest_Press",
+      "legacyFingerprint": "5d8ce57283092686c06bf7556fa7f9465556c47973543e4e11f393abf33b1a8b"
+    },
+    {
+      "sourceKey": "Incline_Cable_Flye",
+      "legacyFingerprint": "223e2b6fdd4f9824c391939cb3b93d2ccf359da6d8b4693fd92fa6ea307fbc80"
+    },
+    {
+      "sourceKey": "Incline_Dumbbell_Bench_With_Palms_Facing_In",
+      "legacyFingerprint": "c52e8027ccc4e93e135e857ea365b94b458d2c2e50a5ccafed361fd1b9c9dc1f"
+    },
+    {
+      "sourceKey": "Incline_Dumbbell_Curl",
+      "legacyFingerprint": "117dbb6d5ccc20f99022f27744f951f96a678e09d00d02a1e52a6537c7441630"
+    },
+    {
+      "sourceKey": "Incline_Dumbbell_Flyes",
+      "legacyFingerprint": "31c8c00ea226d58716e254ae3e6d1134211e9f9f70a160369b701bafd6e8d2ea"
+    },
+    {
+      "sourceKey": "Incline_Dumbbell_Flyes_-_With_A_Twist",
+      "legacyFingerprint": "fdf0d77e4637738d0d0d4ea759738a894b3df5773345ccb0de3e5b5290f72b34"
+    },
+    {
+      "sourceKey": "Incline_Dumbbell_Press",
+      "legacyFingerprint": "c712ff5ba9d52ba8a26af52f8668334cbb11c1144c121fcb0f0a54756c558332"
+    },
+    {
+      "sourceKey": "Incline_Hammer_Curls",
+      "legacyFingerprint": "78e6cf3806af38bf45d4b4dc608d1853f54a3aac5ac7aa7bf3b00ac4068a3a96"
+    },
+    {
+      "sourceKey": "Incline_Inner_Biceps_Curl",
+      "legacyFingerprint": "c3aa3ffe0149b3f2c99140e82cc7a74b04d6546edaca5e8908d94300a9e01380"
+    },
+    {
+      "sourceKey": "Incline_Push-Up",
+      "legacyFingerprint": "26d57d5b595a299620cb768487bf2620455db6d73118e92723d97e3b657c0b82"
+    },
+    {
+      "sourceKey": "Incline_Push-Up_Close-Grip",
+      "legacyFingerprint": "50a9d78859710414d80c55e600e737c255a76b609271b641ae6bf70388451db2"
+    },
+    {
+      "sourceKey": "Incline_Push-Up_Depth_Jump",
+      "legacyFingerprint": "082cf4e7f101219bf6a12da5fcabbcf8f36d0c6854ae265e163dcfb16055e285"
+    },
+    {
+      "sourceKey": "Incline_Push-Up_Medium",
+      "legacyFingerprint": "0583251e2e9f3dbdae58b442af9cbfbc9c02bc0eee80c34f67bdf00038f04a7f"
+    },
+    {
+      "sourceKey": "Incline_Push-Up_Reverse_Grip",
+      "legacyFingerprint": "a548702b102038d4fae781cda45c6dbe9931cabee53cb721cd275802c57a1481"
+    },
+    {
+      "sourceKey": "Incline_Push-Up_Wide",
+      "legacyFingerprint": "91a9a52b029c9c2af6e19b9182697c965374061efd99a4eb92f1a8d1405032a7"
+    },
+    {
+      "sourceKey": "Intermediate_Groin_Stretch",
+      "legacyFingerprint": "2c0ec17d42f6a4f673e64a26cbb2485a9ec19ab4c71f1f8c522651dbc310b5cd"
+    },
+    {
+      "sourceKey": "Intermediate_Hip_Flexor_and_Quad_Stretch",
+      "legacyFingerprint": "5da0f53dd1fd7d43a835eb9d490f0e4ff821f66f1d09a8b4b0e7414f96de5d70"
+    },
+    {
+      "sourceKey": "Internal_Rotation_with_Band",
+      "legacyFingerprint": "823246f77a54d64a14aa7cf07c0397183034c29e4dadba7adb4faa28d5f9af0c"
+    },
+    {
+      "sourceKey": "Inverted_Row",
+      "legacyFingerprint": "bd6cd25a599ba4378962e1e1c8b4ea41eeea17bd0b382db251b0dc3770c157c5"
+    },
+    {
+      "sourceKey": "Inverted_Row_with_Straps",
+      "legacyFingerprint": "a6ee7b7f3628d2885de12eeb7f7931cd168373990511fe1bf04753ec35159b43"
+    },
+    {
+      "sourceKey": "Iron_Cross",
+      "legacyFingerprint": "389399974ce5f5ccc7ceec3c37197327db52b0d148b1251d0f7b1d1362eedb71"
+    },
+    {
+      "sourceKey": "Iron_Crosses_stretch",
+      "legacyFingerprint": "621e687aa713c2c2a7e223607526db9297d113f7e3e90abdc8f6855d39820fb3"
+    },
+    {
+      "sourceKey": "Isometric_Chest_Squeezes",
+      "legacyFingerprint": "032b72740c62ffb2ecf332e11aad28c21c8d9da56da2c8b3c3fc0c1a3893baae"
+    },
+    {
+      "sourceKey": "Isometric_Neck_Exercise_-_Front_And_Back",
+      "legacyFingerprint": "873d2dbe2173962d3ab2ec70039eb93e3b79d4372d8508ffc546b44e45f232e9"
+    },
+    {
+      "sourceKey": "Isometric_Neck_Exercise_-_Sides",
+      "legacyFingerprint": "11c397df7f7a6b44f8d97da97b4202ebab2074dadd0fa62f898d05215ebb2779"
+    },
+    {
+      "sourceKey": "Isometric_Wipers",
+      "legacyFingerprint": "685c26c3cb3fb7e1539b0980365e6c0c8ac310bbd9c95a2116f02483af9c88f4"
+    },
+    {
+      "sourceKey": "JM_Press",
+      "legacyFingerprint": "7260daf2a619b1ccf8ec98303d6c317b2ff24d2ccbac5141473fc3cee813c9ab"
+    },
+    {
+      "sourceKey": "Jackknife_Sit-Up",
+      "legacyFingerprint": "0ebd58df5586012db01c771b8b4b288032f04e3cd34ae11386d6fc5838e71144"
+    },
+    {
+      "sourceKey": "Janda_Sit-Up",
+      "legacyFingerprint": "c420c816706b0cbf5c8c3cbbf01dcc4ea2a607eb80a7b941f1d6f57d143075e5"
+    },
+    {
+      "sourceKey": "Jefferson_Squats",
+      "legacyFingerprint": "d698c107df7dee3d79efc613b095135f77eac8ab7bda8b18b3dfa00a55406aed"
+    },
+    {
+      "sourceKey": "Jerk_Balance",
+      "legacyFingerprint": "ab93ea4801118e032a57bb9184c6a7f6ff63dd68b7b3fda76a98e62707e2bb8b"
+    },
+    {
+      "sourceKey": "Jerk_Dip_Squat",
+      "legacyFingerprint": "77ad01d66e7d1b073f1cf55ae620f21cb77b2df4f706b33a654dd0347bbc0d9c"
+    },
+    {
+      "sourceKey": "Jogging_Treadmill",
+      "legacyFingerprint": "00ed1fb79c37634004392e938eb0610b7f729e31cd9f92c854a40812e0e313fa"
+    },
+    {
+      "sourceKey": "Keg_Load",
+      "legacyFingerprint": "157bad6d835fe754264113c46e6502d9e5c2f631665290e88bca62ede8ae02a8"
+    },
+    {
+      "sourceKey": "Kettlebell_Arnold_Press",
+      "legacyFingerprint": "100d1d03c745691c3440555ccfda55b7b6ea56e4521264a715c651ca355666e1"
+    },
+    {
+      "sourceKey": "Kettlebell_Dead_Clean",
+      "legacyFingerprint": "44efbe409418ff2ba0657f0af8334d96a77db8eba8945c97764e23d1b67d3854"
+    },
+    {
+      "sourceKey": "Kettlebell_Figure_8",
+      "legacyFingerprint": "8a1b95d5377f50dd455401f80eb707379d4da87de601a6d8af49f9a4b5b45f21"
+    },
+    {
+      "sourceKey": "Kettlebell_Halo",
+      "legacyFingerprint": "35b6c53f82f4abdd27a25415d0edebff9bbfb2f4bab317bc9742d409d96460ac"
+    },
+    {
+      "sourceKey": "Kettlebell_Halo_With_Overhead_Extension",
+      "legacyFingerprint": "50b231cc64d8e00e91e113ec4d7b49094c06049e0dbae1a0427c0e21c87921e2"
+    },
+    {
+      "sourceKey": "Kettlebell_Hang_Clean",
+      "legacyFingerprint": "8be228443ecf5b72a37ab8f5629251d98a920938549fb4ccb59e3f46f4b76fd5"
+    },
+    {
+      "sourceKey": "Kettlebell_One-Legged_Deadlift",
+      "legacyFingerprint": "2b3c07f5b35628bd36fd182a478b523ecf706398d441a0fa4223f1f3869ebaa0"
+    },
+    {
+      "sourceKey": "Kettlebell_Overhead_Triceps_Extension",
+      "legacyFingerprint": "05b07e32759429ae6af58cdcc7c64556bad082f48070ea7b382a8be618d7feec"
+    },
+    {
+      "sourceKey": "Kettlebell_Pass_Between_The_Legs",
+      "legacyFingerprint": "90dc14f2a699a5d42aaa5641c95221432bf4cc27a356d1290574d10710eb6aa4"
+    },
+    {
+      "sourceKey": "Kettlebell_Pirate_Ships",
+      "legacyFingerprint": "571723e8096b9e768778e6693114d26ab52cb96fefda499613aaed0b6403d8d6"
+    },
+    {
+      "sourceKey": "Kettlebell_Pistol_Squat",
+      "legacyFingerprint": "59cc2c240b91cfd4260f35f9d0451ff38e6521227c5f8572d19b45e7e035365e"
+    },
+    {
+      "sourceKey": "Kettlebell_Seated_Press",
+      "legacyFingerprint": "18c2cc9b7c2188cc13b7437f75f5d14aa851ba7156dc33870e60777d21eb575c"
+    },
+    {
+      "sourceKey": "Kettlebell_Seesaw_Press",
+      "legacyFingerprint": "8b52810829c7a7b8cc022144084703b32181633a72bd375e851fb114fdef5e7f"
+    },
+    {
+      "sourceKey": "Kettlebell_Sumo_High_Pull",
+      "legacyFingerprint": "e0e5106c034280c2e289f208d55179382d4340f4fae411c491615b045757047d"
+    },
+    {
+      "sourceKey": "Kettlebell_Thruster",
+      "legacyFingerprint": "c66b2c72f612af00a912db5bc9c87dc47c6ed27be271f0059d2f29d113b5b7ea"
+    },
+    {
+      "sourceKey": "Kettlebell_Turkish_Get-Up_Lunge_style",
+      "legacyFingerprint": "a0826fd9f7b9821c83f9d9b03e33871eef48fd5b9ff7304120ae87a7db5cf2b5"
+    },
+    {
+      "sourceKey": "Kettlebell_Turkish_Get-Up_Squat_style",
+      "legacyFingerprint": "3e84bdbdb803ffd84dd758ed7ef6c78b17d1151ee02b4a37accde351e6409efe"
+    },
+    {
+      "sourceKey": "Kettlebell_Windmill",
+      "legacyFingerprint": "95f31e3b79b26ea7bcb1ec0c09b1ac890c8df844b45739c5e0fb1663be3f9de6"
+    },
+    {
+      "sourceKey": "Kipping_Muscle_Up",
+      "legacyFingerprint": "09d3ed5e1ef26b187ca423eda10e9ffd5a7674bc75d7d477f124e55bbc4d3f4a"
+    },
+    {
+      "sourceKey": "Knee_Across_The_Body",
+      "legacyFingerprint": "8090859f985c443341950f57678636bfd763f8f8d7c8a8fef652f8c6c012e8a2"
+    },
+    {
+      "sourceKey": "Knee_Circles",
+      "legacyFingerprint": "e005f6998cbaa3a78290afbf4178de0c768c59e8cb6786d76750700e08bb8648"
+    },
+    {
+      "sourceKey": "Knee_Hip_Raise_On_Parallel_Bars",
+      "legacyFingerprint": "3f0f27f3faabf24c871e3c571171eef9d03e21fbba29f0d7a340e385d0caf9a0"
+    },
+    {
+      "sourceKey": "Knee_Tuck_Jump",
+      "legacyFingerprint": "480d2eb88ecf988add35d1987c7ad98122c73fe5dc2ef806115ef1be8db6e48c"
+    },
+    {
+      "sourceKey": "Kneeling_Arm_Drill",
+      "legacyFingerprint": "738006107154b9cf6308a42297aedb9740780ba10fea0aeae3b03281cc242421"
+    },
+    {
+      "sourceKey": "Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists",
+      "legacyFingerprint": "c62296914c213e11a1fd4bb65ada933b8f405e314f22ebb42b395c2b0d62e7bb"
+    },
+    {
+      "sourceKey": "Kneeling_Cable_Triceps_Extension",
+      "legacyFingerprint": "4545bd695572b901f81e3fc87bef09963ac3765b7b67c9ee81ca11472acffd4e"
+    },
+    {
+      "sourceKey": "Kneeling_Forearm_Stretch",
+      "legacyFingerprint": "6baf2472509832d5dd1865ffaac10e16bdb3855810ba14bed054720248fbe033"
+    },
+    {
+      "sourceKey": "Kneeling_High_Pulley_Row",
+      "legacyFingerprint": "2f69445a19fa221fb50ef1370b6bb4a42e1877a79fbda8d5d606ececdec48e26"
+    },
+    {
+      "sourceKey": "Kneeling_Hip_Flexor",
+      "legacyFingerprint": "e0cfd7c71588b433e1754a0544d973707ba378c3270cad58ece88cc4e9eb7345"
+    },
+    {
+      "sourceKey": "Kneeling_Jump_Squat",
+      "legacyFingerprint": "940a6195d709a62831d7bd8f77fc705139d84aab57b47c1826f3e54af4afb853"
+    },
+    {
+      "sourceKey": "Kneeling_Single-Arm_High_Pulley_Row",
+      "legacyFingerprint": "c6f9810ae1aa28bcdf34f9fb49f0b5ea9ff434c84ceac1982477709010b9da2c"
+    },
+    {
+      "sourceKey": "Kneeling_Squat",
+      "legacyFingerprint": "1d15d111c939d93a16451272db73d7a5af9722e67f5787db88b7cc5d7a5e1412"
+    },
+    {
+      "sourceKey": "Landmine_180s",
+      "legacyFingerprint": "631aad09066e3e23da215ae29c65b19085a8539ea4295b503d9d575ca5873019"
+    },
+    {
+      "sourceKey": "Landmine_Linear_Jammer",
+      "legacyFingerprint": "b85e1e8c7f259b046826e1803e85b837c219612c149465262b8fe77a851d2b29"
+    },
+    {
+      "sourceKey": "Lateral_Bound",
+      "legacyFingerprint": "45d7bd1d8bc79dfca88e2b7c00679cabecbde1d458c92191fe525180890d4379"
+    },
+    {
+      "sourceKey": "Lateral_Box_Jump",
+      "legacyFingerprint": "b2ae6aa5e9942323bf233c5550a2095be80bbc121e36d03dfd2bf703dd1ab292"
+    },
+    {
+      "sourceKey": "Lateral_Cone_Hops",
+      "legacyFingerprint": "7c44539a74f2acf37988c5aae429f5a70a7ffc1202bae0f7dbfa820391c1b45a"
+    },
+    {
+      "sourceKey": "Lateral_Raise_-_With_Bands",
+      "legacyFingerprint": "839cdb58b457f32bea1b67d235eac1a6e508da1a742868e5bd83ad0ee588e12c"
+    },
+    {
+      "sourceKey": "Latissimus_Dorsi-SMR",
+      "legacyFingerprint": "1cea7efd2e63d34727fe04d56bf4990ad1f431cd53d0ea348a72fac54cedf0e7"
+    },
+    {
+      "sourceKey": "Leg-Over_Floor_Press",
+      "legacyFingerprint": "7eb06e6c54718a03ac1902b6b5fcc686f61f1e28641f846aaf9aa48f1af4311a"
+    },
+    {
+      "sourceKey": "Leg-Up_Hamstring_Stretch",
+      "legacyFingerprint": "e06926967078de730517c69d2935755dc76b3d5a7bec82c6c41ee156962fbad5"
+    },
+    {
+      "sourceKey": "Leg_Extensions",
+      "legacyFingerprint": "10a318e21030ae5f8f7dfa900500a247d0e3f92065dada06d68847c28d558f8e"
+    },
+    {
+      "sourceKey": "Leg_Lift",
+      "legacyFingerprint": "861d41cbee9cbc7708ccf7cceef0da565bfe96e55488b92d19548d672aec51db"
+    },
+    {
+      "sourceKey": "Leg_Press",
+      "legacyFingerprint": "06cbe5361cfb398afceec76aa14826523c8cd97378f3ad3be8082c613f5b05fa"
+    },
+    {
+      "sourceKey": "Leg_Pull-In",
+      "legacyFingerprint": "0cbc1212b4c6a77a207cad0a3be8076dfa60caf2a97f0e6e88f3404107a41fb2"
+    },
+    {
+      "sourceKey": "Leverage_Chest_Press",
+      "legacyFingerprint": "59ad225a6c40352e4f29c7cbf844d226bd91c9880c12104e7a6d2205437a8524"
+    },
+    {
+      "sourceKey": "Leverage_Deadlift",
+      "legacyFingerprint": "1771345dcb7e4714d1cfe333f937c2fde9276b462118234c2efe6de8b0500e62"
+    },
+    {
+      "sourceKey": "Leverage_Decline_Chest_Press",
+      "legacyFingerprint": "6ed53a491c3ba11fe777c39aa2f9a0bd7ed94d4f0fb2a47bab6792fa1cac7a93"
+    },
+    {
+      "sourceKey": "Leverage_High_Row",
+      "legacyFingerprint": "64322ad30632e05ab1008e8c5396a2afc21d85f402e53132d142eb49524bb457"
+    },
+    {
+      "sourceKey": "Leverage_Incline_Chest_Press",
+      "legacyFingerprint": "cdcfaf06620adccf24e284948acb93186497bbdaa11b1c5b0bb0bc842d471774"
+    },
+    {
+      "sourceKey": "Leverage_Iso_Row",
+      "legacyFingerprint": "bb481cbe724009454d1eade1a7269697745e62d7a61db912c67fd9dcf5db1951"
+    },
+    {
+      "sourceKey": "Leverage_Shoulder_Press",
+      "legacyFingerprint": "ffe3baf81ae5b95187c3d8d0f4ce0a1dd7e77ca9fef41fe2159a72af639ca836"
+    },
+    {
+      "sourceKey": "Leverage_Shrug",
+      "legacyFingerprint": "98efa0ee29d8a233c85430605278d4d04b062a094ee2163a75d0ef0abbd231d7"
+    },
+    {
+      "sourceKey": "Linear_3-Part_Start_Technique",
+      "legacyFingerprint": "9cb705f4e6b286ea494d6be7b006a7340d4d83837625524313ec9a4488e02478"
+    },
+    {
+      "sourceKey": "Linear_Acceleration_Wall_Drill",
+      "legacyFingerprint": "b0e7bd8942a81d32615170687c6784cb32048f542d844c92133b1018a8288e63"
+    },
+    {
+      "sourceKey": "Linear_Depth_Jump",
+      "legacyFingerprint": "37d6bd651cc9b1ae43824420b78e00aa9a1846a050ce12307dce3704ea4a9c5f"
+    },
+    {
+      "sourceKey": "Log_Lift",
+      "legacyFingerprint": "b8536ecaea80b99343f2070a2c6713829fb4028bc7e231f4a97cb94912ea26fd"
+    },
+    {
+      "sourceKey": "London_Bridges",
+      "legacyFingerprint": "18c71707e78d718755ba0e9c2e2467950d5b0768597589132c9b73c9da11c8a9"
+    },
+    {
+      "sourceKey": "Looking_At_Ceiling",
+      "legacyFingerprint": "8dae443af1294bd3ecda35c2929d97021a7837ff623300f27f591c43c5f90296"
+    },
+    {
+      "sourceKey": "Low_Cable_Crossover",
+      "legacyFingerprint": "61ffcaf576effe485ef1a75c3bb3d9b0cebce952c0f0156c344e1ad7b949c94e"
+    },
+    {
+      "sourceKey": "Low_Cable_Triceps_Extension",
+      "legacyFingerprint": "3af7e24aa115d3d71c5a12d09ab41b8a79f7e0c5b659e26e03874b71173a745b"
+    },
+    {
+      "sourceKey": "Low_Pulley_Row_To_Neck",
+      "legacyFingerprint": "4d06df98e94892bfaa1596cef066b462e06727db937f192c1d10d1ce596aa19b"
+    },
+    {
+      "sourceKey": "Lower_Back-SMR",
+      "legacyFingerprint": "eb72f3774d15cdaf621caebbc06968764c9248184ee99ac3ec11223cb7fe9b84"
+    },
+    {
+      "sourceKey": "Lower_Back_Curl",
+      "legacyFingerprint": "856897b8a7f55b8eb91a6a21980759e9ad995128981e39a90613789bb3992a70"
+    },
+    {
+      "sourceKey": "Lunge_Pass_Through",
+      "legacyFingerprint": "00822553ccafe477496f5af1234640a4af84e51df07385053d50b63506f1b92c"
+    },
+    {
+      "sourceKey": "Lunge_Sprint",
+      "legacyFingerprint": "bdc1b2bb434d0d2bbb5b2b9e0555acb397471a3f6d8761e67c15c650e5ae96ae"
+    },
+    {
+      "sourceKey": "Lying_Bent_Leg_Groin",
+      "legacyFingerprint": "5159563d4db00ec889928bf1452a48daef362d93d445c403f89212eac4109c61"
+    },
+    {
+      "sourceKey": "Lying_Cable_Curl",
+      "legacyFingerprint": "39eb3263d3a2fce03a42733ababd78d51c4ad06e4b392be8e37b6a6c16d782ac"
+    },
+    {
+      "sourceKey": "Lying_Cambered_Barbell_Row",
+      "legacyFingerprint": "702e82ee5031858528732015c18e229e3165d66ddea7a4d671b977847a9d338c"
+    },
+    {
+      "sourceKey": "Lying_Close-Grip_Bar_Curl_On_High_Pulley",
+      "legacyFingerprint": "8d39e29180d1ce41d8a843e78b233478c3fd23927c88414ae4320e1d3fdcdff1"
+    },
+    {
+      "sourceKey": "Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head",
+      "legacyFingerprint": "8bb66aabd4722b57d5fe3c5629a7793e9dbcc020a1b98cde23d91b3989d48c6d"
+    },
+    {
+      "sourceKey": "Lying_Close-Grip_Barbell_Triceps_Press_To_Chin",
+      "legacyFingerprint": "c8110b4846af5aee97bd1b7443bf7eabf9889811da1dea8930df974631e4662c"
+    },
+    {
+      "sourceKey": "Lying_Crossover",
+      "legacyFingerprint": "85313191d01b252a622bc202f464249dd34dff0494e802672338a893c92e9fc7"
+    },
+    {
+      "sourceKey": "Lying_Dumbbell_Tricep_Extension",
+      "legacyFingerprint": "634100838de5e22dad78dc52b5de37825dc1a460df64cc5c0bc5e7667c2d2cf7"
+    },
+    {
+      "sourceKey": "Lying_Face_Down_Plate_Neck_Resistance",
+      "legacyFingerprint": "2b8ec83a1d64664dea626f53f6f347cdfa08e87d18aa2ca4cedea5d0707d13f1"
+    },
+    {
+      "sourceKey": "Lying_Face_Up_Plate_Neck_Resistance",
+      "legacyFingerprint": "dcedc578e4d1c55da85f37edf63b47a8b32312f20258c26358e60929a8874daa"
+    },
+    {
+      "sourceKey": "Lying_Glute",
+      "legacyFingerprint": "48b401e6c4a792792aaa3992aaa22e2ade864c149c208240614e826f1d27788d"
+    },
+    {
+      "sourceKey": "Lying_Hamstring",
+      "legacyFingerprint": "e9f2520aea1ada5c0c19b36e937651a26f8035f6abd802ddf87d65f56716047d"
+    },
+    {
+      "sourceKey": "Lying_High_Bench_Barbell_Curl",
+      "legacyFingerprint": "712a4d6f90e0b776d544e8ee6fd116963f8a67da58c3cf187c6407ddcd0da3ff"
+    },
+    {
+      "sourceKey": "Lying_Leg_Curls",
+      "legacyFingerprint": "cab1b405e41954b2a61318996a1ae9370ff4280a33772b8433ddd11bfb9a11b5"
+    },
+    {
+      "sourceKey": "Lying_Machine_Squat",
+      "legacyFingerprint": "5a8abae2a8a780f68969807e40e5d0645e54efe8435ee1465f3151f7a78981d7"
+    },
+    {
+      "sourceKey": "Lying_One-Arm_Lateral_Raise",
+      "legacyFingerprint": "b9195f513e90e0a0ffb64ff7f4af67a7b7454cafc17b906d430fd4418533475e"
+    },
+    {
+      "sourceKey": "Lying_Prone_Quadriceps",
+      "legacyFingerprint": "d213b60a3a163b6633e82ae5c9b631571b500ce36d8db31acc85e8966d9b99cc"
+    },
+    {
+      "sourceKey": "Lying_Rear_Delt_Raise",
+      "legacyFingerprint": "885d5f20b873367448eb33d3378e6a612ff18ea9a1dca4fc88a7043eaef096cb"
+    },
+    {
+      "sourceKey": "Lying_Supine_Dumbbell_Curl",
+      "legacyFingerprint": "1ed11174256df6a615927937399ad83f0420e4a525d12376d06995efd305c056"
+    },
+    {
+      "sourceKey": "Lying_T-Bar_Row",
+      "legacyFingerprint": "dd3afdfffa15091ff11ce522a0a4e84e590891c335fded1d1ca07d39685ff7a6"
+    },
+    {
+      "sourceKey": "Lying_Triceps_Press",
+      "legacyFingerprint": "d5942463699da803932ccc10d8c7d4d862e530830f27a9c76a0fb1bdcc9c9054"
+    },
+    {
+      "sourceKey": "Machine_Bench_Press",
+      "legacyFingerprint": "ca45c37d6a5e681d79feb4013f17a5b3238371389a96e5bbda983d35b5c3dcdb"
+    },
+    {
+      "sourceKey": "Machine_Bicep_Curl",
+      "legacyFingerprint": "6bbec8853ef098649105811b97e30f919e005a37c64d43779759f654c42b6a7a"
+    },
+    {
+      "sourceKey": "Machine_Preacher_Curls",
+      "legacyFingerprint": "0d50640ca32a8306a701aaded6c63c8180545182b02a4eca716198ecb1a75cec"
+    },
+    {
+      "sourceKey": "Machine_Shoulder_Military_Press",
+      "legacyFingerprint": "503f492d3dc0ca9f2bdd83bda25cdf2d208615f7ff9a45e78c0a5aa008559ea1"
+    },
+    {
+      "sourceKey": "Machine_Triceps_Extension",
+      "legacyFingerprint": "16a5f0cb8c85a129afc7a1c8034ef649eea7fc36d5baadff084abe7aaa461c6d"
+    },
+    {
+      "sourceKey": "Medicine_Ball_Chest_Pass",
+      "legacyFingerprint": "192842c2f7826e95e530148f1dbd3b7ac1233981de32102e008e402b60936365"
+    },
+    {
+      "sourceKey": "Medicine_Ball_Full_Twist",
+      "legacyFingerprint": "ad2d4bcba133d17b593b9bdecda87b1b460411d838eeb914281992f93b2c9947"
+    },
+    {
+      "sourceKey": "Medicine_Ball_Scoop_Throw",
+      "legacyFingerprint": "3d92cfc4064807eee094902bf9760d4c97ddda2bf1a0809e48301a6e0c2dbae3"
+    },
+    {
+      "sourceKey": "Middle_Back_Shrug",
+      "legacyFingerprint": "014e1008185e4a043f71e28cc26f18ef2f20d644d28a88f211f60ab2f7bf7ac0"
+    },
+    {
+      "sourceKey": "Middle_Back_Stretch",
+      "legacyFingerprint": "5e39ca7af3f80fedb005f3f55092c83a2a916c32410558dde7cb1402332b7a70"
+    },
+    {
+      "sourceKey": "Mixed_Grip_Chin",
+      "legacyFingerprint": "8961288fda463a3f6e1044410025f7c33aac7c42ecdf82be8b20a23340e54887"
+    },
+    {
+      "sourceKey": "Monster_Walk",
+      "legacyFingerprint": "3cb837002ab66702f013349c40f9d5a642f5951bfaff7b44fa590092a4f6e531"
+    },
+    {
+      "sourceKey": "Mountain_Climbers",
+      "legacyFingerprint": "3d589de5418279c11ea26b8de24e9a1bd8d7dd1ca511d3b94e762b615e7ad1d7"
+    },
+    {
+      "sourceKey": "Moving_Claw_Series",
+      "legacyFingerprint": "c9e932b1407cd8890cd6907ca1001d7ac0a22bb921f1d869993570bc04effb93"
+    },
+    {
+      "sourceKey": "Muscle_Snatch",
+      "legacyFingerprint": "981014d7da79468dfa3f519c64479b0a6c0ff3a87b00f159a55001b89623a504"
+    },
+    {
+      "sourceKey": "Muscle_Up",
+      "legacyFingerprint": "eb21d821b8546b4f60239442f77ff672d4ad292134a8c3cb13fe22bc1f1eb863"
+    },
+    {
+      "sourceKey": "Narrow_Stance_Hack_Squats",
+      "legacyFingerprint": "a05bdac47a44a4479e0239a409675e4ff5e0f2941b405fe9c036762eccd9a171"
+    },
+    {
+      "sourceKey": "Narrow_Stance_Leg_Press",
+      "legacyFingerprint": "b69b6253da2199ec611b2d56a9cfcbc03fe67b6b3f9031070d4cda85f6479d08"
+    },
+    {
+      "sourceKey": "Narrow_Stance_Squats",
+      "legacyFingerprint": "6ebab1cc57880b9e772415563da5451313d4dbaafe5c9c3196ae595925e24d05"
+    },
+    {
+      "sourceKey": "Natural_Glute_Ham_Raise",
+      "legacyFingerprint": "74ff166e74bae45d9451e4b3d284ac623fd7253b727215d8f0c2bf2f1cb69b56"
+    },
+    {
+      "sourceKey": "Neck-SMR",
+      "legacyFingerprint": "a8b0a67aacb92816cc8511c38a5d6931df87608e1202cc8719cb2a07f4ab5128"
+    },
+    {
+      "sourceKey": "Neck_Press",
+      "legacyFingerprint": "0ca35e2af766c8e94ce33bb1b6fa6aa44def9295e7f3ef4932e2686af82db977"
+    },
+    {
+      "sourceKey": "Oblique_Crunches",
+      "legacyFingerprint": "b95e9102cba10407f4035bd6b478db4804da6494bc59bb3f2cde26d43f225994"
+    },
+    {
+      "sourceKey": "Oblique_Crunches_-_On_The_Floor",
+      "legacyFingerprint": "776b0b2b3b4eb8861383a80eb38b17a0b262ff4fada8e7e16b62dc9030d383bb"
+    },
+    {
+      "sourceKey": "Olympic_Squat",
+      "legacyFingerprint": "3732aaa6882e796cba4926c20b1b4c443a0209862377022860ce07893b05bfae"
+    },
+    {
+      "sourceKey": "On-Your-Back_Quad_Stretch",
+      "legacyFingerprint": "892f04e1ee238aab7c7ba164fd96156ca698a30e901ac85805597f6c1a864c5d"
+    },
+    {
+      "sourceKey": "On_Your_Side_Quad_Stretch",
+      "legacyFingerprint": "25c635ae7607c97e7f59b3fb479b77b9b24c48b5df8a6b0e9444d7ac46c85ec7"
+    },
+    {
+      "sourceKey": "One-Arm_Dumbbell_Row",
+      "legacyFingerprint": "8cc6ebf936cd9b5527fed3f42483986367d5336b98cc69a1af284809d9f34aea"
+    },
+    {
+      "sourceKey": "One-Arm_Flat_Bench_Dumbbell_Flye",
+      "legacyFingerprint": "d1f7b28024fb422d3c18de82d16714b07f2471b0138fb94c22f6ff86d43f5a21"
+    },
+    {
+      "sourceKey": "One-Arm_High-Pulley_Cable_Side_Bends",
+      "legacyFingerprint": "426114dc22abe80f401fb666418ee3f859c31b4e849dc902b4f5384b35cbb959"
+    },
+    {
+      "sourceKey": "One-Arm_Incline_Lateral_Raise",
+      "legacyFingerprint": "b267ec443c53126c47be147753acaf6aad53c17b21accfedfd68ce8bdef37a4f"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Clean",
+      "legacyFingerprint": "605217205bbf1e9121386b32eede0ca14d530a057a4023cc8f61365461d9a3a4"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Clean_and_Jerk",
+      "legacyFingerprint": "b16f40172756625af62b7737b0e802d4713a8c7a1728c2eaf3f0dcd607be1508"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Floor_Press",
+      "legacyFingerprint": "a2a98dbee4618251f2b461ee305c550f0a0a1fd17dc5ce3bb6dbdce6e29ca70e"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Jerk",
+      "legacyFingerprint": "d04f74bfab49e86b3fc1ea00cd20cb9620353842bad6f40abe075a46a54e8467"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Military_Press_To_The_Side",
+      "legacyFingerprint": "90a3c2544bce54284d981b56c9e7258aaafeff97eee807766bae79b56854b79a"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Para_Press",
+      "legacyFingerprint": "ee7be6c9fb6bf54c444726de1580cb1066f7ad712d1e1abae00907848480244e"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Push_Press",
+      "legacyFingerprint": "32df0e08a11341982739da92f07bd7701b2062b2697314e322c970a9d37063cb"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Row",
+      "legacyFingerprint": "afac470de8a52d8fb7a290dd7bbd0004683d63b2002ecfc519fef685c12e929b"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Snatch",
+      "legacyFingerprint": "41b8fe37ab1f89bfa568ef3876583eb2023f37e7f244aa4bbecaf4bbc1875696"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Split_Jerk",
+      "legacyFingerprint": "8730eac2f0dd9abb4b89f444c11ac40adda8282e92a9d011c626d863a724ee07"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Split_Snatch",
+      "legacyFingerprint": "0526ad39caeb6c17d57d0b7a4bd6a52146d67a07956066c46fe18d8eab4ee9e7"
+    },
+    {
+      "sourceKey": "One-Arm_Kettlebell_Swings",
+      "legacyFingerprint": "7b027ddca943f454d09f77a2118d0a7f332a29468be7a5d632cd623c8f79ef8d"
+    },
+    {
+      "sourceKey": "One-Arm_Long_Bar_Row",
+      "legacyFingerprint": "488ad356c7db2316d40a8510898f4039b02b0520a7d031bbf14be59f834cdbc9"
+    },
+    {
+      "sourceKey": "One-Arm_Medicine_Ball_Slam",
+      "legacyFingerprint": "0492c724744c156b84edc27989f72697912d0dfb6509622358793d60200e99ad"
+    },
+    {
+      "sourceKey": "One-Arm_Open_Palm_Kettlebell_Clean",
+      "legacyFingerprint": "851cdfff856b74453fb7cd1a6ce814ddb07e9f3843e19532f85c8cd0a62435f7"
+    },
+    {
+      "sourceKey": "One-Arm_Overhead_Kettlebell_Squats",
+      "legacyFingerprint": "c28da2257271f74f95182218e190c7bb980ac620b0cca967604467a6d5735e9a"
+    },
+    {
+      "sourceKey": "One-Arm_Side_Deadlift",
+      "legacyFingerprint": "b94b6a07240ef6aa59aed4090493e6978c6bc771ef90a418c2de5b3a10c0510f"
+    },
+    {
+      "sourceKey": "One-Arm_Side_Laterals",
+      "legacyFingerprint": "a414e703d4bd3e70da997dfcfc2416b68ae9c11b8a74a1f0b60a558d67171272"
+    },
+    {
+      "sourceKey": "One-Legged_Cable_Kickback",
+      "legacyFingerprint": "4fbe66acc319f1d14a9b9b5c1c872bcd6e288b3c5c198b740cf721e470bbe155"
+    },
+    {
+      "sourceKey": "One_Arm_Against_Wall",
+      "legacyFingerprint": "978e6ab0c8309a03a9065b269e8217a2f9b1408d25d50796ed56713e9865a13d"
+    },
+    {
+      "sourceKey": "One_Arm_Chin-Up",
+      "legacyFingerprint": "6218d7ccdf44bc674f2cc2eb55f5f38d29c694402b70ca83577d957d93b042e8"
+    },
+    {
+      "sourceKey": "One_Arm_Dumbbell_Bench_Press",
+      "legacyFingerprint": "c6d817cd386efc7d1a17451e20d263691828a45de4a1b116d84bc570546a2265"
+    },
+    {
+      "sourceKey": "One_Arm_Dumbbell_Preacher_Curl",
+      "legacyFingerprint": "bc20b2cd67bb77d264d15067199f38c5defceeafd9a6e259088220fadc768a95"
+    },
+    {
+      "sourceKey": "One_Arm_Floor_Press",
+      "legacyFingerprint": "582961658f8dfac7137796a07c0f47e1fb1886f5f796901c31a49748a23b1ada"
+    },
+    {
+      "sourceKey": "One_Arm_Lat_Pulldown",
+      "legacyFingerprint": "3bb084cd324d8c52624c187dc56b8b1a579447d6aa82941f899079ff4858f2a6"
+    },
+    {
+      "sourceKey": "One_Arm_Pronated_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "b66d3ec285c3184e4f23c2acfe16349a093cae01833a4e9f46e88937c104509e"
+    },
+    {
+      "sourceKey": "One_Arm_Supinated_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "6f7a4acde80f1ca1b0c5acc991df2e3a2384405a3d5afd40b48f87b700de017d"
+    },
+    {
+      "sourceKey": "One_Half_Locust",
+      "legacyFingerprint": "0dcf2d30b2f60494fea7e514f30e25ec5308ca36b30a436df01f723444b84f20"
+    },
+    {
+      "sourceKey": "One_Handed_Hang",
+      "legacyFingerprint": "b0af5dc867f857750b082b0807fb3e1f2daaa8193445751cb5d11c8e8a4a8440"
+    },
+    {
+      "sourceKey": "One_Knee_To_Chest",
+      "legacyFingerprint": "aadb05caf8784cd0d20cfe08be01219240893a6fbb17d00fff3d78d00ffc0e37"
+    },
+    {
+      "sourceKey": "One_Leg_Barbell_Squat",
+      "legacyFingerprint": "1fd97aaba2143d66f351c4021db57086623f2d99d7f95dba9b59086e328ec123"
+    },
+    {
+      "sourceKey": "Open_Palm_Kettlebell_Clean",
+      "legacyFingerprint": "7587f57ddbb536efe3f4798da5d0857c2030774cb49649780d884b3df7344c70"
+    },
+    {
+      "sourceKey": "Otis-Up",
+      "legacyFingerprint": "fb5a5f7abda8f856b6a9378604f69d97efd3eebead099b6b395379009ea14899"
+    },
+    {
+      "sourceKey": "Overhead_Cable_Curl",
+      "legacyFingerprint": "fe157afc3215ab3af6c92638900abf5d20cc9c5518a9a425a3260cb75f72f620"
+    },
+    {
+      "sourceKey": "Overhead_Lat",
+      "legacyFingerprint": "2c9a6683c142ae7dada439247e85e0a3ef6f850580d02fb8d9d2cc15ba76b682"
+    },
+    {
+      "sourceKey": "Overhead_Slam",
+      "legacyFingerprint": "b78f67d862eb00479bbb90bc0c9db3ed8f8fface4241af30d690189d8155eb5f"
+    },
+    {
+      "sourceKey": "Overhead_Squat",
+      "legacyFingerprint": "426cb08ead174e1c40f2d393344567cb5e777a2e5de528313ff1925c7630ec00"
+    },
+    {
+      "sourceKey": "Overhead_Stretch",
+      "legacyFingerprint": "643d8302cf0db39b8e232e4f5239ee6fead2c3cce268ea570ffaaa97096b1dea"
+    },
+    {
+      "sourceKey": "Overhead_Triceps",
+      "legacyFingerprint": "e01643ed22a44fc6689eae2a7907e7c3e5e2c76d4694762eefc5fa613819c9fe"
+    },
+    {
+      "sourceKey": "Pallof_Press",
+      "legacyFingerprint": "21457ecc19bf8c38ad23d349c27e9763fbea606e9e826a50fb2bcf0462705c50"
+    },
+    {
+      "sourceKey": "Pallof_Press_With_Rotation",
+      "legacyFingerprint": "3acc8cda13a8779f72701327be5a764085c703314b88319f90ef04272bdceaea"
+    },
+    {
+      "sourceKey": "Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench",
+      "legacyFingerprint": "2817a1fc9ad9a43288a71bae544603793736ef3a9360f093428eb04802fba301"
+    },
+    {
+      "sourceKey": "Palms-Down_Wrist_Curl_Over_A_Bench",
+      "legacyFingerprint": "62bde74c1408706802678061017cdd118374dd5ecef096c2355023c5b1d48929"
+    },
+    {
+      "sourceKey": "Palms-Up_Barbell_Wrist_Curl_Over_A_Bench",
+      "legacyFingerprint": "bdc6490e0e260f81034a8548411d80740e0ffd6b1273716a721b4bdbbd1e3636"
+    },
+    {
+      "sourceKey": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+      "legacyFingerprint": "b8ec53b581abda7af75b3fce34343b5594682381744b816218cf92175643687b"
+    },
+    {
+      "sourceKey": "Parallel_Bar_Dip",
+      "legacyFingerprint": "ee038606c866eebcf27bf788f247e8ca55d249c3094d632ec45916e115211b69"
+    },
+    {
+      "sourceKey": "Pelvic_Tilt_Into_Bridge",
+      "legacyFingerprint": "38807c809eb9e1abd498fdbe1a6ce727ab1b800f0a173fdef65404c875f8c2b6"
+    },
+    {
+      "sourceKey": "Peroneals-SMR",
+      "legacyFingerprint": "9b2fd2a3a4bf4a78cb42820d59caa3eebf75a1aa28b9eb73fb4f3cec73346687"
+    },
+    {
+      "sourceKey": "Peroneals_Stretch",
+      "legacyFingerprint": "147131e6e966b0bd3a83986326f4704d9da28b2b9d7ae7773dcd5120db62977b"
+    },
+    {
+      "sourceKey": "Physioball_Hip_Bridge",
+      "legacyFingerprint": "8c4445376c2815c51fcb3a955cf1741ce5bb8b8ddcdf725c69acc1fa505c6ef6"
+    },
+    {
+      "sourceKey": "Pin_Presses",
+      "legacyFingerprint": "a85809ef66fd4dca835147eae25e89b9409264b4eeb0825b75f7ed03147dce51"
+    },
+    {
+      "sourceKey": "Piriformis-SMR",
+      "legacyFingerprint": "9ea080e1177c4a642ec33bc00d369afdeca63fa4aa873d5a12c1c20b67d33bd2"
+    },
+    {
+      "sourceKey": "Plank",
+      "legacyFingerprint": "190b439215ee8fd16789ad86260227809572607974aa476df061f8e0f1a3ddfb"
+    },
+    {
+      "sourceKey": "Plate_Pinch",
+      "legacyFingerprint": "ae22fde0ee7935fb3244c6d14e16fb31f0f03c4ffd5a19be5a8eaae3d6c0fdfc"
+    },
+    {
+      "sourceKey": "Plate_Twist",
+      "legacyFingerprint": "5319e156b0dd4ff66c4da2a6072e040616ff9ec5ac451f5e41621067094e4113"
+    },
+    {
+      "sourceKey": "Platform_Hamstring_Slides",
+      "legacyFingerprint": "91767dfbca76a9efff1cf2c9b992f275e7474d87255ac5d9764b39109e7d9319"
+    },
+    {
+      "sourceKey": "Plie_Dumbbell_Squat",
+      "legacyFingerprint": "02ff20e935993b7727edbb3cc38413c70a06daaf9a7fa519307d4aecad3913a5"
+    },
+    {
+      "sourceKey": "Plyo_Kettlebell_Pushups",
+      "legacyFingerprint": "83407bc0526723c23b432699f1715f263c786a15a80b4f7cd14c1d2babf28c14"
+    },
+    {
+      "sourceKey": "Plyo_Push-up",
+      "legacyFingerprint": "6b130ec17a394d2866cbf5c17ee4485cc9217b13741485f42385f8b4c5f15852"
+    },
+    {
+      "sourceKey": "Posterior_Tibialis_Stretch",
+      "legacyFingerprint": "282ec462ebdc09839648d17697f582ffe8af523a15bdf3a39f92c3b4ead04bf8"
+    },
+    {
+      "sourceKey": "Power_Clean",
+      "legacyFingerprint": "09c125c12342dcb7cb49783e4a10e8c6abbf4fb53278d56cf872e6f6f07e95ab"
+    },
+    {
+      "sourceKey": "Power_Clean_from_Blocks",
+      "legacyFingerprint": "232c15aca7bbf018b131c2a27ee7865ac98ef7884e288f40659e92d9564c917b"
+    },
+    {
+      "sourceKey": "Power_Jerk",
+      "legacyFingerprint": "1c564dd74e172a8bfe819458661da5b93ac607f50af3bb247f0406507a2bb4f0"
+    },
+    {
+      "sourceKey": "Power_Partials",
+      "legacyFingerprint": "52abc9fc41a7bbcc63cd9b0cb1f3008d77151f0ecc197d23520545d89b7889c3"
+    },
+    {
+      "sourceKey": "Power_Snatch",
+      "legacyFingerprint": "a71ad83ce531e5aa42e26e9e78badd457c64bbdfe26b2ab8db2cbb447481ec35"
+    },
+    {
+      "sourceKey": "Power_Snatch_from_Blocks",
+      "legacyFingerprint": "dd275872a5f0c4df53b2ab1641bb0e565086d5884ad115ed1d4b70cb922334fe"
+    },
+    {
+      "sourceKey": "Power_Stairs",
+      "legacyFingerprint": "f4e5fcf65cd394a16ec9b8ad74e80e5b5c3a3a275508b9f9bb862e72b203eff6"
+    },
+    {
+      "sourceKey": "Preacher_Curl",
+      "legacyFingerprint": "48d2e2034b8706d5b017c851c4144df36dcb04013033a96e08f581e1ea4f8f83"
+    },
+    {
+      "sourceKey": "Preacher_Hammer_Dumbbell_Curl",
+      "legacyFingerprint": "f041dc2ef844ba99a1a62d048a9d2d2378318218037bf42dce36f10078a749cb"
+    },
+    {
+      "sourceKey": "Press_Sit-Up",
+      "legacyFingerprint": "58b13b11a4eb9f1d9caae4572c781711c0ae5527fe1687b232ea46e3d396a6cd"
+    },
+    {
+      "sourceKey": "Prone_Manual_Hamstring",
+      "legacyFingerprint": "2e4c5928a4826bbad59d363378dbbf15ef065844877e606a2d9618725374b021"
+    },
+    {
+      "sourceKey": "Prowler_Sprint",
+      "legacyFingerprint": "037da06625150741c96b9656b203b62a92db1bd906756b7ad2d1a01371637542"
+    },
+    {
+      "sourceKey": "Pull_Through",
+      "legacyFingerprint": "bb9b913c0a06257d26fa3d8a6ce199532722181fe0b70e435fa2c0c508408b84"
+    },
+    {
+      "sourceKey": "Pullups",
+      "legacyFingerprint": "4a1b19a8f31fd7c8605cad2d894fb6843716e84eae67abfac55e6d42c9edc813"
+    },
+    {
+      "sourceKey": "Push-Up_Wide",
+      "legacyFingerprint": "0b960d62e7335d6909f06ca1d17192131934df81264cbbfc3af0ca42aa9e970c"
+    },
+    {
+      "sourceKey": "Push-Ups_-_Close_Triceps_Position",
+      "legacyFingerprint": "462dab423d7b493557dda861b08a0c5af074e620fb92fb9a088ccb62ad28a813"
+    },
+    {
+      "sourceKey": "Push-Ups_With_Feet_Elevated",
+      "legacyFingerprint": "07cf87aa023d28a879b3aaa80efc8e8c054aa5702c6a58bc0902631507779fe2"
+    },
+    {
+      "sourceKey": "Push-Ups_With_Feet_On_An_Exercise_Ball",
+      "legacyFingerprint": "74abc578561a8b48755c69dfc0d7b8e04120153cff499bbfc474c924f603d81a"
+    },
+    {
+      "sourceKey": "Push_Press",
+      "legacyFingerprint": "635c36e174c634a63ab3e2146bc1379dd5ed84f6e89a7aae734488d25570256a"
+    },
+    {
+      "sourceKey": "Push_Press_-_Behind_the_Neck",
+      "legacyFingerprint": "7818c7f22bb09634b400cb45e35135953172bec09844c0a78e40c88439011e9e"
+    },
+    {
+      "sourceKey": "Push_Up_to_Side_Plank",
+      "legacyFingerprint": "88e17990a314d65cf7690e558f2589249afa258d75fb239fa30330885e1bc3d9"
+    },
+    {
+      "sourceKey": "Pushups",
+      "legacyFingerprint": "282a850fa40eb0465dc4c0b178b44376b76773850f64bad515974d42e715c686"
+    },
+    {
+      "sourceKey": "Pushups_Close_and_Wide_Hand_Positions",
+      "legacyFingerprint": "98ceb791dcb8e68912824d470b2bc4d2c8fb6a5affce3c554f10231d1346f554"
+    },
+    {
+      "sourceKey": "Pyramid",
+      "legacyFingerprint": "86829c4f6e1dc9f514e1e1d230e597ec8452a33b12235b37e3394db77c570f61"
+    },
+    {
+      "sourceKey": "Quad_Stretch",
+      "legacyFingerprint": "289aeacad660d016f1ee5ded794ff5e584c89203443edd46a5a10df2bb001178"
+    },
+    {
+      "sourceKey": "Quadriceps-SMR",
+      "legacyFingerprint": "cf46d844bc91cc56f911fda0fb4acb3dd35f386475c2e94fccb3df9091e7fddd"
+    },
+    {
+      "sourceKey": "Quick_Leap",
+      "legacyFingerprint": "dd5cef819e5883b8ed408936774167cb8d00f88e1423cda3d88276df692d8289"
+    },
+    {
+      "sourceKey": "Rack_Delivery",
+      "legacyFingerprint": "563f0d04691063bacc4d8c948d573d6f64e30c05af78f783018e5fc4188b936e"
+    },
+    {
+      "sourceKey": "Rack_Pull_with_Bands",
+      "legacyFingerprint": "946de763956cb69cdab6ded784d483a8719dbc1a1c6df0b2dabfb14a69d04924"
+    },
+    {
+      "sourceKey": "Rack_Pulls",
+      "legacyFingerprint": "002a30d858e382b0ad8ac4203e91192a37bcca82335a896eb2f2d96b86a923d2"
+    },
+    {
+      "sourceKey": "Rear_Leg_Raises",
+      "legacyFingerprint": "cbe1e7d10e70ac83337be0bf14e09fb5a61419d829681d245c7a63fbab7ee7ce"
+    },
+    {
+      "sourceKey": "Recumbent_Bike",
+      "legacyFingerprint": "b323d3a43f291d33350ec922ae7b432b3780abe7c8296c2f0869e6863928fc4e"
+    },
+    {
+      "sourceKey": "Return_Push_from_Stance",
+      "legacyFingerprint": "44366369ebcb101c03868abe85f00f6e5d2513d7472eaf5128c538830f31c3fd"
+    },
+    {
+      "sourceKey": "Reverse_Band_Bench_Press",
+      "legacyFingerprint": "b1cd6127c908f110a582004b65ff5d0870ab20953b4464bf2197aeddfea0617b"
+    },
+    {
+      "sourceKey": "Reverse_Band_Box_Squat",
+      "legacyFingerprint": "05788c4d309b10ff05ad71db2f38b63b5103f05a7ee57859fb27f976c5efdb43"
+    },
+    {
+      "sourceKey": "Reverse_Band_Deadlift",
+      "legacyFingerprint": "c401898ae7b33cc766f98f9e777f96d80017420d383c13aadfcd215ebdd7670a"
+    },
+    {
+      "sourceKey": "Reverse_Band_Power_Squat",
+      "legacyFingerprint": "3f265d844700dad57b63c6c07ecb3e24a31899d8546669141a8648606338d7b6"
+    },
+    {
+      "sourceKey": "Reverse_Band_Sumo_Deadlift",
+      "legacyFingerprint": "216015abfe496bd0ace19e871fc4e1e9fbfbbd217cdcfbaf7856ee77e2fd907e"
+    },
+    {
+      "sourceKey": "Reverse_Barbell_Curl",
+      "legacyFingerprint": "9739104ed9861ba9166c05d6ac9092197215289c04877e01ebf316e34d45178a"
+    },
+    {
+      "sourceKey": "Reverse_Barbell_Preacher_Curls",
+      "legacyFingerprint": "bf037c371d90b5d4045234dc84ee3973816480e25db27673eaa4f6d55a70c83f"
+    },
+    {
+      "sourceKey": "Reverse_Cable_Curl",
+      "legacyFingerprint": "5318b029c0de8d8993cd293079ce891e105b545f503f63ab2a3eda7a79985a62"
+    },
+    {
+      "sourceKey": "Reverse_Crunch",
+      "legacyFingerprint": "aed4dd04d117fd700cfab62bda60cc27d907af5f2d581ac50a1ae7ffeea98b60"
+    },
+    {
+      "sourceKey": "Reverse_Flyes",
+      "legacyFingerprint": "fe5e95a5bcbbcb337b06f410a91810d857b18ef1da260c9b05e459e0e63a1726"
+    },
+    {
+      "sourceKey": "Reverse_Flyes_With_External_Rotation",
+      "legacyFingerprint": "2dfc7e5fa5f87ff930b7609bbc8b7f8e5506070d0c4d97682a58ca7b2cf871f4"
+    },
+    {
+      "sourceKey": "Reverse_Grip_Bent-Over_Rows",
+      "legacyFingerprint": "01045f7cd805fe98ee0e1538355ffd20228a9b73ab29cf2911d34cdb88ee9714"
+    },
+    {
+      "sourceKey": "Reverse_Grip_Triceps_Pushdown",
+      "legacyFingerprint": "f33213fb251b77165c62a9a9d206a2169f26835acee576b5281106777166bed0"
+    },
+    {
+      "sourceKey": "Reverse_Hyperextension",
+      "legacyFingerprint": "c0dbd406d63f00b785b198b014ea81b7574c77234f4695496dfdada1b57fad46"
+    },
+    {
+      "sourceKey": "Reverse_Machine_Flyes",
+      "legacyFingerprint": "3b33e080577a2afba9bc6a64ee976daa65494a63ef24107800e103fc2a7895c0"
+    },
+    {
+      "sourceKey": "Reverse_Plate_Curls",
+      "legacyFingerprint": "9db36519c780ebbe0553557418547a1d298e9f18b662aef2de3b61e352ba40ec"
+    },
+    {
+      "sourceKey": "Reverse_Triceps_Bench_Press",
+      "legacyFingerprint": "bbad10ec3ad10e958728de5ae7fd11611b0ba9eeb3dd6e51f9ece5b0064687e4"
+    },
+    {
+      "sourceKey": "Rhomboids-SMR",
+      "legacyFingerprint": "55b3a3461cb522c2270335a00224d07e9f12286b58ee93b8fdd8f752f04d8aaa"
+    },
+    {
+      "sourceKey": "Rickshaw_Carry",
+      "legacyFingerprint": "7f835b70b9411f9846cd8944b675197d3a13da0b75dc71de201c45620722a65e"
+    },
+    {
+      "sourceKey": "Rickshaw_Deadlift",
+      "legacyFingerprint": "77a1a7705027c8bebf4cc398773015fe28ed008911b6a62a0c065a54b5afeb5c"
+    },
+    {
+      "sourceKey": "Ring_Dips",
+      "legacyFingerprint": "d8cf2b234757856f27308e7b97d42853e17bf0afc0c3e22df4189a10bdc1771e"
+    },
+    {
+      "sourceKey": "Rocket_Jump",
+      "legacyFingerprint": "5acf9ac637704a2bd8574f63327201f59360da5501382245f719774723d40920"
+    },
+    {
+      "sourceKey": "Rocking_Standing_Calf_Raise",
+      "legacyFingerprint": "2d501c888cc7004836d62967baa4d1b12baf6b502807ff13d3ad0c80211464be"
+    },
+    {
+      "sourceKey": "Rocky_Pull-Ups_Pulldowns",
+      "legacyFingerprint": "369b6992c36ec901ac81f67ec075a6753b7eecbb43a29bd9e0e611baeafcc0b9"
+    },
+    {
+      "sourceKey": "Romanian_Deadlift",
+      "legacyFingerprint": "b2c3290275b0ec462d70ad615a7b929606c4f0ac182d512b0da543c0fdd76a17"
+    },
+    {
+      "sourceKey": "Romanian_Deadlift_from_Deficit",
+      "legacyFingerprint": "e392bdf6376371c0c104507684ab9e952477a428154c318915826eddb7532b12"
+    },
+    {
+      "sourceKey": "Rope_Climb",
+      "legacyFingerprint": "27614bc860993ae46477e0d46f9b1f7063196310ca37a96ce113033fa859ac68"
+    },
+    {
+      "sourceKey": "Rope_Crunch",
+      "legacyFingerprint": "ce1dc69f47a067681f69496fa997b540cf5201a1421297bace9ddf8dac84e8f7"
+    },
+    {
+      "sourceKey": "Rope_Jumping",
+      "legacyFingerprint": "356ad44f433fa61844cc9cef0e35803dacb57f40099d5f915f02aeb617246411"
+    },
+    {
+      "sourceKey": "Rope_Straight-Arm_Pulldown",
+      "legacyFingerprint": "72cdf7a070c9c0c7c5c7ac44fd3aaf45925d11d1ac49492f4a73ea6615e9af4b"
+    },
+    {
+      "sourceKey": "Round_The_World_Shoulder_Stretch",
+      "legacyFingerprint": "8a20a8cb3a13dd3d4c8a572d4b2fb1d63de4fd33a71bd57c04d523a5c9716997"
+    },
+    {
+      "sourceKey": "Rowing_Stationary",
+      "legacyFingerprint": "6542b05126132f984937f75c2692b9dd8fc3befde73474ebe8696e8eb7a8bd75"
+    },
+    {
+      "sourceKey": "Runners_Stretch",
+      "legacyFingerprint": "ceec4f54ee8dfe4d12c539062337ce4194416b26cb973b9a9eebe56d35b72a5e"
+    },
+    {
+      "sourceKey": "Running_Treadmill",
+      "legacyFingerprint": "72328c5c9175e646c4cb4675a0b8e8d06284602bbc8a48aa3e44dba42c57a360"
+    },
+    {
+      "sourceKey": "Russian_Twist",
+      "legacyFingerprint": "c6540a48c3a4f8914c8b9a5293beef95e1a434d46274722064278bdc89d7a45c"
+    },
+    {
+      "sourceKey": "Sandbag_Load",
+      "legacyFingerprint": "d4e010a47a25f8bdcabe042fdca205042bb192747ba945fa75290adb29700b65"
+    },
+    {
+      "sourceKey": "Scapular_Pull-Up",
+      "legacyFingerprint": "48e85bc954c6f24f283cfa3a5895c864635f7c9e234908139e634d4b47b77bd1"
+    },
+    {
+      "sourceKey": "Scissor_Kick",
+      "legacyFingerprint": "6f58ad1293b5ec1edad5e153bc179e48e4feeccd62f4ab2be6c4a2c50e63e33a"
+    },
+    {
+      "sourceKey": "Scissors_Jump",
+      "legacyFingerprint": "6d8facebaae57b336d9425c3e1b37365185b42ecec4e6a8e9a692fd1c609a789"
+    },
+    {
+      "sourceKey": "Seated_Band_Hamstring_Curl",
+      "legacyFingerprint": "de6377151937ba9eced4b7082fc6bcdd55792ef30e89076eb554550ef5fc2168"
+    },
+    {
+      "sourceKey": "Seated_Barbell_Military_Press",
+      "legacyFingerprint": "31f30398dfdd73ed20ab967b36fda58e0bdd845238175cb19d79d9357daa8189"
+    },
+    {
+      "sourceKey": "Seated_Barbell_Twist",
+      "legacyFingerprint": "a847eb098b1038f3a108ca116cd88dbb7491487d030a345e3c4078892213cb2a"
+    },
+    {
+      "sourceKey": "Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "46a24681ea99208412743406d3720ed1445f6ec8cf7e0be8e0891cf48378a75e"
+    },
+    {
+      "sourceKey": "Seated_Bent-Over_Rear_Delt_Raise",
+      "legacyFingerprint": "86b646818723b883c86b10a27afc4e00583a0080e2e281a4a417f63222c9efe1"
+    },
+    {
+      "sourceKey": "Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "5310d176e58d4427a2423940600093a5b4782c61463cc4f9cb0a3e52b5e61785"
+    },
+    {
+      "sourceKey": "Seated_Biceps",
+      "legacyFingerprint": "645150594a8f5feec180f907215e60367dc09dc4e11d1ad0d9e743edc6fa0726"
+    },
+    {
+      "sourceKey": "Seated_Cable_Rows",
+      "legacyFingerprint": "5a73773a63eaac1b3475f5cbb90ff6c2aaca2c0694e82e512c9ad554d10fe70d"
+    },
+    {
+      "sourceKey": "Seated_Cable_Shoulder_Press",
+      "legacyFingerprint": "d0a3586aab6a2fe3469d2960a921fa37db5f508ee8b88de707d127ca7edaf273"
+    },
+    {
+      "sourceKey": "Seated_Calf_Raise",
+      "legacyFingerprint": "9c4e3d0a0f99f52ae1af1f07391d475596c6e1481789a9b8d187e6fcf7fac622"
+    },
+    {
+      "sourceKey": "Seated_Calf_Stretch",
+      "legacyFingerprint": "8732338b3481a48191a781818d8e1ead054a954e062497fa941b6d983ce0586c"
+    },
+    {
+      "sourceKey": "Seated_Close-Grip_Concentration_Barbell_Curl",
+      "legacyFingerprint": "60d81839069fcc86738d260723cf060f27ad615565c900dcc5b77b591c8225d9"
+    },
+    {
+      "sourceKey": "Seated_Dumbbell_Curl",
+      "legacyFingerprint": "17ae88f2f1f5050bbc388ec0de35017e0be9301d8f2b07f5e643d9a37d6ad015"
+    },
+    {
+      "sourceKey": "Seated_Dumbbell_Inner_Biceps_Curl",
+      "legacyFingerprint": "7abbdc6a7d6295ce6b1e94a1b9c84f57e7bc7969085d3418476457e793b3a7c7"
+    },
+    {
+      "sourceKey": "Seated_Dumbbell_Palms-Down_Wrist_Curl",
+      "legacyFingerprint": "0b036300bfece65d22a891469aae56b690843a5e99e08acc6179c35db9ca9171"
+    },
+    {
+      "sourceKey": "Seated_Dumbbell_Palms-Up_Wrist_Curl",
+      "legacyFingerprint": "67d0684ce9fb6d59f197e2bd25f8fd0f0c78f5462d7812e75b47d7d2698c395c"
+    },
+    {
+      "sourceKey": "Seated_Dumbbell_Press",
+      "legacyFingerprint": "1b361e2768654f9acd09bbb9df70910b24d6cdbc6f9df5ea765b95db44158966"
+    },
+    {
+      "sourceKey": "Seated_Flat_Bench_Leg_Pull-In",
+      "legacyFingerprint": "0845b4b2037e11343319656074194aa82b64ed2172a45956acbda720f1acf1c2"
+    },
+    {
+      "sourceKey": "Seated_Floor_Hamstring_Stretch",
+      "legacyFingerprint": "477195521982e45d7527c5b79a9281435224a7f05413b5c46273f0a3e93fee3f"
+    },
+    {
+      "sourceKey": "Seated_Front_Deltoid",
+      "legacyFingerprint": "deb501f4b233e1d1fc20245a621bd0a94ee27336298916035aa45af29f02d251"
+    },
+    {
+      "sourceKey": "Seated_Glute",
+      "legacyFingerprint": "eb2620cb7dbb314af14fbee1d9dd08969d1cb82cabafb98f9165b33f37ca3e15"
+    },
+    {
+      "sourceKey": "Seated_Good_Mornings",
+      "legacyFingerprint": "7e14d12114ae8b50611bbc25e6fcc3570b5a83f7237e323fcaebd39c6d8d2b44"
+    },
+    {
+      "sourceKey": "Seated_Hamstring",
+      "legacyFingerprint": "ccfd276390504c2613a09b9490aba7db53bf0cb941c6d3e472ee57b478c9ac96"
+    },
+    {
+      "sourceKey": "Seated_Hamstring_and_Calf_Stretch",
+      "legacyFingerprint": "1a7065c1733ebcd42fc2e22d1e646f852779103489fbca9b4f55c4c1192f907b"
+    },
+    {
+      "sourceKey": "Seated_Head_Harness_Neck_Resistance",
+      "legacyFingerprint": "6f23bd2aecffb8845c15a52c977c5ab3f41631060a012b346d212dc50634ee12"
+    },
+    {
+      "sourceKey": "Seated_Leg_Curl",
+      "legacyFingerprint": "a419f24be37ff26ad7a5b70b64d430f922e604d6056e66ffa30244d0d5ce1c9d"
+    },
+    {
+      "sourceKey": "Seated_Leg_Tucks",
+      "legacyFingerprint": "2eb18f2daff9c7128cd9362ede67d31c5507a7ebe8d3500e5cb08fc27845c7b2"
+    },
+    {
+      "sourceKey": "Seated_One-Arm_Dumbbell_Palms-Down_Wrist_Curl",
+      "legacyFingerprint": "1f736fa448591a5ae17cfff43e29ed614056a15d0816c9ab1300916f4f60eb28"
+    },
+    {
+      "sourceKey": "Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl",
+      "legacyFingerprint": "11a34399a1b2d4720324d8d247b5b46937b34c607290e1359e960443368797f6"
+    },
+    {
+      "sourceKey": "Seated_One-arm_Cable_Pulley_Rows",
+      "legacyFingerprint": "ad6f367647870cb3dbfc5d24585d2c5f7d1fd91d30bd86199f68d6d88495a29c"
+    },
+    {
+      "sourceKey": "Seated_Overhead_Stretch",
+      "legacyFingerprint": "7d377eae0278f8c331e730346a9bbf5f60937f2a2cefe97a0417502a2820f213"
+    },
+    {
+      "sourceKey": "Seated_Palm-Up_Barbell_Wrist_Curl",
+      "legacyFingerprint": "3e97ba80972c4ae4e96af0d0b43c6994c9d9578f427cb547e4efbb514c043b86"
+    },
+    {
+      "sourceKey": "Seated_Palms-Down_Barbell_Wrist_Curl",
+      "legacyFingerprint": "d8be93d8f613c363bd8cda9bbd83851ee651ca8872b896eef4809f1e741be5d2"
+    },
+    {
+      "sourceKey": "Seated_Side_Lateral_Raise",
+      "legacyFingerprint": "29c6ffbe095c000e0f3f1c37694ba2cbc79d6cd8ae506ae7445762636cf4bbf0"
+    },
+    {
+      "sourceKey": "Seated_Triceps_Press",
+      "legacyFingerprint": "92fa60ac9599c5d3140d21186a1d3617684862368a507726a258ea02361519ff"
+    },
+    {
+      "sourceKey": "Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl",
+      "legacyFingerprint": "adb5cd232ba9672828c0624971c1c1bacf826df4ec15034c226e6f178ae1faf3"
+    },
+    {
+      "sourceKey": "See-Saw_Press_Alternating_Side_Press",
+      "legacyFingerprint": "82134120ed103c8b7d5404eae8dd54703030d8c2fac967134d9c16160e5908db"
+    },
+    {
+      "sourceKey": "Shotgun_Row",
+      "legacyFingerprint": "6a21dc20a4525e9cdead3e6eb4d8744b9f7727a7b86af0741f9e284caa9e9a6c"
+    },
+    {
+      "sourceKey": "Shoulder_Circles",
+      "legacyFingerprint": "7f6a15c6bf5a96340c55eb17d8fc54597eb84e96b5bfa0382894561ee77ab1d4"
+    },
+    {
+      "sourceKey": "Shoulder_Press_-_With_Bands",
+      "legacyFingerprint": "b96113488f75ab695f762dd72d0926bf11643c189448ab0c37a15cff7deff1cb"
+    },
+    {
+      "sourceKey": "Shoulder_Raise",
+      "legacyFingerprint": "7ff5881c47a57eea7add8c7114d0549926be9f86beab7f045d582c0b93fae840"
+    },
+    {
+      "sourceKey": "Shoulder_Stretch",
+      "legacyFingerprint": "96ad68ab5ff1bbbf8a8f3a39dcef49bba9de17d84f12a67c9bd7319b69a0beb8"
+    },
+    {
+      "sourceKey": "Side-Lying_Floor_Stretch",
+      "legacyFingerprint": "081b93062e0f95c98b10aabfaccc50b913aa83e990074a5ef7ec768c3a9d30fd"
+    },
+    {
+      "sourceKey": "Side_Bridge",
+      "legacyFingerprint": "014314f2561a68a8b6bbaece28d7eec33970906fc0d23e97fc522c61d329e600"
+    },
+    {
+      "sourceKey": "Side_Hop-Sprint",
+      "legacyFingerprint": "f347e6b91bb42dd8a906c4d48bf5466801ea35f78ec7b364e9424154dda6a20e"
+    },
+    {
+      "sourceKey": "Side_Jackknife",
+      "legacyFingerprint": "37b539304d3ca6ef453e06770a0c27a2fb62270014fde2ccb9bf5a05cd7395e1"
+    },
+    {
+      "sourceKey": "Side_Lateral_Raise",
+      "legacyFingerprint": "09a5b7a6c3d20add2b8413290117a2507b427615e436a6564f53c286a2465d82"
+    },
+    {
+      "sourceKey": "Side_Laterals_to_Front_Raise",
+      "legacyFingerprint": "b395ab88326b264f85f92c00e229bc1f419cdea53b1526420e0c33e551f00c55"
+    },
+    {
+      "sourceKey": "Side_Leg_Raises",
+      "legacyFingerprint": "73a2c4821fdca38d2ab226d9eb0e5c95a58891c22fc782969a42c91da64dec0f"
+    },
+    {
+      "sourceKey": "Side_Lying_Groin_Stretch",
+      "legacyFingerprint": "35282fbc713b0a6579499511ac1f229a219a5c7d00d3428a711c0655570493bc"
+    },
+    {
+      "sourceKey": "Side_Neck_Stretch",
+      "legacyFingerprint": "394509e917dc55df57358b43b33f0038d039f303e4de020d533c1c4b18ae5233"
+    },
+    {
+      "sourceKey": "Side_Standing_Long_Jump",
+      "legacyFingerprint": "f876b61b9f6007c52012f063f2814ec6963b9b5c26515b44f19a9f81c3873ac8"
+    },
+    {
+      "sourceKey": "Side_To_Side_Chins",
+      "legacyFingerprint": "25147654596d2c583f19a547a5d224a38b3d682e9cd6637962017aa6456469d6"
+    },
+    {
+      "sourceKey": "Side_Wrist_Pull",
+      "legacyFingerprint": "45d299e087c268d9789cf2af40b331209a20d4919ebcb7e94b3a6d677a9cfc9c"
+    },
+    {
+      "sourceKey": "Side_to_Side_Box_Shuffle",
+      "legacyFingerprint": "e2f0281c02fe753a2dd06b86d71bbf7171abfb2a705ef1fffbefe2d69adfff15"
+    },
+    {
+      "sourceKey": "Single-Arm_Cable_Crossover",
+      "legacyFingerprint": "363575f039b94e919c0c40394c25fa23a20c82c81bbadad2b6296d6b4dd3fdde"
+    },
+    {
+      "sourceKey": "Single-Arm_Linear_Jammer",
+      "legacyFingerprint": "92941aac46ceec6f80e7a1e75077ec9b43e4897557e3cf6de34d23bd1e1fef85"
+    },
+    {
+      "sourceKey": "Single-Arm_Push-Up",
+      "legacyFingerprint": "8435ca9948f953a429aae1caa23b2f74cb5c53418f4de64a55800f53c0626b94"
+    },
+    {
+      "sourceKey": "Single-Cone_Sprint_Drill",
+      "legacyFingerprint": "78e723d88bfdc0867e812603e0c3f294819466245ad5d8d72bf5e03ee1d5073c"
+    },
+    {
+      "sourceKey": "Single-Leg_High_Box_Squat",
+      "legacyFingerprint": "c28bef30a4819fca1e6d748bfb9adb54bea7bbdaba7c346ebaa4897c5764d413"
+    },
+    {
+      "sourceKey": "Single-Leg_Hop_Progression",
+      "legacyFingerprint": "710185f9223ae3343fcce74abd78d08545f5d6339df2a5083fc418bb55c448fe"
+    },
+    {
+      "sourceKey": "Single-Leg_Lateral_Hop",
+      "legacyFingerprint": "915d7e79d23fa849891e332b1ddb6eb495e407507fbdc1bfe1c28fc90ea01f18"
+    },
+    {
+      "sourceKey": "Single-Leg_Leg_Extension",
+      "legacyFingerprint": "108273f05366f8a72fe326a4df7741bf1a44c9946443b666a36d95a9f58581be"
+    },
+    {
+      "sourceKey": "Single-Leg_Stride_Jump",
+      "legacyFingerprint": "a05252a9c9cd5dbd756e24c43371208a77dbf9a67480570ada7ec3f4cca5d084"
+    },
+    {
+      "sourceKey": "Single_Dumbbell_Raise",
+      "legacyFingerprint": "9a43e245ea14347b777b8676bf84ab67ccf0ef4cc7e945dd9dfb9502489f6185"
+    },
+    {
+      "sourceKey": "Single_Leg_Butt_Kick",
+      "legacyFingerprint": "6ed8d3be25322c1a6317b667c1f0572b6628612f1b20b5335ba48c82cab40711"
+    },
+    {
+      "sourceKey": "Single_Leg_Glute_Bridge",
+      "legacyFingerprint": "a436b5b2a8d01a136a67296ad5e2f937e4edf589348f5f90adf1728eed6fc24c"
+    },
+    {
+      "sourceKey": "Single_Leg_Push-off",
+      "legacyFingerprint": "c33986d3dcc76ee9c02772074844573f75a36a47dd0c23b73601bb1ef023b5e9"
+    },
+    {
+      "sourceKey": "Sit-Up",
+      "legacyFingerprint": "48deff1513d49abd08f7a16ac3244841c5562dea64af76f32fa5a6d766f79836"
+    },
+    {
+      "sourceKey": "Sit_Squats",
+      "legacyFingerprint": "4fb51fed0d75b56cc1ce5ccb66d72df4b0afb5dbdc34d293482e595ce3851aae"
+    },
+    {
+      "sourceKey": "Skating",
+      "legacyFingerprint": "be97bfb380507b7e77f12c0c59af3915c89e684807422e7eb5ac3067d16d94ed"
+    },
+    {
+      "sourceKey": "Sled_Drag_-_Harness",
+      "legacyFingerprint": "f6efc83c552802a12523b803f8d2940b593131cc644632d659585eb5dc54ac86"
+    },
+    {
+      "sourceKey": "Sled_Overhead_Backward_Walk",
+      "legacyFingerprint": "af4950dfeac40035052bbe39b2ad0c05d557f8ed5ed7b6296b43a766935a25f7"
+    },
+    {
+      "sourceKey": "Sled_Overhead_Triceps_Extension",
+      "legacyFingerprint": "468c1dc723f0b05a760c9e3f1009d6a7d8842b44aa3ce245ef2bbef37e17a5ab"
+    },
+    {
+      "sourceKey": "Sled_Push",
+      "legacyFingerprint": "31d8fbf4cb3918d8f3f6c0f5b84d7cf7cb60ae72327919477f13da7689171ec2"
+    },
+    {
+      "sourceKey": "Sled_Reverse_Flye",
+      "legacyFingerprint": "b18484687f36c51a327eb4b06c7328925a406ebde84ec241402745697fcf4aaf"
+    },
+    {
+      "sourceKey": "Sled_Row",
+      "legacyFingerprint": "cdbd59eb2b763b18b2db7f4883cdc979bde6bc7d6e2a7b5f119ef0785c51d0c7"
+    },
+    {
+      "sourceKey": "Sledgehammer_Swings",
+      "legacyFingerprint": "8a6cae5016657e32dfc8cfc8d71823a4e82fa0c3168aec2ece1991c0c4648839"
+    },
+    {
+      "sourceKey": "Smith_Incline_Shoulder_Raise",
+      "legacyFingerprint": "2ebba4c589cd6eb6ed5d4217a5b988cfa735f5e2acc4bf9b5af871628540b02f"
+    },
+    {
+      "sourceKey": "Smith_Machine_Behind_the_Back_Shrug",
+      "legacyFingerprint": "cb6a7df195df97bd2e4f3b71ea286ca3ac2e7158324e06bf0363f62cc8ae194c"
+    },
+    {
+      "sourceKey": "Smith_Machine_Bench_Press",
+      "legacyFingerprint": "db7c2aeacc3feb57f14142c81710f675a2983033776d6b36e506cad9e86cad8d"
+    },
+    {
+      "sourceKey": "Smith_Machine_Bent_Over_Row",
+      "legacyFingerprint": "87baeed716935a2ef89fd235b0d513230e3a20e63eca5ad6ed232de7afebda82"
+    },
+    {
+      "sourceKey": "Smith_Machine_Calf_Raise",
+      "legacyFingerprint": "eee9efcd8fd44ce541fc8181c47fb0663bc62d0ae694b799e44883b8f26b1c1a"
+    },
+    {
+      "sourceKey": "Smith_Machine_Close-Grip_Bench_Press",
+      "legacyFingerprint": "1ce7014d6506b838ee10cc6411383bfd7fbf8e67b311a679ba35ef56636a0839"
+    },
+    {
+      "sourceKey": "Smith_Machine_Decline_Press",
+      "legacyFingerprint": "5f4a97994347296e2faa9b81f5737736e24c3636a41f0c8bd359402196a24497"
+    },
+    {
+      "sourceKey": "Smith_Machine_Hang_Power_Clean",
+      "legacyFingerprint": "338b25b047b75d9959bbeee7f5f75577204278cf1981a54cf67d0b59cb5e9cfd"
+    },
+    {
+      "sourceKey": "Smith_Machine_Hip_Raise",
+      "legacyFingerprint": "287d161f1ff40f015e3eb40f7ebf5bfccd72abd0ea536233faa0592537d446a5"
+    },
+    {
+      "sourceKey": "Smith_Machine_Incline_Bench_Press",
+      "legacyFingerprint": "f7f7d90c2cd894a258e8e0ebcf5a2aad8d472017bd94b610751cd12ef0f893bd"
+    },
+    {
+      "sourceKey": "Smith_Machine_Leg_Press",
+      "legacyFingerprint": "0788116c6b000ed08293a26981cb8e16b74966ea2f349bab11ab06b2ca18fc38"
+    },
+    {
+      "sourceKey": "Smith_Machine_One-Arm_Upright_Row",
+      "legacyFingerprint": "f9fead0d5ce07c0bf52a7ef72a099367751b715dedfd4f632d66ca39461abf34"
+    },
+    {
+      "sourceKey": "Smith_Machine_Overhead_Shoulder_Press",
+      "legacyFingerprint": "7ad028660984d6a160b552924c058c185408b3c7778afbedd8b6e00e59b6b093"
+    },
+    {
+      "sourceKey": "Smith_Machine_Pistol_Squat",
+      "legacyFingerprint": "cdd02c68b848373a65f4c8e941f560e926deb6b4229f2e1349c2d5813c14161f"
+    },
+    {
+      "sourceKey": "Smith_Machine_Reverse_Calf_Raises",
+      "legacyFingerprint": "9b597142b6c4b798d73832398d95e287d97d05b04ae13212af6fc5c6c2496f71"
+    },
+    {
+      "sourceKey": "Smith_Machine_Squat",
+      "legacyFingerprint": "eaac435a8a5aea22c0779683427e117f545fdcadb7cf5bef13902e667287f88a"
+    },
+    {
+      "sourceKey": "Smith_Machine_Stiff-Legged_Deadlift",
+      "legacyFingerprint": "460802e32d05f83f3e6906d68678a4905e2af94556e895f1f056afa2bbcf9493"
+    },
+    {
+      "sourceKey": "Smith_Machine_Upright_Row",
+      "legacyFingerprint": "d41ba9a5c11c9835fceba393cf8b0cff118fa13d1d02476190731a30b4ddbcd2"
+    },
+    {
+      "sourceKey": "Smith_Single-Leg_Split_Squat",
+      "legacyFingerprint": "4dfef0bd2ce2baa32b56df970b05cddd8e0e00b7051f77579598bbfcf2474619"
+    },
+    {
+      "sourceKey": "Snatch",
+      "legacyFingerprint": "02cc7969f6d4473224c6ccc26f257b4b451b909976c32b037178a9f137bfa324"
+    },
+    {
+      "sourceKey": "Snatch_Balance",
+      "legacyFingerprint": "e9a206aa38c082f5fb3f8f37ee9debd602632a73ec607e7438c8717533d45e8b"
+    },
+    {
+      "sourceKey": "Snatch_Deadlift",
+      "legacyFingerprint": "f3f49a6847bda25ad122ab78c49cf4bf0123f821c8fbceeb8212668268bd6392"
+    },
+    {
+      "sourceKey": "Snatch_Pull",
+      "legacyFingerprint": "8f1c387865b71cad4b3f21dbe1c1fcb0915f7b37ccef4ff1af7acf9faf702e6c"
+    },
+    {
+      "sourceKey": "Snatch_Shrug",
+      "legacyFingerprint": "ea79032ff16fbc4e353a5917df8d29726b4669fb9559371473978a4fd255abfc"
+    },
+    {
+      "sourceKey": "Snatch_from_Blocks",
+      "legacyFingerprint": "99d4d0c468b9cf26814663fdc9394aa9087f2e3b7d2f53e04940d60635244ece"
+    },
+    {
+      "sourceKey": "Speed_Band_Overhead_Triceps",
+      "legacyFingerprint": "2a7703ede08d219b664a55788c38aafb31798f890edb1c35d4b564982af5d663"
+    },
+    {
+      "sourceKey": "Speed_Box_Squat",
+      "legacyFingerprint": "2fd016684fac509e190362b6f086f842b80e80c55d3e4dfc9df0cbff6fe613eb"
+    },
+    {
+      "sourceKey": "Speed_Squats",
+      "legacyFingerprint": "27b38999e9bae1047067041f9bdcd75b9411963761977044cdd4971497595a36"
+    },
+    {
+      "sourceKey": "Spell_Caster",
+      "legacyFingerprint": "31d6681f01e2df4fce2e25e8b57b08aa0c6d594d433b8afcc9822425a4f3f2d4"
+    },
+    {
+      "sourceKey": "Spider_Crawl",
+      "legacyFingerprint": "874b47858f16f73ea28e07424c8ad22553b3a8faa1b4ecd79897ae4e480d4d04"
+    },
+    {
+      "sourceKey": "Spider_Curl",
+      "legacyFingerprint": "ed8f74d2b4aed5598805e185499ca888d1c60ae8ea71dc440f2907c7f2bb18f0"
+    },
+    {
+      "sourceKey": "Spinal_Stretch",
+      "legacyFingerprint": "3b4c4ab0fd832c6e009e2c1208379b2b373b4a9edab2d3ee6cae260fe1a7ab97"
+    },
+    {
+      "sourceKey": "Split_Clean",
+      "legacyFingerprint": "648f0957202328f3272450b6ec97411d549ea9aaff2f828f197f1ba079318f9b"
+    },
+    {
+      "sourceKey": "Split_Jerk",
+      "legacyFingerprint": "778af1a6f53cb6e1d5accfb687e365566acd01e4e696f0834c5d276797d9b1bb"
+    },
+    {
+      "sourceKey": "Split_Jump",
+      "legacyFingerprint": "aedf52f680c8ad9d7095a9d5993d31654b511ad5b7f2b8ce6e5056dc4f04d3ea"
+    },
+    {
+      "sourceKey": "Split_Snatch",
+      "legacyFingerprint": "dcecc36823914e700ad89b4ecc92297f2aa3284318e4993fc53e0aace1276c5c"
+    },
+    {
+      "sourceKey": "Split_Squat_with_Dumbbells",
+      "legacyFingerprint": "255a64c49ef2f7e55a64bb5ad7b4ed9111633462087832f0d68807a430d46597"
+    },
+    {
+      "sourceKey": "Split_Squats",
+      "legacyFingerprint": "1ed3cfaf694406a7b240020a1c323309ac7c4d1154c986597eb185328e9f9d68"
+    },
+    {
+      "sourceKey": "Squat_Jerk",
+      "legacyFingerprint": "7c38bf15b5080140f8ceda970b73a52078ffea92e3a47f65e324fd321028b6d0"
+    },
+    {
+      "sourceKey": "Squat_with_Bands",
+      "legacyFingerprint": "661a555ac2fdffce030a33e266fec45c873fbe6a8f38a2e566857f2c9a05f425"
+    },
+    {
+      "sourceKey": "Squat_with_Chains",
+      "legacyFingerprint": "ff6abc97e93cd0c23b3d6c21bf3f1ca6eaa94a10ed7ea9e6c89c51ce840d52a2"
+    },
+    {
+      "sourceKey": "Squat_with_Plate_Movers",
+      "legacyFingerprint": "f1831cc021de38bc7f683332e52624f719fc22b56156024486ae279252a2a747"
+    },
+    {
+      "sourceKey": "Squats_-_With_Bands",
+      "legacyFingerprint": "ea0cedf8b95e0018bf4b0c92f52c874ef942ab6f4de0cc268466c754cc5bfdaa"
+    },
+    {
+      "sourceKey": "Stairmaster",
+      "legacyFingerprint": "13863fc9e5eb820f70dc0602f89fff6acf0fdbd981fd9574946b9c039eaebfa7"
+    },
+    {
+      "sourceKey": "Standing_Alternating_Dumbbell_Press",
+      "legacyFingerprint": "7d3b48c00c9787a7f9f60537fcdb220f53f73462264dd072bc6a799159916e1d"
+    },
+    {
+      "sourceKey": "Standing_Barbell_Calf_Raise",
+      "legacyFingerprint": "5a5e31a05d907e7da2e192addc75a3b7e2b674c00504b890d1190bc44f2881e5"
+    },
+    {
+      "sourceKey": "Standing_Barbell_Press_Behind_Neck",
+      "legacyFingerprint": "2cbc06c5efc9eb7e8f8a613205e7b8a2e0741aa0953b22b11c83a7937261968a"
+    },
+    {
+      "sourceKey": "Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "f045228b549c40a9f3408905ed1a549d2ad48481c995e11e8c2c0b1a5b4e4e7c"
+    },
+    {
+      "sourceKey": "Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "ccd62b25bc5ea4d894cddd2b7624fe012e650b60443a0f8336adbf3c5cf841ca"
+    },
+    {
+      "sourceKey": "Standing_Biceps_Cable_Curl",
+      "legacyFingerprint": "af62217b954a31ff2ac93298db66c50c82c7e5a8daeb0159fdec7165bd4072e5"
+    },
+    {
+      "sourceKey": "Standing_Biceps_Stretch",
+      "legacyFingerprint": "51aeb909026b18c4a2f82393779e2d8b56d4b37a5b2fdb496e238f1e0f64f11e"
+    },
+    {
+      "sourceKey": "Standing_Bradford_Press",
+      "legacyFingerprint": "b40f3543fb3304d6278593ef4320a40559b19448880a10a5458333d47cd8c062"
+    },
+    {
+      "sourceKey": "Standing_Cable_Chest_Press",
+      "legacyFingerprint": "3d1e250f19791df68da60126e9456ba78173eab307d3d9974507b149a85373cb"
+    },
+    {
+      "sourceKey": "Standing_Cable_Lift",
+      "legacyFingerprint": "32f1679f2d7cbaad2e076acb9d474bccfdcf2eaa8e3444fac0e0c71cf050dec6"
+    },
+    {
+      "sourceKey": "Standing_Cable_Wood_Chop",
+      "legacyFingerprint": "5a0eb9b1658367ea2854a525a2f961656083b3d12584e527b93590c42ec47114"
+    },
+    {
+      "sourceKey": "Standing_Calf_Raises",
+      "legacyFingerprint": "1c7950f33fc0f6f6bdff07885477078c30e9e725c807d4a5c2db823087cce47e"
+    },
+    {
+      "sourceKey": "Standing_Concentration_Curl",
+      "legacyFingerprint": "3dc3d4113f1ab6ab2d829537508c571c878784291f7976bf5d75eb2607d58188"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Calf_Raise",
+      "legacyFingerprint": "c7de4b558413f8f27f430fed5468ad776945d9e04564d8df72fd1b7feb5ee279"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Press",
+      "legacyFingerprint": "dc9494900546fa751d001282f9675afbddfbd5c05f1d358e6814b0f024dcb048"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Reverse_Curl",
+      "legacyFingerprint": "427bb21a6d612a54b4c1c040e1321971ce54a2e4a128a09c19dce8aa851cd282"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head",
+      "legacyFingerprint": "ce327bdafcb2cbcee26a924341afb61ce0a24ab1be61054161799e46091b6427"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "0484412a04d175c4493c19dae6999542fb46372d177813bf87d3a78b9676bfdf"
+    },
+    {
+      "sourceKey": "Standing_Dumbbell_Upright_Row",
+      "legacyFingerprint": "e501d907e25b6658fc1354acd94f27cfbfd436a3180ba46613cbd3c2b9840b10"
+    },
+    {
+      "sourceKey": "Standing_Elevated_Quad_Stretch",
+      "legacyFingerprint": "a9bc6468158759d9ec18a7675f6dc7d0a0f40a7ddf8970ffcc75a911c856d079"
+    },
+    {
+      "sourceKey": "Standing_Front_Barbell_Raise_Over_Head",
+      "legacyFingerprint": "c17418df75369fa1812252e162a7e08b50e0343b1ec8019c6b4a69506fef336e"
+    },
+    {
+      "sourceKey": "Standing_Gastrocnemius_Calf_Stretch",
+      "legacyFingerprint": "29c1aa65641b4584ed36af2aa75b7350442e3715cc24920e206855779d8c7401"
+    },
+    {
+      "sourceKey": "Standing_Hamstring_and_Calf_Stretch",
+      "legacyFingerprint": "b69b7680d6ac13987a8061260c8e7c721cfa0f872bd6b8a7cd6716ef1ca975aa"
+    },
+    {
+      "sourceKey": "Standing_Hip_Circles",
+      "legacyFingerprint": "bd3f8877cded66cae18f48443941acad4ce964d33eaa856a36554578b0526075"
+    },
+    {
+      "sourceKey": "Standing_Hip_Flexors",
+      "legacyFingerprint": "1f28670e54c2fe796a7c64b11aa5c0544da0a8aff6bbea2ef31e0518b46fb606"
+    },
+    {
+      "sourceKey": "Standing_Inner-Biceps_Curl",
+      "legacyFingerprint": "0709c732b66b0dd098fad6fb82337367f844e96c75be1bc282fcb8d41c1036cb"
+    },
+    {
+      "sourceKey": "Standing_Lateral_Stretch",
+      "legacyFingerprint": "edf2afb299cbc82abd8c8e6d255229f3df7962169c1397d1f264cf992c906a3c"
+    },
+    {
+      "sourceKey": "Standing_Leg_Curl",
+      "legacyFingerprint": "f3eaf2b58ff20f016d58f5120aadd10e247f5633333f137f7831d42641c5f2f9"
+    },
+    {
+      "sourceKey": "Standing_Long_Jump",
+      "legacyFingerprint": "ae1b69ffe50fd4d265907d70254e81aa72f511265981af4a51ec6451e42b94ff"
+    },
+    {
+      "sourceKey": "Standing_Low-Pulley_Deltoid_Raise",
+      "legacyFingerprint": "3b66ee8f6a701d8af38ae818d9d7f4b43b8adc81749c8c5a427d6a44843ca165"
+    },
+    {
+      "sourceKey": "Standing_Low-Pulley_One-Arm_Triceps_Extension",
+      "legacyFingerprint": "02a9d99649305057b24b606aaca6910748a4a44c9c7209b778e9c0ecc4a7ab4e"
+    },
+    {
+      "sourceKey": "Standing_Military_Press",
+      "legacyFingerprint": "a9ef7cf76ffe4e3b6e74531fe9036c04ff2cb20b0a4249a67feb12d1503be3c2"
+    },
+    {
+      "sourceKey": "Standing_Olympic_Plate_Hand_Squeeze",
+      "legacyFingerprint": "0180a267dd76de4a0c67be2bcaa7a0da776dfdcea5f018420c4943665a0c492f"
+    },
+    {
+      "sourceKey": "Standing_One-Arm_Cable_Curl",
+      "legacyFingerprint": "a8ca5474cc0ccef157293b4aaf95b7731c7f847434f1dfc19f84296ad8084552"
+    },
+    {
+      "sourceKey": "Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench",
+      "legacyFingerprint": "e8b2b6242bb15f477edd507942d16150141af2f8a7479efd109318b74d549163"
+    },
+    {
+      "sourceKey": "Standing_One-Arm_Dumbbell_Triceps_Extension",
+      "legacyFingerprint": "a59d64659445113f8c7a44504666cc1a502c5d0e2959c76f3eb11fbb537cf2c0"
+    },
+    {
+      "sourceKey": "Standing_Overhead_Barbell_Triceps_Extension",
+      "legacyFingerprint": "8e9c46e78f4320366a5077e32dd385e2571bdca5ca5c10322a29c219c771618d"
+    },
+    {
+      "sourceKey": "Standing_Palm-In_One-Arm_Dumbbell_Press",
+      "legacyFingerprint": "0b697ea01fd970f58a375bfdecdf39b199a7dea169d9131c87733127a7654114"
+    },
+    {
+      "sourceKey": "Standing_Palms-In_Dumbbell_Press",
+      "legacyFingerprint": "f8fb3059d9712e847f8751932b3f479ede5e02ca9e1d94177f0ea5a621fd97eb"
+    },
+    {
+      "sourceKey": "Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl",
+      "legacyFingerprint": "1572e53660a5a2ade43618a6f0dc3beccefffaa72c4b66e9baf9fcdbbd48dc62"
+    },
+    {
+      "sourceKey": "Standing_Pelvic_Tilt",
+      "legacyFingerprint": "89a086dd8809577e69a3093d2ed5f52077ca6cd3d2e6f7fe9e2dfae17a141d34"
+    },
+    {
+      "sourceKey": "Standing_Rope_Crunch",
+      "legacyFingerprint": "9c9197b37c95875a40cf6c15a026f77e69a414e3fc7eed7dd43680c9f92db453"
+    },
+    {
+      "sourceKey": "Standing_Soleus_And_Achilles_Stretch",
+      "legacyFingerprint": "9239a4ef5157c13370598aedf770a7101231b96cd869c48e3c6a4d9d8b43acb2"
+    },
+    {
+      "sourceKey": "Standing_Toe_Touches",
+      "legacyFingerprint": "96f908a97d2217fc9b578e55b78f7a4f591312ff331b94248f79f6f49329f677"
+    },
+    {
+      "sourceKey": "Standing_Towel_Triceps_Extension",
+      "legacyFingerprint": "5673e8b05d3149b64eff7f2891571224e689b240a648d2fe13f6d9c287200b3b"
+    },
+    {
+      "sourceKey": "Standing_Two-Arm_Overhead_Throw",
+      "legacyFingerprint": "ab9953dff48bbb35be1eda8d21807e198e84ced5158e6488a606534903478290"
+    },
+    {
+      "sourceKey": "Star_Jump",
+      "legacyFingerprint": "5824ad487989d094f1fa13f5fd53a2c25e6de657f305a8e5fd772a5b837180fb"
+    },
+    {
+      "sourceKey": "Step-up_with_Knee_Raise",
+      "legacyFingerprint": "7b35f9b4738e104cd35573eb3a0bf8cd04c8cb758eb7f7b843a107db010bd56a"
+    },
+    {
+      "sourceKey": "Step_Mill",
+      "legacyFingerprint": "de1e2e252005a7f99e36108e311f602f7af0ddff1f93ff6347a7e60cce16bc11"
+    },
+    {
+      "sourceKey": "Stiff-Legged_Barbell_Deadlift",
+      "legacyFingerprint": "c7c77f29df19182c07e8dea1e324d15a348d8465baa471b7ce6d4bda6f0e9562"
+    },
+    {
+      "sourceKey": "Stiff-Legged_Dumbbell_Deadlift",
+      "legacyFingerprint": "982bf0c112284ef1f3940540989f7270f859ee99011035d477fda05acac8447a"
+    },
+    {
+      "sourceKey": "Stiff_Leg_Barbell_Good_Morning",
+      "legacyFingerprint": "ac52b812f1b09fbd3fdbdf02e20b7c2d336682d5a84c6ef9b694c22cc6fc8ef5"
+    },
+    {
+      "sourceKey": "Stomach_Vacuum",
+      "legacyFingerprint": "2ac1acd4c9a7941241d1e51748e14de860c847e49fd4f2b25e11d5106c953d66"
+    },
+    {
+      "sourceKey": "Straight-Arm_Dumbbell_Pullover",
+      "legacyFingerprint": "8a8a6d1327eeb7c0a0ce48ca9730358cff7b41a04bfffd5e10191c8abf29fa36"
+    },
+    {
+      "sourceKey": "Straight-Arm_Pulldown",
+      "legacyFingerprint": "5c7d8ae57ace0c4c7cf5ea9a8556942197e974e2d95b1d9cfdd0796ebf956656"
+    },
+    {
+      "sourceKey": "Straight_Bar_Bench_Mid_Rows",
+      "legacyFingerprint": "402cfc65324d4829545bfa2469d7dfd6bf0a5004bac4c17608fb32a0d67e754d"
+    },
+    {
+      "sourceKey": "Straight_Raises_on_Incline_Bench",
+      "legacyFingerprint": "1cc12b9b8b9311e96d80788537db3cde959fda4072601a936ec85e80588fa347"
+    },
+    {
+      "sourceKey": "Stride_Jump_Crossover",
+      "legacyFingerprint": "b7cbbf0f157eba2deb0490b8ee059c5f38bf5e487bbdf253509dc2498ea5c416"
+    },
+    {
+      "sourceKey": "Sumo_Deadlift",
+      "legacyFingerprint": "7eba8e69d81888d345f19052a6fa4ea763c0ad262ea5ea9e541022b4749bf88b"
+    },
+    {
+      "sourceKey": "Sumo_Deadlift_with_Bands",
+      "legacyFingerprint": "ed8a053f53f6cd31a0000c2685d28d8ff72391feb93d6aadceb9dcd61715ba0f"
+    },
+    {
+      "sourceKey": "Sumo_Deadlift_with_Chains",
+      "legacyFingerprint": "bbb29485896722fdef86866a897db97620840bf80fa08e1eac0a30cd1b7b3c20"
+    },
+    {
+      "sourceKey": "Superman",
+      "legacyFingerprint": "fff60347c8734414df309a20a1be2a9e123ad582224e2f0d086f8d8790a3ef09"
+    },
+    {
+      "sourceKey": "Supine_Chest_Throw",
+      "legacyFingerprint": "159bb910514ff5d5cdfb60418dbb40792f8d10d4a9751d12af00115f86d3188a"
+    },
+    {
+      "sourceKey": "Supine_One-Arm_Overhead_Throw",
+      "legacyFingerprint": "2462927c44978e8e9bdeb39a5657f51dc584abe9f15410e2c37818d2d3346f1f"
+    },
+    {
+      "sourceKey": "Supine_Two-Arm_Overhead_Throw",
+      "legacyFingerprint": "28ba51961c472b5110fb8f4176f99dc421df3e00d583937ebf19727aacdd344f"
+    },
+    {
+      "sourceKey": "Suspended_Fallout",
+      "legacyFingerprint": "e6b1bb4a5cec9ac2bf2ef70f629c9b388239d0ea571674e2dc9e79ce240de729"
+    },
+    {
+      "sourceKey": "Suspended_Push-Up",
+      "legacyFingerprint": "e4c84901c0c4f381141f432fbbc69778e20029003cb56b5e58ff813dace25dc7"
+    },
+    {
+      "sourceKey": "Suspended_Reverse_Crunch",
+      "legacyFingerprint": "88b4dba0f0ec888a4dd95aef46322bce3b95bb4d150b525cfb3717af21664002"
+    },
+    {
+      "sourceKey": "Suspended_Row",
+      "legacyFingerprint": "cbe9906835531c1281fd0c752725220ce937fa01bfa8733f06e845edfff3ba8a"
+    },
+    {
+      "sourceKey": "Suspended_Split_Squat",
+      "legacyFingerprint": "9b4436961d748583b72baf918c17af92e44297ff0b63540260f9c55c1c99917f"
+    },
+    {
+      "sourceKey": "Svend_Press",
+      "legacyFingerprint": "81032cca570429b7c7bcaabac3e5b4b99c5773d10302790d8684eb6d805a291f"
+    },
+    {
+      "sourceKey": "T-Bar_Row_with_Handle",
+      "legacyFingerprint": "63bb495a9fd398742d7317798eb3e946eabf0f7579114fd8bc5f733236b4c80b"
+    },
+    {
+      "sourceKey": "Tate_Press",
+      "legacyFingerprint": "0a73a40f73139530f49d4708f9fec95a03a07ae094c37bf783887d80feb1fd64"
+    },
+    {
+      "sourceKey": "The_Straddle",
+      "legacyFingerprint": "b6174cb9c75454e65a33c925e21eacb2da8ae9003acf4b9ca639f3971fae4cc5"
+    },
+    {
+      "sourceKey": "Thigh_Abductor",
+      "legacyFingerprint": "391089e43f9a4df10103c28241a5d481a35799599b494c3db72feb7cfdd35d6a"
+    },
+    {
+      "sourceKey": "Thigh_Adductor",
+      "legacyFingerprint": "ef52963352a58e904f3c9f2608af29a15a113f4ce71e8d9321470348a28f9f49"
+    },
+    {
+      "sourceKey": "Tire_Flip",
+      "legacyFingerprint": "1e632128c6c34bff18e5f220022b8a41e7e4480ece64c3513886be6f721d9564"
+    },
+    {
+      "sourceKey": "Toe_Touchers",
+      "legacyFingerprint": "7314b9369ee42c4bdcc45aa299f24011cc5b9741c611f49e1d00bb6d907c9de5"
+    },
+    {
+      "sourceKey": "Torso_Rotation",
+      "legacyFingerprint": "50ae09ee9daf06032e07f563bc897bb2bcf87b0c1286994c77443d065f2f1caa"
+    },
+    {
+      "sourceKey": "Trail_Running_Walking",
+      "legacyFingerprint": "12f447aef3fdf7b89287d5965b9dc2c07a66cc3e7c8adc55cf644b4d20dcca27"
+    },
+    {
+      "sourceKey": "Trap_Bar_Deadlift",
+      "legacyFingerprint": "2b93708394e077531dedae989fba3e83ac539af52d2fafbefa0a27e958c56ed7"
+    },
+    {
+      "sourceKey": "Tricep_Dumbbell_Kickback",
+      "legacyFingerprint": "51b7b8f24ac16e687f81436c74414f84a4f26e54c9b1a577411c0e512b2a1fc0"
+    },
+    {
+      "sourceKey": "Tricep_Side_Stretch",
+      "legacyFingerprint": "94b3dc187eb4eba865c4feb71f83ecafb9c8df96badf4feee45c5a0218591a94"
+    },
+    {
+      "sourceKey": "Triceps_Overhead_Extension_with_Rope",
+      "legacyFingerprint": "c671b523027e8e9e985ec4d5f1656949ebd6c7b6bd63e71ece6b8d4c8a21eaf1"
+    },
+    {
+      "sourceKey": "Triceps_Pushdown",
+      "legacyFingerprint": "09d28e1e52647fe17a1a6094b486811a03839779695a452a08c5541bd9ea6d6c"
+    },
+    {
+      "sourceKey": "Triceps_Pushdown_-_Rope_Attachment",
+      "legacyFingerprint": "0e0d5faa3b898d8db8b0894b63261b09faf5f07112b6d7e4eaa43726208acb49"
+    },
+    {
+      "sourceKey": "Triceps_Pushdown_-_V-Bar_Attachment",
+      "legacyFingerprint": "4e38bac0949c956fc28027bd799e63f19202b19b8c3755fd2024b4c66ea38585"
+    },
+    {
+      "sourceKey": "Triceps_Stretch",
+      "legacyFingerprint": "77691c1dd58f186c1fb6545b3d4995a9c48dbc1b55b5275b12e46a3173bcc78b"
+    },
+    {
+      "sourceKey": "Tuck_Crunch",
+      "legacyFingerprint": "917f268d3585776de9540d9bc681f3090605a6583c6c3ebe080e4c1ceb870195"
+    },
+    {
+      "sourceKey": "Two-Arm_Dumbbell_Preacher_Curl",
+      "legacyFingerprint": "a75d01e810fd1db1b0539db952717a184d7e94e11a5b0b6b83460ff5526c7acd"
+    },
+    {
+      "sourceKey": "Two-Arm_Kettlebell_Clean",
+      "legacyFingerprint": "9aade84c2e707b7fe4b758f660c43992b60298f2ac556ceab697f3795400854b"
+    },
+    {
+      "sourceKey": "Two-Arm_Kettlebell_Jerk",
+      "legacyFingerprint": "5d1e531e2f2d56c42f90dc0a3aad8a2728edcdf914b36b3d1d3914f8e6de6227"
+    },
+    {
+      "sourceKey": "Two-Arm_Kettlebell_Military_Press",
+      "legacyFingerprint": "fc1e9d6db3546ad7d875b1b88651b04a64c7e95af54179e0024116d3164a6b66"
+    },
+    {
+      "sourceKey": "Two-Arm_Kettlebell_Row",
+      "legacyFingerprint": "79b6764b5514014b8a79cc33ed8254d10bd2f8fa9b5c3557f5af7e944b3925c1"
+    },
+    {
+      "sourceKey": "Underhand_Cable_Pulldowns",
+      "legacyFingerprint": "007222060c47c4fcd3014d01dfd62a61bbafa9eca27f0d9c01939b0d3ac5a2c5"
+    },
+    {
+      "sourceKey": "Upper_Back-Leg_Grab",
+      "legacyFingerprint": "a883eeccf92447b4141be79ba4db620bd85e6e1addabfc065fc276b94d1a3d97"
+    },
+    {
+      "sourceKey": "Upper_Back_Stretch",
+      "legacyFingerprint": "57c063806b22ef2b42652130c2db4d958d6b1c6eea8255e6151c8a3d571b7c2d"
+    },
+    {
+      "sourceKey": "Upright_Barbell_Row",
+      "legacyFingerprint": "78982da09fb91eb3f60976f0ce4f29bafb8073d0d57c84deb68900a84162a6eb"
+    },
+    {
+      "sourceKey": "Upright_Cable_Row",
+      "legacyFingerprint": "6a75fdfd481aece1da3da290b80ec53ff462705f9488de19b50e212c1138d337"
+    },
+    {
+      "sourceKey": "Upright_Row_-_With_Bands",
+      "legacyFingerprint": "f0f47da825d7e6c67be80ba245d264ff8230ee058a16e3c0a4f5383f4e551c17"
+    },
+    {
+      "sourceKey": "Upward_Stretch",
+      "legacyFingerprint": "426bb7ed61b4e871cf1e85c187e83e2b3f276e21370fe99b9aebbc29dc594e1b"
+    },
+    {
+      "sourceKey": "V-Bar_Pulldown",
+      "legacyFingerprint": "e44a049b00320235308dce90d2074ed216fc45359bd4803a34a439f4e7c0bbfd"
+    },
+    {
+      "sourceKey": "V-Bar_Pullup",
+      "legacyFingerprint": "493e12e43e186fccfb6fdb3e87d950ac0639c6f602514ac71d6c10c8c4975a78"
+    },
+    {
+      "sourceKey": "Vertical_Swing",
+      "legacyFingerprint": "09dad26ac005b4550d93135773b967424a4d5dc6ad63414e452cb3f6eb6aa58d"
+    },
+    {
+      "sourceKey": "Walking_Treadmill",
+      "legacyFingerprint": "3ef731a3fe852b7b15a10c43f43c784f7d5ef823428c1e5f1bead184dcad22fc"
+    },
+    {
+      "sourceKey": "Weighted_Ball_Hyperextension",
+      "legacyFingerprint": "0d62c25e80dddf0395f2c94f332fcb6bbc5bd2a7e2a7f317cc5aac22c64b270d"
+    },
+    {
+      "sourceKey": "Weighted_Ball_Side_Bend",
+      "legacyFingerprint": "2766d178930de384639c44df88facfd6c779d71ac3f2eeaedfbb7f4db897caf7"
+    },
+    {
+      "sourceKey": "Weighted_Bench_Dip",
+      "legacyFingerprint": "7032bb93568d0a73a613174289e257b7a951275248c554dd8ac12178ab53149a"
+    },
+    {
+      "sourceKey": "Weighted_Crunches",
+      "legacyFingerprint": "1b3b8f823d15e092f0a8ba789c50fd577cc40e5860bb79bcc52571af520df40f"
+    },
+    {
+      "sourceKey": "Weighted_Jump_Squat",
+      "legacyFingerprint": "41a034a9acbc3f923f391b2ee451648f74c863e05ed7ef73092729217fa112dc"
+    },
+    {
+      "sourceKey": "Weighted_Pull_Ups",
+      "legacyFingerprint": "eab0ba2224ee485088516000c4d5a034d117cbb625ff82ac9ea21f8471450c38"
+    },
+    {
+      "sourceKey": "Weighted_Sissy_Squat",
+      "legacyFingerprint": "109eb972f70ac31650e8cf916d4ca13c638da199165da8e75c487810c0be1d11"
+    },
+    {
+      "sourceKey": "Weighted_Sit-Ups_-_With_Bands",
+      "legacyFingerprint": "c93e9fa40329f7b958d77115da149c975780798c167a593b238dfd7647655df8"
+    },
+    {
+      "sourceKey": "Weighted_Squat",
+      "legacyFingerprint": "8f742ddd8ef074a387a638f464bf079818dbc8a95ad9f9fe4d01c9dc8a839038"
+    },
+    {
+      "sourceKey": "Wide-Grip_Barbell_Bench_Press",
+      "legacyFingerprint": "77b040e72b54c906d72fa38f7b8aa3c5f2e8ff6c7a967c44f870d6a9249a6cf8"
+    },
+    {
+      "sourceKey": "Wide-Grip_Decline_Barbell_Bench_Press",
+      "legacyFingerprint": "03910ceed7caa2fb2710b517d1c8d5e614aa774fa427899af4c08fe7604eb446"
+    },
+    {
+      "sourceKey": "Wide-Grip_Decline_Barbell_Pullover",
+      "legacyFingerprint": "037415560ebafb314e5f7f06a868e98dc6ca77d756c0aa6263e1d4a597333aef"
+    },
+    {
+      "sourceKey": "Wide-Grip_Lat_Pulldown",
+      "legacyFingerprint": "ca5ed2413e0168a17d6704b9c72ab1216e1325a94790ed32eee27be5940879bb"
+    },
+    {
+      "sourceKey": "Wide-Grip_Pulldown_Behind_The_Neck",
+      "legacyFingerprint": "d8d62f811efb3fd9d90d6e266c5e3852192ebd49f0393404f0f4ff200b7857cf"
+    },
+    {
+      "sourceKey": "Wide-Grip_Rear_Pull-Up",
+      "legacyFingerprint": "f8de9468585b58a2937b9b9ca0bc7c0dab5c1b5d42b5bc31436e9fb24e30dddc"
+    },
+    {
+      "sourceKey": "Wide-Grip_Standing_Barbell_Curl",
+      "legacyFingerprint": "fa528b841d0540854b762054e533a0c6259288d1df6e8d7288472b144281e9a9"
+    },
+    {
+      "sourceKey": "Wide_Stance_Barbell_Squat",
+      "legacyFingerprint": "6dd8ef5ad2ff7a4cb8f6794f6951cd34bb798fd20772f11a43e3171def28aa8f"
+    },
+    {
+      "sourceKey": "Wide_Stance_Stiff_Legs",
+      "legacyFingerprint": "09611b2b2aa766e60b150e99156f1a7835631c039d54061b3db552165df223ca"
+    },
+    {
+      "sourceKey": "Wind_Sprints",
+      "legacyFingerprint": "b65aa117d41eaccfa7f29e1ea9e91c72b7b2e4211f40f296f32fa01d437ffd7d"
+    },
+    {
+      "sourceKey": "Windmills",
+      "legacyFingerprint": "d92739081c9be045dd74a4f0b641a47dbc8424b43d1bb67bbb206d1067b4b7b9"
+    },
+    {
+      "sourceKey": "Worlds_Greatest_Stretch",
+      "legacyFingerprint": "25bff2a1571ccf576ea53188531c572d4a42f7fd4e597ed1373029b6f8ce11f8"
+    },
+    {
+      "sourceKey": "Wrist_Circles",
+      "legacyFingerprint": "b9b414f62e51bdd8e2963580f7e49f7c1a15bb4facd4c724c3f15e0eea69df44"
+    },
+    {
+      "sourceKey": "Wrist_Roller",
+      "legacyFingerprint": "bfb24378fe666a28d1165619a2714c40966badf97d31b512f2c19d87249256b6"
+    },
+    {
+      "sourceKey": "Wrist_Rotations_with_Straight_Bar",
+      "legacyFingerprint": "e1cebc9a40ba4023a46f10ec577e4adb076db930f6528b816cd07aa977e92310"
+    },
+    {
+      "sourceKey": "Yoke_Walk",
+      "legacyFingerprint": "1121843a2ea90f2da9a2c865d7c570eb9d1fc7322de14b93ff85f091fa23d4c0"
+    },
+    {
+      "sourceKey": "Zercher_Squats",
+      "legacyFingerprint": "de9b5c5775422d84cf28be48d851a8b172a5267a9cd119fba1a336b225acb3c8"
+    },
+    {
+      "sourceKey": "Zottman_Curl",
+      "legacyFingerprint": "124e51f0465bac6415480e05fb3c6a5d675ee7b22f1d423633dd27ac995baa4a"
+    },
+    {
+      "sourceKey": "Zottman_Preacher_Curl",
+      "legacyFingerprint": "a5ec5861c68cf315cb174dbf47f001481d51bad6dd3838a5f0f37c6356a7ec1a"
+    }
+  ]
+}

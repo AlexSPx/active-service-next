@@ -1,6 +1,7 @@
 package com.services.active.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.services.active.models.types.*;
@@ -25,6 +26,14 @@ import java.util.UUID;
 public class Exercise {
     @Id
     private UUID id;
+
+    @JsonIgnore
+    @Column(unique = true)
+    private String sourceKey;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private boolean retired;
 
     private String name;
 
@@ -59,12 +68,11 @@ public class Exercise {
     private Category category;
 
     /**
-     * The remote exercise JSON uses a human-readable slug as "id" (e.g. "3_4_Sit-Up").
-     * We ignore that during deserialization and assign a proper UUID in ExerciseLoaderConfig.
+     * Catalog source keys are parsed separately by ExerciseCatalog; API identity remains a UUID.
      * This setter absorbs the JSON "id" string without crashing.
      */
     @JsonProperty("id")
     public void setJsonId(String jsonId) {
-        // Intentionally ignored — UUIDs are assigned by ExerciseLoaderConfig
+        // Catalog imports assign UUIDs and source keys separately.
     }
 }

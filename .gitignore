@@ -3,7 +3,17 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-src/main/resources/
+src/main/resources/*
+!src/main/resources/catalog/
+src/main/resources/catalog/*
+!src/main/resources/catalog/exercises.json
+!src/main/resources/catalog/legacy-fingerprints.json
+!src/main/resources/catalog/LICENSE.md
+!src/main/resources/db/
+src/main/resources/db/*
+!src/main/resources/db/migration/
+src/main/resources/db/migration/*
+!src/main/resources/db/migration/V4__exercise_catalog.sql
 
 ### STS ###
 .apt_generated
